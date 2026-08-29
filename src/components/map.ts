@@ -16,16 +16,16 @@ export function initMap(elementId: string = 'leaflet-map'): L.Map | null {
     mapInstance = null;
   }
 
-  // Initialisation de la carte
+  // Initialisation de la carte avec zoom et contrôles minimaux
   mapInstance = L.map(elementId, {
     zoomControl: true,
     attributionControl: false
   }).setView([48.8566, 2.3522], 12);
 
-  // Fond de carte épuré OpenStreetMap avec filtre CSS doux "Editorial Runner Paper"
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '&copy; OpenStreetMap contributors'
+  // Fond de carte ultra-épuré (Base seule : zéro bâtiment, zéro restaurant/commerce, zéro texte de route)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16,
+    attribution: '&copy; Esri World Light Gray Base'
   }).addTo(mapInstance);
 
   currentLayerGroup = L.layerGroup().addTo(mapInstance);
@@ -44,15 +44,15 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
   let targetBounds: L.LatLngBounds | null = null;
 
-  // 1. Dessiner l'ensemble des 280 autres tracés de course (Heatmap personnelle en gris épuré)
+  // 1. Dessiner l'ensemble de tous les tracés de course depuis le début (Heatmap personnelle épurée)
   activities.forEach(activity => {
     if (activity.id !== targetActivity?.id && activity.map?.summary_polyline) {
       const coords = decodePolyline(activity.map.summary_polyline);
       if (coords.length > 0) {
         const polyline = L.polyline(coords, {
-          color: '#7B828E',
-          weight: 2,
-          opacity: 0.35,
+          color: '#717885',
+          weight: 2.2,
+          opacity: 0.45,
           lineJoin: 'round'
         });
 
@@ -71,7 +71,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
     }
   });
 
-  // 2. Dessiner la séance sélectionnée / dernière sortie (en Terracotta vibrant au premier plan)
+  // 2. Dessiner la séance sélectionnée (en Terracotta vibrant au premier plan)
   if (targetActivity && targetActivity.map?.summary_polyline) {
     const coords = decodePolyline(targetActivity.map.summary_polyline);
     if (coords.length > 0) {
@@ -84,7 +84,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
       mainPolyline.bindPopup(`
         <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 190px; padding: 4px;">
-          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #E05A36; margin-bottom: 2px;">🔥 Séance Sélectionnée</div>
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #E05A36; margin-bottom: 2px;">🔥 Selected run</div>
           <strong style="font-size: 0.92rem; color: #1C1E21; display: block; margin-bottom: 4px;">${targetActivity.name}</strong>
           <div style="font-size: 0.78rem; color: #5C626C; margin-bottom: 6px;">📅 ${formatDate(targetActivity.start_date_local)}</div>
           <div style="display: flex; justify-content: space-between; font-size: 0.82rem; border-top: 1px solid #ECE6DC; padding-top: 6px;">
@@ -106,7 +106,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         weight: 2.5,
         fillColor: '#2E6B56',
         fillOpacity: 1
-      }).bindTooltip("📍 Départ", { permanent: false }).addTo(currentLayerGroup!);
+      }).bindTooltip("📍 Start", { permanent: false }).addTo(currentLayerGroup!);
 
       // Marqueur d'arrivée (terracotta)
       const endPt = coords[coords.length - 1];
@@ -116,11 +116,11 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         weight: 2.5,
         fillColor: '#E05A36',
         fillOpacity: 1
-      }).bindTooltip("🏁 Arrivée", { permanent: false }).addTo(currentLayerGroup!);
+      }).bindTooltip("🏁 Finish", { permanent: false }).addTo(currentLayerGroup!);
     }
   }
 
-  // 3. Cadrage intelligent : zoomer sur la région de la séance active avec marge pour voir les parcours voisins
+  // 3. Cadrage épuré centré sur la zone de course
   if (targetBounds && targetBounds.isValid()) {
     mapInstance.fitBounds(targetBounds.pad(0.25), {
       padding: [25, 25],
