@@ -73,9 +73,10 @@
   height: 100%;
 }
 
-/* Style de carte épuré, minimaliste et doux "Editorial Runner Paper" */
+/* Style de carte ultra-épuré, doux et minimaliste */
 .leaflet-tile-pane {
-  filter: grayscale(0.65) contrast(1.02) brightness(1.03);
+  filter: contrast(0.95) brightness(1.02);
+  opacity: 0.88;
 }
 
 .featured-metrics-grid {
@@ -231,8 +232,8 @@
 
 .shoe-image-wrap {
   width: 100%;
-  height: 170px;
-  background: radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F4ECE1 100%);
+  height: 205px;
+  background: radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F5EDE3 100%);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
   display: flex;
@@ -244,15 +245,47 @@
 }
 
 .shoe-image {
-  max-width: 85%;
-  max-height: 140px;
+  width: 100%;
+  height: 100%;
+  max-width: 95%;
+  max-height: 180px;
   object-fit: contain;
-  filter: drop-shadow(0 10px 18px rgba(35, 25, 15, 0.15));
-  transition: transform var(--transition-normal);
+  filter: drop-shadow(0 12px 20px rgba(35, 25, 15, 0.15));
+  transition: transform var(--transition-normal), filter var(--transition-normal);
+  transform-origin: center center;
 }
 
-.shoe-image:hover {
-  transform: scale(1.04) rotate(-2deg);
+/* Harmonisation optique précise pour que chaque modèle ait exactement la même taille perçue */
+.shoe-image[src*="adizero"] {
+  transform: scale(1.42);
+}
+
+.shoe-image[src*="brooks"] {
+  transform: scale(1.36);
+}
+
+.shoe-image[src*="ultraboost"] {
+  transform: scale(1.40);
+}
+
+.shoe-image[src*="pegasus"] {
+  transform: scale(1.05);
+}
+
+.shoe-image[src*="adizero"]:hover {
+  transform: scale(1.48) rotate(-2deg);
+}
+
+.shoe-image[src*="brooks"]:hover {
+  transform: scale(1.42) rotate(-2deg);
+}
+
+.shoe-image[src*="ultraboost"]:hover {
+  transform: scale(1.46) rotate(-2deg);
+}
+
+.shoe-image[src*="pegasus"]:hover {
+  transform: scale(1.10) rotate(-2deg);
 }
 
 .shoe-details-box {
@@ -505,31 +538,141 @@
   align-self: flex-end;
 }
 
-/* 7. Activities Feed */
+/* 7. Activities Feed & Interactive Telemetry Drawer */
 .activities-card {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
+.activities-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.activities-search-wrap {
+  flex: 1;
+  min-width: 260px;
+  max-width: 480px;
+}
+
+.search-input-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  transition: all var(--transition-fast);
+}
+
+.search-input-box:focus-within {
+  background-color: #FFFFFF;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(224, 90, 54, 0.12);
+}
+
+.search-icon {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.search-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.clear-search-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.clear-search-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Tag filter chips */
+.activities-tag-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.tag-chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background-color: var(--bg-surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tag-chip:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.tag-chip.active {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Activity item container */
 .activity-item {
+  display: flex;
+  flex-direction: column;
+  padding: 12px var(--space-md);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+  position: relative;
+}
+
+.activity-item:hover,
+.activity-item.expanded {
+  background-color: #FFFFFF;
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 24px rgba(35, 25, 15, 0.07);
+}
+
+/* Top summary row */
+.activity-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px var(--space-md);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-light);
-  transition: all var(--transition-fast);
-  cursor: pointer;
   gap: var(--space-md);
   flex-wrap: wrap;
-}
-
-.activity-item:hover {
-  background-color: var(--bg-surface-subtle);
-  border-color: var(--border-medium);
-  transform: translateX(2px);
+  width: 100%;
 }
 
 .activity-main {
@@ -548,6 +691,9 @@
 .activity-date {
   font-size: 0.76rem;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .activity-metrics {
@@ -566,23 +712,215 @@
 .act-stat-val {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.98rem;
   color: var(--text-primary);
 }
 
 .act-stat-unit {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   text-transform: uppercase;
 }
 
 .act-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--bg-surface-subtle);
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  font-size: 0.75rem;
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-fast);
+}
+
+.activity-item:hover .act-pill,
+.activity-item.expanded .act-pill {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+/* Hover Accordion Drawer (Déroulé fluide au survol) */
+.activity-drawer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, margin-top 0.3s ease;
+  width: 100%;
+}
+
+.activity-item:hover .activity-drawer,
+.activity-item.expanded .activity-drawer {
+  max-height: 600px;
+  opacity: 1;
+  pointer-events: auto;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-light);
+}
+
+.drawer-content-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+@media (max-width: 980px) {
+  .drawer-content-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .drawer-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 1. Map column */
+.drawer-map-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-map-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.mini-trace-svg {
+  width: 100%;
+  max-width: 260px;
+  height: 130px;
+  display: block;
+}
+
+/* 2. Telemetry details column */
+.drawer-telemetry-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-surface-subtle);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+}
+
+.telemetry-lbl {
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.telemetry-val {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.effort-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+}
+
+.activity-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.act-tag-badge {
+  font-size: 0.7rem;
   font-weight: 600;
-  background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--bg-surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+/* 3. Kilometer Splits Column */
+.drawer-splits-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.splits-header {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.splits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.split-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.split-km {
+  width: 38px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.split-bar-track {
+  flex: 1;
+  height: 6px;
+  background-color: var(--bg-surface-subtle);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.split-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--color-cobalt);
+  transition: width var(--transition-normal);
+}
+
+.split-bar-fill.fast {
+  background-color: var(--color-forest);
+}
+
+.split-pace {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.76rem;
+  width: 58px;
+  text-align: right;
+  color: var(--text-primary);
 }
 
 /* Button & Tabs */

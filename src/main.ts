@@ -4,11 +4,14 @@ import { renderCharts } from './components/charts.ts';
 import { initMap, renderActivityTraces } from './components/map.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
 import { i18n, Language } from './utils/i18n.ts';
+import { generateActivityTags } from './utils/metrics.ts';
 
 class App {
   private dataService = DataService.getInstance();
   private dataset: StravaDataset | null = null;
   private currentPeriod: 'all' | 'ytd' | '30d' = 'all';
+  private searchQuery: string = '';
+  private activeTagFilter: string = 'all';
 
   public async init(): Promise<void> {
     try {
@@ -58,28 +61,65 @@ class App {
     // Carte GPS
     renderActivityTraces(this.dataset.activities);
 
-    // Flux des activités (Étage 4)
+    // Flux des activités avec recherche et tiroir interactif (Étage 4)
     this.renderActivitiesForCurrentPeriod();
   }
 
   private renderActivitiesForCurrentPeriod(): void {
     if (!this.dataset) return;
 
-    let filteredActivities = [...this.dataset.activities];
+    let filtered = [...this.dataset.activities];
     const now = new Date();
 
+    // 1. Filtre temporel
     if (this.currentPeriod === 'ytd') {
-      filteredActivities = filteredActivities.filter(a => new Date(a.start_date_local).getFullYear() === 2026);
+      filtered = filtered.filter(a => new Date(a.start_date_local).getFullYear() === 2026);
     } else if (this.currentPeriod === '30d') {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(now.getDate() - 30);
-      filteredActivities = filteredActivities.filter(a => new Date(a.start_date_local) >= thirtyDaysAgo);
+      filtered = filtered.filter(a => new Date(a.start_date_local) >= thirtyDaysAgo);
     }
 
-    UIRenderer.renderActivitiesFeed(filteredActivities, this.dataset, (activity: Activity) => {
-      UIRenderer.openActivityModal(activity, this.dataset!);
-      renderActivityTraces(this.dataset!.activities, activity.id);
-    });
+    // 2. Filtre par Tag rapide
+    if (this.activeTagFilter !== 'all') {
+      filtered = filtered.filter(a => {
+        const gear = this.dataset?.gear.find(g => g.id === a.gear_id);
+        const tags = generateActivityTags(a, gear?.name);
+        return tags.includes(this.activeTagFilter);
+      });
+    }
+
+    // 3. Filtre par recherche textuelle
+    if (this.searchQuery.trim() !== '') {
+      const query = this.searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(a => {
+        const gear = this.dataset?.gear.find(g => g.id === a.gear_id);
+        const gearName = (gear?.name || '').toLowerCase();
+        const title = (a.name || '').toLowerCase();
+        const date = (a.start_date_local || '').toLowerCase();
+        const dist = `${(a.distance / 1000).toFixed(1)}km`.toLowerCase();
+        const tags = generateActivityTags(a, gear?.name).join(' ').toLowerCase();
+
+        return title.includes(query) ||
+               gearName.includes(query) ||
+               date.includes(query) ||
+               dist.includes(query) ||
+               tags.includes(query);
+      });
+    }
+
+    // Rendu avec fonction de synchronisation de la carte au survol
+    UIRenderer.renderActivitiesFeed(
+      filtered,
+      this.dataset,
+      (hoveredActivity: Activity) => {
+        renderActivityTraces(this.dataset!.activities, hoveredActivity.id);
+      },
+      (selectedActivity: Activity) => {
+        UIRenderer.openActivityModal(selectedActivity, this.dataset!);
+        renderActivityTraces(this.dataset!.activities, selectedActivity.id);
+      }
+    );
   }
 
   private setupEventListeners(): void {
@@ -107,6 +147,40 @@ class App {
         this.currentPeriod = period || 'all';
         this.renderActivitiesForCurrentPeriod();
         UIRenderer.showToast(`${btn.textContent}`);
+      });
+    });
+
+    // Barre de recherche
+    const searchInput = document.getElementById('activity-search-input') as HTMLInputElement;
+    const clearBtn = document.getElementById('btn-clear-search');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchQuery = (e.target as HTMLInputElement).value;
+        if (clearBtn) {
+          clearBtn.style.display = this.searchQuery ? 'block' : 'none';
+        }
+        this.renderActivitiesForCurrentPeriod();
+      });
+    }
+
+    if (clearBtn && searchInput) {
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        this.searchQuery = '';
+        clearBtn.style.display = 'none';
+        this.renderActivitiesForCurrentPeriod();
+      });
+    }
+
+    // Puces de filtres par tags
+    const tagChips = document.querySelectorAll<HTMLButtonElement>('.tag-chip');
+    tagChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        tagChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        this.activeTagFilter = chip.getAttribute('data-tag') || 'all';
+        this.renderActivitiesForCurrentPeriod();
       });
     });
 

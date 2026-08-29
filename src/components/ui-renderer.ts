@@ -9,7 +9,12 @@ import {
   calculateWeeklyAverages,
   calculateConsistencyGrid,
   calculateGearStats,
-  calculateCalories
+  calculateCalories,
+  calculateElevationDetails,
+  calculateDifficulty,
+  generateActivityTags,
+  generateKilometerSplits,
+  renderPolylineSVG
 } from '../utils/metrics.ts';
 import { i18n } from '../utils/i18n.ts';
 
@@ -81,6 +86,14 @@ export class UIRenderer {
 
     setTxt('lbl-activities-title', t.recentActivitiesTitle);
     setTxt('lbl-activities-sub', t.recentActivitiesSubtitle);
+
+    const searchInput = document.getElementById('activity-search-input') as HTMLInputElement;
+    if (searchInput) searchInput.placeholder = t.searchPlaceholder;
+
+    setTxt('chip-all', t.filterAll);
+    setTxt('chip-long', `🏃 ${t.filterLong}`);
+    setTxt('chip-fast', `⚡ ${t.filterFast}`);
+    setTxt('chip-elev', `⛰️ ${t.filterElevation}`);
 
     setTxt('lbl-modal-dist', t.distance);
     setTxt('lbl-modal-time', t.time);
@@ -333,59 +346,167 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu de la liste des activités récentes (avec calcul réel des calories)
+   * Rendu de la liste des activités avec tiroir de télémétrie dépliant au survol
    */
   public static renderActivitiesFeed(
     activities: Activity[],
     dataset: StravaDataset,
+    onHoverActivity: (activity: Activity) => void,
     onSelectActivity: (activity: Activity) => void
   ): void {
     const container = document.getElementById('activities-feed-list');
     if (!container) return;
 
     container.innerHTML = '';
-    const recentActivities = activities.slice(0, 10);
     const t = i18n.t();
+    const isFr = i18n.getLang() === 'fr';
 
-    recentActivities.forEach(activity => {
+    if (activities.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 32px 16px; color: var(--text-secondary); background: var(--bg-surface-subtle); border-radius: var(--radius-sm);">
+          🔍 ${isFr ? 'Aucune activité trouvée pour cette recherche.' : 'No activities matching this search.'}
+        </div>
+      `;
+      return;
+    }
+
+    activities.forEach((activity) => {
       const item = document.createElement('div');
       item.className = 'activity-item';
+      item.setAttribute('data-activity-id', activity.id.toString());
 
       const gearItem = dataset.gear.find(g => g.id === activity.gear_id);
-      const gearName = gearItem ? gearItem.name : 'Running Shoes';
+      const gearName = gearItem ? gearItem.name : (isFr ? 'Chaussures de running' : 'Running shoes');
       const caloriesVal = calculateCalories(activity);
+      const elev = calculateElevationDetails(activity);
+      const diff = calculateDifficulty(activity);
+      const tags = generateActivityTags(activity, gearName);
+      const splits = generateKilometerSplits(activity);
+      const svgMap = renderPolylineSVG(activity.map?.summary_polyline || '', 250, 130);
+
+      // HTML des splits par kilomètre
+      const splitsHtml = splits.map(s => `
+        <div class="split-row">
+          <span class="split-km">${s.kmLabel}</span>
+          <div class="split-bar-track">
+            <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
+          </div>
+          <span class="split-pace">${s.paceFormatted}</span>
+        </div>
+      `).join('');
+
+      // HTML des tags
+      const tagsHtml = tags.map(tag => `<span class="act-tag-badge">${tag}</span>`).join('');
 
       item.innerHTML = `
-        <div class="activity-main">
-          <div class="activity-title">${activity.name}</div>
-          <div class="activity-date">
-            <span>📅 ${formatDate(activity.start_date_local)}</span>
-            <span>•</span>
-            <span>👟 ${gearName}</span>
+        <!-- Top summary row -->
+        <div class="activity-header-row">
+          <div class="activity-main">
+            <div class="activity-title">${activity.name}</div>
+            <div class="activity-date">
+              <span>📅 ${formatDate(activity.start_date_local)}</span>
+              <span>•</span>
+              <span>👟 ${gearName}</span>
+            </div>
+          </div>
+          <div class="activity-metrics">
+            <div class="act-stat">
+              <span class="act-stat-val">${(activity.distance / 1000).toFixed(2)} km</span>
+              <span class="act-stat-unit">${t.distance}</span>
+            </div>
+            <div class="act-stat">
+              <span class="act-stat-val">${formatTimeShort(activity.moving_time)}</span>
+              <span class="act-stat-unit">${t.time}</span>
+            </div>
+            <div class="act-stat">
+              <span class="act-stat-val">${formatPace(activity.average_speed)}</span>
+              <span class="act-stat-unit">${t.pace}</span>
+            </div>
+            <div class="act-stat">
+              <span class="act-stat-val">${caloriesVal} kcal</span>
+              <span class="act-stat-unit">${t.energy}</span>
+            </div>
+            <span class="act-pill">${t.viewDetails}</span>
           </div>
         </div>
-        <div class="activity-metrics">
-          <div class="act-stat">
-            <span class="act-stat-val">${(activity.distance / 1000).toFixed(2)} km</span>
-            <span class="act-stat-unit">${t.distance}</span>
+
+        <!-- Telemetry Hover Drawer (Déroulé interactif au survol) -->
+        <div class="activity-drawer">
+          <div class="drawer-content-grid">
+            
+            <!-- Col 1 : Tracé GPS SVG vectoriel -->
+            <div class="drawer-map-box">
+              <span class="drawer-map-title">🗺️ ${isFr ? 'Tracé du parcours' : 'Route trace'}</span>
+              ${svgMap}
+            </div>
+
+            <!-- Col 2 : Télémétrie complète (Dénivelé +/-, BPM, Montre, Effort, Tags) -->
+            <div class="drawer-telemetry-col">
+              <div class="telemetry-row">
+                <span class="telemetry-lbl">⛰️ ${t.elevation} (D+ / D-) :</span>
+                <span class="telemetry-val" style="color: var(--color-primary);">▲ +${elev.gain}m <span style="color: var(--color-forest); margin-left: 4px;">▼ -${elev.loss}m</span></span>
+              </div>
+
+              ${elev.minAlt !== null && elev.maxAlt !== null ? `
+              <div class="telemetry-row">
+                <span class="telemetry-lbl">📍 ${t.altitude} :</span>
+                <span class="telemetry-val">${elev.minAlt}m min • ${elev.maxAlt}m max</span>
+              </div>` : ''}
+
+              <div class="telemetry-row">
+                <span class="telemetry-lbl">❤️ ${t.heartRate} :</span>
+                <span class="telemetry-val">${activity.average_heartrate ? `${activity.average_heartrate} bpm (max ${activity.max_heartrate || '--'})` : t.notRecorded}</span>
+              </div>
+
+              <div class="telemetry-row">
+                <span class="telemetry-lbl">⌚ ${t.device} :</span>
+                <span class="telemetry-val">${activity.device_name || 'Strava GPS App'}</span>
+              </div>
+
+              <div class="telemetry-row">
+                <span class="telemetry-lbl">⚡ ${t.difficulty} :</span>
+                <span class="effort-badge" style="color: ${diff.color}; border-color: ${diff.color}40;">
+                  ${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}
+                </span>
+              </div>
+
+              <div class="activity-tags-list">
+                ${tagsHtml}
+              </div>
+            </div>
+
+            <!-- Col 3 : Détail des allures km par km (Splits) -->
+            <div class="drawer-splits-col">
+              <span class="splits-header">⏱️ ${t.splits}</span>
+              <div class="splits-list">
+                ${splitsHtml}
+              </div>
+            </div>
+
           </div>
-          <div class="act-stat">
-            <span class="act-stat-val">${formatTimeShort(activity.moving_time)}</span>
-            <span class="act-stat-unit">${t.time}</span>
-          </div>
-          <div class="act-stat">
-            <span class="act-stat-val">${formatPace(activity.average_speed)}</span>
-            <span class="act-stat-unit">${t.pace}</span>
-          </div>
-          <div class="act-stat">
-            <span class="act-stat-val">${caloriesVal} kcal</span>
-            <span class="act-stat-unit">${t.energy}</span>
-          </div>
-          <span class="act-pill">${t.viewDetails}</span>
         </div>
       `;
 
-      item.addEventListener('click', () => onSelectActivity(activity));
+      // Déclencheur au survol : Synchronisation de la carte principale
+      let hoverTimeout: any = null;
+      item.addEventListener('mouseenter', () => {
+        hoverTimeout = setTimeout(() => {
+          onHoverActivity(activity);
+        }, 120);
+      });
+      item.addEventListener('mouseleave', () => {
+        if (hoverTimeout) clearTimeout(hoverTimeout);
+      });
+
+      // Clic pour épingler / déplier sur mobile
+      item.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.classList.contains('act-pill') || target.closest('.activity-header-row')) {
+          item.classList.toggle('expanded');
+          onSelectActivity(activity);
+        }
+      });
+
       container.appendChild(item);
     });
   }

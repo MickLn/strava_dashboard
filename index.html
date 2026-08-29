@@ -278,13 +278,36 @@
 
     </section>
 
-    <!-- 5. Floor 4 : Recent activities -->
+    <!-- 5. Floor 4 : Recent activities & interactive telemetry feed -->
     <section class="runner-card activities-card" id="section-activities">
-      <div class="chart-header">
-        <h3 class="chart-title" id="lbl-activities-title">🕒 Recent activities</h3>
-        <span class="section-subtitle" id="lbl-activities-sub">Session history with pace and shoes</span>
+      <div class="activities-header-row">
+        <div>
+          <h3 class="chart-title" id="lbl-activities-title">🕒 Recent activities</h3>
+          <span class="section-subtitle" id="lbl-activities-sub">Hover over a session to expand route map & telemetry</span>
+        </div>
+        
+        <!-- Search bar -->
+        <div class="activities-search-wrap">
+          <div class="search-input-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="activity-search-input" class="search-input" placeholder="Search by title, shoes, date, or tags (#10k, #morning, #brooks)..." />
+            <button id="btn-clear-search" class="clear-search-btn" style="display: none;">&times;</button>
+          </div>
+        </div>
       </div>
-      <div id="activities-feed-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+      <!-- Quick tag filter chips -->
+      <div class="activities-tag-filters" id="activity-tag-chips">
+        <button class="tag-chip active" data-tag="all" id="chip-all">All</button>
+        <button class="tag-chip" data-tag="#SortieLongue" id="chip-long">🏃 Long runs (15k+)</button>
+        <button class="tag-chip" data-tag="#Tempo" id="chip-fast">⚡ Fast (&lt; 4:45)</button>
+        <button class="tag-chip" data-tag="#Dénivelé" id="chip-elev">⛰️ Elevation (D+)</button>
+        <button class="tag-chip" data-tag="#Adizero">👟 Adizero EVO SL</button>
+        <button class="tag-chip" data-tag="#Pegasus">👟 Pegasus 41</button>
+        <button class="tag-chip" data-tag="#Brooks">👟 Brooks Hyperion</button>
+      </div>
+
+      <div id="activities-feed-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;"></div>
     </section>
 
   </div>

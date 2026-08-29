@@ -72,10 +72,23 @@ export const translations = {
     more: "More",
     restDay: "Rest day",
 
-    // Feed
+    // Feed & Hover Drawer
     recentActivitiesTitle: "🕒 Recent activities",
-    recentActivitiesSubtitle: "Session history with pace and shoes",
-    viewDetails: "Details ↗",
+    recentActivitiesSubtitle: "Hover over a session to expand route map & telemetry",
+    viewDetails: "Hover to expand ▾",
+    searchPlaceholder: "Search by title, shoes, date, or tags (#10k, #morning, #brooks)...",
+    filterAll: "All",
+    filterLong: "Long runs (15k+)",
+    filterFast: "Fast (< 5:00)",
+    filterElevation: "Elevation (D+)",
+    elevGain: "Elevation gain (D+)",
+    elevLoss: "Elevation loss (D-)",
+    altitude: "Altitude",
+    device: "Watch / Device",
+    difficulty: "Effort score",
+    splits: "Kilometer splits (Pace breakdown)",
+    notRecorded: "Not recorded",
+    hoverTip: "Hover to expand GPS trace & detailed kilometer splits",
 
     // Footer
     footerTitle: "Personal runner dashboard • Deployed on GitHub Pages",
@@ -99,7 +112,7 @@ export const translations = {
     distance: "Distance",
     time: "Chrono",
     pace: "Allure",
-    energy: "Énergie",
+    energy: "Calories",
     elevation: "Dénivelé",
     avgPace: "Allure moyenne",
     heartRate: "Fréquence cardiaque",
@@ -110,9 +123,9 @@ export const translations = {
     finishPoint: "🏁 Arrivée",
 
     // Weekly Pulse
-    weeklyPulseTitle: "⚡ Rythme hebdomadaire",
+    weeklyPulseTitle: "⚡ Weekly pulse",
     weeklyPulseSubtitle: "Régularité & streak",
-    consecutiveWeeks: "semaines consécutives",
+    consecutiveWeeks: "semaines d'entraînement consécutives",
     activeStreak: "Streak actif • Objectif régularité",
     activeDaysThisWeek: "Jours actifs cette semaine",
     runsPerWeek: "Sorties / semaine",
@@ -122,7 +135,7 @@ export const translations = {
     mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam", sun: "Dim",
 
     // Records
-    recordsTitle: "🏆 Records personnels",
+    recordsTitle: "🏆 Records & best efforts",
     recordsSubtitle: "Meilleures performances",
     top5k: "Top 3 - 5 km",
     top10k: "Top 3 - 10 km",
@@ -138,27 +151,40 @@ export const translations = {
     nextShoeBtn: "Paire suivante ↻",
 
     // Season
-    ytdTitle: "📈 Évolution de l'année (2026)",
+    ytdTitle: "📈 Évolution année en cours (YTD cumulé)",
     ytdBadge: "Objectif 2026",
     ytdRuns: "Sorties YTD",
     ytdTime: "Temps YTD",
-    ytdDist: "Distance YTD",
-    ytdElev: "Dénivelé YTD",
+    ytdDist: "Dist. YTD",
+    ytdElev: "D+ YTD",
 
     // Matrix
     matrixTitle: "📅 Matrice de constance (52 semaines)",
-    matrixTooltip: "Survolez une case pour voir le détail des kilomètres courus par jour",
+    matrixTooltip: "Survolez une case pour voir le détail des kilomètres",
     less: "Moins",
     more: "Plus",
     restDay: "Repos",
 
-    // Feed
-    recentActivitiesTitle: "🕒 Activités récentes",
-    recentActivitiesSubtitle: "Historique des séances avec allures et chaussures",
-    viewDetails: "Détails ↗",
+    // Feed & Hover Drawer
+    recentActivitiesTitle: "🕒 Journal des dernières activités",
+    recentActivitiesSubtitle: "Survolez une séance pour dérouler le tracé et la télémétrie",
+    viewDetails: "Survoler pour dérouler ▾",
+    searchPlaceholder: "Rechercher par titre, chaussure, date ou tag (#10k, #matin, #brooks)...",
+    filterAll: "Toutes",
+    filterLong: "Sorties longues (15k+)",
+    filterFast: "Rapides (< 5:00)",
+    filterElevation: "Dénivelé (D+)",
+    elevGain: "Dénivelé positif (D+)",
+    elevLoss: "Dénivelé négatif (D-)",
+    altitude: "Altitude",
+    device: "Montre / GPS",
+    difficulty: "Score d'effort",
+    splits: "Allures par kilomètre (Splits)",
+    notRecorded: "Non mesuré",
+    hoverTip: "Survolez pour dérouler le tracé GPS et le détail des kilomètres",
 
     // Footer
-    footerTitle: "Tableau de bord personnel • Déployé sur GitHub Pages",
+    footerTitle: "Tableau de bord de course à pied • Déployé sur GitHub Pages",
     footerSubtitle: "Modern runner bento • 0ms serverless API"
   }
 };
@@ -168,11 +194,9 @@ class I18nService {
   private currentLang: Language = 'en';
 
   private constructor() {
-    const saved = localStorage.getItem('runner_lang') as Language;
-    if (saved === 'fr' || saved === 'en') {
+    const saved = localStorage.getItem('strava_dash_lang') as Language;
+    if (saved === 'en' || saved === 'fr') {
       this.currentLang = saved;
-    } else {
-      this.currentLang = 'en'; // Default English as requested
     }
   }
 
@@ -189,7 +213,8 @@ class I18nService {
 
   public setLang(lang: Language): void {
     this.currentLang = lang;
-    localStorage.setItem('runner_lang', lang);
+    localStorage.setItem('strava_dash_lang', lang);
+    document.documentElement.lang = lang;
   }
 
   public t() {

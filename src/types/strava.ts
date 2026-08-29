@@ -41,6 +41,9 @@ export interface Activity {
   suffer_score?: number;
   has_heartrate?: boolean;
   pr_count?: number;
+  device_name?: string;
+  elev_high?: number;
+  elev_low?: number;
 }
 
 export interface GearItem {
