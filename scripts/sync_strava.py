@@ -33,20 +33,23 @@ STRAVA_REFRESH_TOKEN = os.environ.get("STRAVA_REFRESH_TOKEN")
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "..", "public", "data", "strava_data.json")
 
 SHOE_IMAGE_MAP = {
-    "adizero": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80",
-    "ultraboost": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=600&auto=format&fit=crop&q=80",
-    "pegasus": "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600&auto=format&fit=crop&q=80",
-    "default": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop&q=80"
+    "adizero": "/images/shoes/adizero_evo_sl.png",
+    "ultraboost": "/images/shoes/ultraboost_gtx.png",
+    "pegasus": "/images/shoes/pegasus_41.png",
+    "brooks": "/images/shoes/brooks_hyperion_max.png",
+    "default": "/images/shoes/adizero_evo_sl.png"
 }
 
 def get_shoe_image(shoe_name):
     name_lower = (shoe_name or "").lower()
-    if "adizero" in name_lower or "evo" in name_lower or "sl" in name_lower:
+    if "adizero" in name_lower or "evo" in name_lower:
         return SHOE_IMAGE_MAP["adizero"]
     elif "ultraboost" in name_lower or "gtx" in name_lower:
         return SHOE_IMAGE_MAP["ultraboost"]
-    elif "pegasus" in name_lower or "nike" in name_lower:
+    elif "pegasus" in name_lower:
         return SHOE_IMAGE_MAP["pegasus"]
+    elif "brooks" in name_lower or "hyperion" in name_lower:
+        return SHOE_IMAGE_MAP["brooks"]
     return SHOE_IMAGE_MAP["default"]
 
 def refresh_access_token():

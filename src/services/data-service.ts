@@ -20,46 +20,39 @@ export class DataService {
    * Charge les données Strava depuis le fichier statique ou le cache local
    */
   public async loadData(forceRefresh: boolean = false): Promise<StravaDataset> {
+    // Si déjà chargé en mémoire dans cette session et sans forceRefresh
     if (!forceRefresh && this.currentDataset) {
       return this.currentDataset;
     }
 
-    // Essayer de lire depuis le cache si pas de forceRefresh
-    if (!forceRefresh) {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        try {
-          this.currentDataset = JSON.parse(cached);
-          if (this.currentDataset) return this.currentDataset;
-        } catch (e) {
-          console.warn('Cache local invalide, rechargement...', e);
-        }
-      }
-    }
-
-    // Charger depuis le fichier statique json
+    // Charger directement depuis le fichier statique JSON (avec cache buster)
     const basePath = import.meta.env.BASE_URL || './';
     const jsonUrl = `${basePath.replace(/\/$/, '')}/data/strava_data.json?t=${Date.now()}`;
 
     try {
-      const response = await fetch(jsonUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await fetch(jsonUrl, { cache: 'no-store' });
+      if (response.ok) {
+        const data: StravaDataset = await response.json();
+        this.currentDataset = data;
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        return data;
       }
-      const data: StravaDataset = await response.json();
-      this.currentDataset = data;
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-      return data;
     } catch (error) {
-      console.error('Erreur lors du chargement des données Strava:', error);
-      // Si un cache existe même vieux, on l'utilise en fallback
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        this.currentDataset = JSON.parse(cached);
-        return this.currentDataset!;
-      }
-      throw error;
+      console.warn('Erreur réseau, tentative de lecture du cache local...', error);
     }
+
+    // Fallback cache local si réseau inaccessible
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        this.currentDataset = JSON.parse(cached);
+        if (this.currentDataset) return this.currentDataset;
+      } catch (e) {
+        console.warn('Cache local corrompu', e);
+      }
+    }
+
+    throw new Error('Impossible de charger les données Strava.');
   }
 
   /**
