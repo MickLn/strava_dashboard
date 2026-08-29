@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mickaël • Strava Runner Dashboard</title>
-  <meta name="description" content="Tableau de bord personnel de course à pied et analyse de performance connecté à Strava.">
+  <meta name="description" content="Personal running dashboard and performance analytics connected to Strava.">
   <link rel="icon" type="image/svg+xml" href="/vite.svg">
   <link rel="stylesheet" href="./src/css/design-system.css">
   <link rel="stylesheet" href="./src/css/layout.css">
@@ -13,128 +13,134 @@
 <body>
   <div class="dashboard-container">
     
-    <!-- 1. En-tête & Profil Athlète -->
+    <!-- 1. Header & athlete profile -->
     <header class="top-header" id="dashboard-header">
       <div class="athlete-brand">
         <div class="athlete-avatar-wrap">
-          <img id="athlete-avatar" class="athlete-avatar" src="" alt="Avatar Athlète">
+          <img id="athlete-avatar" class="athlete-avatar" src="" alt="Athlete profile picture">
         </div>
         <div class="athlete-info">
           <h1 id="athlete-name">Mickaël L.</h1>
           <div class="athlete-meta">
-            <span class="live-badge">Connecté Strava</span>
+            <span class="live-badge" id="lbl-live-badge">Connected to Strava</span>
             <span id="athlete-location">Paris, France</span>
             <span>•</span>
-            <span id="last-sync-time">Sync : 28/08/2026 22:30</span>
+            <span id="last-sync-time">Sync : 29/08/2026 12:53</span>
           </div>
         </div>
       </div>
 
       <div class="header-controls">
-        <div class="period-tabs">
-          <button class="tab-btn active" data-period="all">All-Time</button>
-          <button class="tab-btn" data-period="ytd">2026 (YTD)</button>
-          <button class="tab-btn" data-period="30d">30 Jours</button>
+        <!-- Language selector EN / FR -->
+        <div class="lang-switcher" id="lang-switcher">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="fr">FR</button>
         </div>
 
-        <button id="btn-force-refresh" class="btn btn-primary" title="Forcer la mise à jour des activités">
-          <span>⚡ Forcer MAJ</span>
+        <div class="period-tabs">
+          <button class="tab-btn active" data-period="all" id="tab-all">All-time</button>
+          <button class="tab-btn" data-period="ytd" id="tab-ytd">2026 (YTD)</button>
+          <button class="tab-btn" data-period="30d" id="tab-30d">30 days</button>
+        </div>
+
+        <button id="btn-force-refresh" class="btn btn-primary" title="Force Strava sync">
+          <span id="lbl-force-refresh">⚡ Sync now</span>
         </button>
       </div>
     </header>
 
-    <!-- 2. Étage 1 : Live Hub (Dernière Sortie 60% + Weekly Pulse 40%) -->
+    <!-- 2. Floor 1 : Live Hub (Latest run 60% + Weekly pulse 40%) -->
     <section class="grid-bento-hero">
       
-      <!-- Carte A : Dernière Sortie en Vedette -->
+      <!-- Card A : Featured latest run -->
       <div class="runner-card featured-run-card" id="featured-run-card">
         <div class="featured-run-header">
           <div>
-            <span class="featured-badge">🔥 Dernière Sortie</span>
-            <h2 class="featured-title" id="featured-run-title">281/ Run du matin - 23/08/2026</h2>
-            <span class="featured-date" id="featured-run-date">Dimanche 23 Août 2026 • 08:30</span>
+            <span class="featured-badge" id="lbl-latest-badge">🔥 Latest run</span>
+            <h2 class="featured-title" id="featured-run-title">281/ Morning run</h2>
+            <span class="featured-date" id="featured-run-date">Sunday 23 August 2026 • 08:30</span>
           </div>
           <button id="btn-featured-details" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
-            Détails complets ↗
+            <span id="lbl-full-details">Full details ↗</span>
           </button>
         </div>
 
-        <!-- Tracé Cartographique Leaflet intégré -->
+        <!-- Integrated Leaflet map preview -->
         <div class="featured-map-wrap">
           <div id="leaflet-map"></div>
         </div>
 
-        <!-- Métriques Clés de la dernière séance -->
+        <!-- Key metrics of the latest run -->
         <div class="featured-metrics-grid">
           <div class="featured-metric-item">
-            <span class="featured-metric-label">Distance</span>
+            <span class="featured-metric-label" id="lbl-metric-dist">Distance</span>
             <span class="featured-metric-value" id="featured-dist">10.04 km</span>
           </div>
           <div class="featured-metric-item">
-            <span class="featured-metric-label">Chrono</span>
+            <span class="featured-metric-label" id="lbl-metric-time">Time</span>
             <span class="featured-metric-value text-cobalt" id="featured-time">54m 35s</span>
           </div>
           <div class="featured-metric-item">
-            <span class="featured-metric-label">Allure</span>
+            <span class="featured-metric-label" id="lbl-metric-pace">Pace</span>
             <span class="featured-metric-value text-forest" id="featured-pace">5:26 /km</span>
           </div>
           <div class="featured-metric-item">
-            <span class="featured-metric-label">Calories</span>
+            <span class="featured-metric-label" id="lbl-metric-cal">Energy</span>
             <span class="featured-metric-value text-amber" id="featured-cal">728 kcal</span>
           </div>
         </div>
       </div>
 
-      <!-- Carte B : Weekly Pulse & Streak -->
+      <!-- Card B : Weekly pulse & streak -->
       <div class="runner-card weekly-pulse-card">
         <div>
           <div class="section-title-wrap">
-            <h3 class="section-title">⚡ Weekly Pulse</h3>
-            <span class="section-subtitle">Régularité & Streak</span>
+            <h3 class="section-title" id="lbl-weekly-title">⚡ Weekly pulse</h3>
+            <span class="section-subtitle" id="lbl-weekly-subtitle">Consistency & streak</span>
           </div>
 
-          <!-- Streak Box -->
+          <!-- Streak box -->
           <div class="pulse-streak-box" style="margin-top: 10px;">
             <span class="streak-big-num" id="hero-streak-count">51</span>
             <div>
-              <div class="streak-label">Semaines d'entraînement consécutives</div>
-              <div style="font-size: 0.75rem; color: var(--color-forest); opacity: 0.85;">Streak actif • Objectif régularité</div>
+              <div class="streak-label" id="lbl-streak-text">consecutive active weeks</div>
+              <div style="font-size: 0.75rem; color: var(--color-forest); opacity: 0.85;" id="lbl-streak-sub">Active streak • Consistency goal</div>
             </div>
           </div>
 
-          <!-- Jours de la semaine courante -->
+          <!-- Active days tracker -->
           <div style="margin-top: 14px;">
-            <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px;">
-              Jours actifs cette semaine
+            <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px;" id="lbl-active-days">
+              Active days this week
             </div>
             <div class="week-days-tracker">
-              <div class="day-pill"><span class="day-box" id="day-l">L</span><span style="font-size: 0.65rem; color: var(--text-muted);">Lun</span></div>
-              <div class="day-pill"><span class="day-box" id="day-m">M</span><span style="font-size: 0.65rem; color: var(--text-muted);">Mar</span></div>
-              <div class="day-pill"><span class="day-box" id="day-me">M</span><span style="font-size: 0.65rem; color: var(--text-muted);">Mer</span></div>
-              <div class="day-pill"><span class="day-box" id="day-j">J</span><span style="font-size: 0.65rem; color: var(--text-muted);">Jeu</span></div>
-              <div class="day-pill"><span class="day-box" id="day-v">V</span><span style="font-size: 0.65rem; color: var(--text-muted);">Ven</span></div>
-              <div class="day-pill"><span class="day-box" id="day-s">S</span><span style="font-size: 0.65rem; color: var(--text-muted);">Sam</span></div>
-              <div class="day-pill"><span class="day-box" id="day-d">D</span><span style="font-size: 0.65rem; color: var(--text-muted);">Dim</span></div>
+              <div class="day-pill"><span class="day-box" id="day-l">M</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-1">Mon</span></div>
+              <div class="day-pill"><span class="day-box" id="day-m">T</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-2">Tue</span></div>
+              <div class="day-pill"><span class="day-box" id="day-me">W</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-3">Wed</span></div>
+              <div class="day-pill"><span class="day-box" id="day-j">T</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-4">Thu</span></div>
+              <div class="day-pill"><span class="day-box" id="day-v">F</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-5">Fri</span></div>
+              <div class="day-pill"><span class="day-box" id="day-s">S</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-6">Sat</span></div>
+              <div class="day-pill"><span class="day-box" id="day-d">S</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-7">Sun</span></div>
             </div>
           </div>
         </div>
 
-        <!-- Moyennes historiques hebdo -->
+        <!-- Weekly historical averages -->
         <div class="pulse-averages-grid">
           <div class="pulse-avg-item">
-            <span class="pulse-avg-label">Sorties / semaine</span>
+            <span class="pulse-avg-label" id="lbl-avg-runs">Runs / week</span>
             <span class="pulse-avg-val" id="avg-runs-per-week">2.3</span>
           </div>
           <div class="pulse-avg-item">
-            <span class="pulse-avg-label">Temps / semaine</span>
+            <span class="pulse-avg-label" id="lbl-avg-time">Time / week</span>
             <span class="pulse-avg-val" id="avg-time-per-week">1h 43m</span>
           </div>
           <div class="pulse-avg-item">
-            <span class="pulse-avg-label">Distance / semaine</span>
+            <span class="pulse-avg-label" id="lbl-avg-dist">Distance / week</span>
             <span class="pulse-avg-val" id="avg-dist-per-week">18.3 km</span>
           </div>
           <div class="pulse-avg-item">
-            <span class="pulse-avg-label">Calories / semaine</span>
+            <span class="pulse-avg-label" id="lbl-avg-cal">Calories / week</span>
             <span class="pulse-avg-val" id="avg-cal-per-week">1 326 kcal</span>
           </div>
         </div>
@@ -142,48 +148,48 @@
 
     </section>
 
-    <!-- 3. Étage 2 : Records Personnels & Parc de Chaussures Rotatif -->
+    <!-- 3. Floor 2 : Personal records & Shoe rotator -->
     <section class="grid-bento-middle">
       
-      <!-- Records (Hall of Fame) -->
+      <!-- Personal records (Hall of Fame) -->
       <div class="runner-card records-card">
         <div class="section-title-wrap">
-          <h3 class="section-title">🏆 Records & Best Efforts</h3>
-          <span class="section-subtitle">Meilleures performances</span>
+          <h3 class="section-title" id="lbl-records-title">🏆 Personal records</h3>
+          <span class="section-subtitle" id="lbl-records-sub">All-time best efforts</span>
         </div>
 
         <div style="margin-top: 6px;">
-          <h4 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Top 3 - 5 km</h4>
+          <h4 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;" id="lbl-top-5k">Top 3 - 5 km</h4>
           <div class="records-list" id="top-5k-list"></div>
         </div>
 
         <div style="margin-top: 8px;">
-          <h4 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Top 3 - 10 km</h4>
+          <h4 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;" id="lbl-top-10k">Top 3 - 10 km</h4>
           <div class="records-list" id="top-10k-list"></div>
         </div>
 
         <div style="margin-top: 8px;">
-          <h4 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Top 3 - Sorties Longues (15k+)</h4>
+          <h4 style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;" id="lbl-top-15k">Top 3 - Long runs (15k+)</h4>
           <div class="records-list" id="top-15k-list"></div>
         </div>
       </div>
 
-      <!-- Parc de Chaussures Rotatif (Shoe Card Rotator) -->
+      <!-- Shoe locker rotator -->
       <div class="runner-card shoe-rotator-card">
         <div class="shoe-rotator-header">
           <div>
-            <h3 class="section-title">👟 Parc de Chaussures</h3>
-            <span class="section-subtitle" id="shoe-count-indicator">Paire 1 sur 3</span>
+            <h3 class="section-title" id="lbl-shoe-title">👟 Shoe locker</h3>
+            <span class="section-subtitle" id="shoe-count-indicator">Pair 1 of 3</span>
           </div>
-          <span id="shoe-primary-badge" class="act-pill">Paire Principale</span>
+          <span id="shoe-primary-badge" class="act-pill">⭐ Primary pair</span>
         </div>
 
-        <!-- Image de la chaussure -->
+        <!-- Shoe image -->
         <div class="shoe-image-wrap">
-          <img id="shoe-active-image" class="shoe-image" src="" alt="Chaussure de Running">
+          <img id="shoe-active-image" class="shoe-image" src="" alt="Running shoe">
         </div>
 
-        <!-- Détails et jauge d'usure -->
+        <!-- Shoe details & wear bar -->
         <div class="shoe-details-box">
           <div class="shoe-name-row">
             <span id="shoe-active-name" class="shoe-name">Adidas Adizero EVO SL</span>
@@ -195,12 +201,12 @@
           </div>
 
           <div class="shoe-meta-row">
-            <span>Temps d'amorti : <strong id="shoe-active-time">5j 6h 36m</strong></span>
-            <span>Usure : <strong id="shoe-active-percent">90%</strong> (max 1 500 km)</span>
+            <span><span id="lbl-shoe-time">Cushioning time</span> : <strong id="shoe-active-time">5d 6h 36m</strong></span>
+            <span><span id="lbl-shoe-wear">Wear</span> : <strong id="shoe-active-percent">90%</strong></span>
           </div>
         </div>
 
-        <!-- Footer du rotateur : Pagination + Bouton "Paire suivante ↻" -->
+        <!-- Shoe rotator footer : Pagination & Next Pair button -->
         <div class="shoe-rotator-footer">
           <div class="shoe-pagination-dots" id="shoe-pagination-dots">
             <div class="shoe-dot active" data-index="0"></div>
@@ -209,74 +215,74 @@
           </div>
 
           <button id="btn-next-shoe" class="btn btn-secondary">
-            <span>Paire suivante ↻</span>
+            <span id="lbl-btn-next-shoe">Next pair ↻</span>
           </button>
         </div>
       </div>
 
     </section>
 
-    <!-- 4. Étage 3 : Saison 2026, Constance & Distribution -->
+    <!-- 4. Floor 3 : Season progress & 52-week matrix -->
     <section class="grid-bento-season">
       
-      <!-- Graphique Évolution YTD Cumulée -->
+      <!-- Cumulative YTD chart -->
       <div class="runner-card chart-card">
         <div class="chart-header">
-          <h3 class="chart-title">📈 Évolution Année en Cours (YTD Cumulé)</h3>
-          <span class="act-pill">Objectif 2026</span>
+          <h3 class="chart-title" id="lbl-chart-title">📈 Year-to-date progress (2026)</h3>
+          <span class="act-pill" id="lbl-chart-badge">2026 goal</span>
         </div>
         <div class="chart-container">
           <canvas id="chart-ytd-cumulative"></canvas>
         </div>
         <div class="chart-stats-strip">
           <div class="mini-stat">
-            <span class="mini-stat-label">Sorties YTD</span>
-            <span class="mini-stat-val" id="ytd-strip-runs">116</span>
+            <span class="mini-stat-label" id="lbl-ytd-runs">YTD runs</span>
+            <span class="mini-stat-val" id="ytd-strip-runs">117</span>
           </div>
           <div class="mini-stat">
-            <span class="mini-stat-label">Temps YTD</span>
-            <span class="mini-stat-val" id="ytd-strip-time">3j 21h 37m</span>
+            <span class="mini-stat-label" id="lbl-ytd-time">YTD time</span>
+            <span class="mini-stat-val" id="ytd-strip-time">3d 22h 39m</span>
           </div>
           <div class="mini-stat">
-            <span class="mini-stat-label">Dist. YTD</span>
-            <span class="mini-stat-val" id="ytd-strip-dist">1 002 km</span>
+            <span class="mini-stat-label" id="lbl-ytd-dist">YTD distance</span>
+            <span class="mini-stat-val" id="ytd-strip-dist">1 013 km</span>
           </div>
           <div class="mini-stat">
-            <span class="mini-stat-label">D+ YTD</span>
-            <span class="mini-stat-val" id="ytd-strip-elev">4 846 m</span>
+            <span class="mini-stat-label" id="lbl-ytd-elev">YTD elevation</span>
+            <span class="mini-stat-val" id="ytd-strip-elev">4 910 m</span>
           </div>
         </div>
       </div>
 
-      <!-- Matrice de Constance (52 Semaines) -->
+      <!-- 52-week consistency matrix -->
       <div class="runner-card matrix-card">
         <div class="chart-header">
-          <h3 class="chart-title">📅 Matrice de Constance (52 Semaines)</h3>
+          <h3 class="chart-title" id="lbl-matrix-title">📅 52-week consistency matrix</h3>
           <div class="matrix-legend">
-            <span>Moins</span>
+            <span id="lbl-matrix-less">Less</span>
             <div class="matrix-cell" data-level="0"></div>
             <div class="matrix-cell" data-level="1"></div>
             <div class="matrix-cell" data-level="2"></div>
             <div class="matrix-cell" data-level="3"></div>
             <div class="matrix-cell" data-level="4"></div>
-            <span>Plus</span>
+            <span id="lbl-matrix-more">More</span>
           </div>
         </div>
         <div class="matrix-grid-scroll">
           <div class="matrix-grid" id="consistency-grid"></div>
         </div>
-        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;">
-          Survolez une case pour voir le détail des kilomètres courus par jour.
+        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;" id="lbl-matrix-hint">
+          Hover over a square to view daily distance.
         </div>
       </div>
 
     </section>
 
-    <!-- 5. Étage 4 : Journal des Activités Récentes -->
+    <!-- 5. Floor 4 : Recent activities -->
     <section class="runner-card activities-card" id="section-activities">
       <div class="chart-header">
-        <h3 class="chart-title">🕒 Journal des Dernières Activités</h3>
-        <span class="section-subtitle">Historique des séances avec allures et chaussures</span>
+        <h3 class="chart-title" id="lbl-activities-title">🕒 Recent activities</h3>
+        <span class="section-subtitle" id="lbl-activities-sub">Session history with pace and shoes</span>
       </div>
       <div id="activities-feed-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </section>
@@ -286,17 +292,17 @@
   <!-- Footer -->
   <footer class="dashboard-footer">
     <div class="footer-content">
-      <span>🏃 <strong>Strava Personal Runner Dashboard</strong> • Déployé sur GitHub Pages</span>
-      <span>Concept <em>Modern Runner Bento</em> • 0ms Serverless API</span>
+      <span id="lbl-footer-1">🏃 <strong>Strava Personal Runner Dashboard</strong> • Deployed on GitHub Pages</span>
+      <span id="lbl-footer-2">Modern runner bento • 0ms serverless API</span>
     </div>
   </footer>
 
-  <!-- Modal Détail d'une Activité -->
+  <!-- Activity details modal -->
   <div class="modal-overlay" id="activity-modal">
     <div class="modal-box">
       <div class="modal-header">
         <div>
-          <h3 class="modal-title" id="modal-activity-title">Détail de la Séance</h3>
+          <h3 class="modal-title" id="modal-activity-title">Activity details</h3>
           <span style="font-size: 0.82rem; color: var(--text-secondary);" id="modal-activity-date"></span>
         </div>
         <button class="modal-close-btn" id="modal-close-btn">&times;</button>
@@ -304,35 +310,35 @@
 
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0;">
         <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label">Distance</span>
+          <span class="featured-metric-label" id="lbl-modal-dist">Distance</span>
           <span class="featured-metric-value" id="modal-activity-dist">--</span>
         </div>
         <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label">Temps</span>
+          <span class="featured-metric-label" id="lbl-modal-time">Time</span>
           <span class="featured-metric-value text-cobalt" id="modal-activity-time">--</span>
         </div>
         <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label">Allure Moyenne</span>
+          <span class="featured-metric-label" id="lbl-modal-pace">Average pace</span>
           <span class="featured-metric-value text-forest" id="modal-activity-pace">--</span>
         </div>
         <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label">Calories</span>
+          <span class="featured-metric-label" id="lbl-modal-cal">Energy</span>
           <span class="featured-metric-value text-amber" id="modal-activity-cal">--</span>
         </div>
       </div>
 
       <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; padding: 12px; background: var(--bg-surface-subtle); border-radius: var(--radius-sm);">
-        <div>⛰️ <strong>Dénivelé :</strong> <span id="modal-activity-elev">--</span></div>
-        <div>❤️ <strong>Fréquence Cardiaque :</strong> <span id="modal-activity-hr">--</span></div>
-        <div>👟 <strong>Chaussures utilisées :</strong> <span id="modal-activity-gear">--</span></div>
+        <div>⛰️ <strong id="lbl-modal-elev">Elevation :</strong> <span id="modal-activity-elev">--</span></div>
+        <div>❤️ <strong id="lbl-modal-hr">Heart rate :</strong> <span id="modal-activity-hr">--</span></div>
+        <div>👟 <strong id="lbl-modal-gear">Shoes used :</strong> <span id="modal-activity-gear">--</span></div>
       </div>
     </div>
   </div>
 
-  <!-- Toast Container -->
+  <!-- Toast container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <!-- Application TypeScript Bundle -->
+  <!-- TypeScript application entry -->
   <script type="module" src="./src/main.ts"></script>
 </body>
 </html>

@@ -17,6 +17,15 @@ export function formatPace(metersPerSecond: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')} /km`;
 }
 
+export function calculateCalories(activity: Activity): number {
+  if (activity.calories && activity.calories > 0) {
+    return Math.round(activity.calories);
+  }
+  // Estimation running standard : ~72 kcal par km
+  const km = (activity.distance || 0) / 1000;
+  return Math.round(km * 72.5);
+}
+
 export function formatTimeShort(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -132,7 +141,7 @@ export function calculateWeeklyAverages(activities: Activity[], totalWeeks: numb
   const totalRuns = activities.length || 280;
   const totalDistanceKm = (activities.reduce((acc, a) => acc + a.distance, 0) / 1000) || 2261;
   const totalTimeSeconds = activities.reduce((acc, a) => acc + a.moving_time, 0) || (280 * 2700);
-  const totalCalories = activities.reduce((acc, a) => acc + (a.calories || 0), 0) || 163957;
+  const totalCalories = activities.reduce((acc, a) => acc + calculateCalories(a), 0) || 163957;
 
   const weeks = Math.max(1, totalWeeks);
 
@@ -148,7 +157,7 @@ export function calculateWeeklyAverages(activities: Activity[], totalWeeks: numb
  * Calcule les données pour le graphique YTD mensuel et cumulatif
  */
 export function calculateYtdMonthlyData(activities: Activity[], targetYear: number = 2026) {
-  const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthlyDistances = new Array(12).fill(0);
   const monthlyCalories = new Array(12).fill(0);
   const cumulativeDistance = new Array(12).fill(0);
@@ -159,7 +168,7 @@ export function calculateYtdMonthlyData(activities: Activity[], targetYear: numb
     const d = new Date(act.start_date_local);
     const month = d.getMonth();
     monthlyDistances[month] += act.distance / 1000;
-    monthlyCalories[month] += act.calories || 0;
+    monthlyCalories[month] += calculateCalories(act);
   }
 
   // Si l'activité est vide (démo), injecter les valeurs conformes au screenshot

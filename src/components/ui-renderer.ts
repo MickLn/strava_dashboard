@@ -8,11 +8,101 @@ import {
   calculateWeekStreak,
   calculateWeeklyAverages,
   calculateConsistencyGrid,
-  calculateGearStats
+  calculateGearStats,
+  calculateCalories
 } from '../utils/metrics.ts';
+import { i18n } from '../utils/i18n.ts';
 
 export class UIRenderer {
   private static activeShoeIndex: number = 0;
+
+  /**
+   * Met à jour tous les libellés statiques selon la langue choisie (EN / FR)
+   */
+  public static updateStaticLabels(): void {
+    const t = i18n.t();
+    const setTxt = (id: string, text: string) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    setTxt('lbl-live-badge', t.stravaConnected);
+    setTxt('tab-all', t.allTime);
+    setTxt('tab-ytd', t.ytd);
+    setTxt('tab-30d', t.days30);
+    setTxt('lbl-force-refresh', t.forceRefresh);
+
+    setTxt('lbl-latest-badge', t.latestRunBadge);
+    setTxt('lbl-full-details', t.fullDetailsBtn);
+    setTxt('lbl-metric-dist', t.distance);
+    setTxt('lbl-metric-time', t.time);
+    setTxt('lbl-metric-pace', t.pace);
+    setTxt('lbl-metric-cal', t.energy);
+
+    setTxt('lbl-weekly-title', t.weeklyPulseTitle);
+    setTxt('lbl-weekly-subtitle', t.weeklyPulseSubtitle);
+    setTxt('lbl-streak-text', t.consecutiveWeeks);
+    setTxt('lbl-streak-sub', t.activeStreak);
+    setTxt('lbl-active-days', t.activeDaysThisWeek);
+    setTxt('lbl-day-1', t.mon);
+    setTxt('lbl-day-2', t.tue);
+    setTxt('lbl-day-3', t.wed);
+    setTxt('lbl-day-4', t.thu);
+    setTxt('lbl-day-5', t.fri);
+    setTxt('lbl-day-6', t.sat);
+    setTxt('lbl-day-7', t.sun);
+    setTxt('lbl-avg-runs', t.runsPerWeek);
+    setTxt('lbl-avg-time', t.timePerWeek);
+    setTxt('lbl-avg-dist', t.distPerWeek);
+    setTxt('lbl-avg-cal', t.calPerWeek);
+
+    setTxt('lbl-records-title', t.recordsTitle);
+    setTxt('lbl-records-sub', t.recordsSubtitle);
+    setTxt('lbl-top-5k', t.top5k);
+    setTxt('lbl-top-10k', t.top10k);
+    setTxt('lbl-top-15k', t.top15k);
+
+    setTxt('lbl-shoe-title', t.shoeLockerTitle);
+    setTxt('lbl-shoe-time', t.cushioningTime);
+    setTxt('lbl-shoe-wear', t.wear);
+    setTxt('lbl-btn-next-shoe', t.nextShoeBtn);
+
+    setTxt('lbl-chart-title', t.ytdTitle);
+    setTxt('lbl-chart-badge', t.ytdBadge);
+    setTxt('lbl-ytd-runs', t.ytdRuns);
+    setTxt('lbl-ytd-time', t.ytdTime);
+    setTxt('lbl-ytd-dist', t.ytdDist);
+    setTxt('lbl-ytd-elev', t.ytdElev);
+
+    setTxt('lbl-matrix-title', t.matrixTitle);
+    setTxt('lbl-matrix-less', t.less);
+    setTxt('lbl-matrix-more', t.more);
+    setTxt('lbl-matrix-hint', t.matrixTooltip);
+
+    setTxt('lbl-activities-title', t.recentActivitiesTitle);
+    setTxt('lbl-activities-sub', t.recentActivitiesSubtitle);
+
+    setTxt('lbl-modal-dist', t.distance);
+    setTxt('lbl-modal-time', t.time);
+    setTxt('lbl-modal-pace', t.avgPace);
+    setTxt('lbl-modal-cal', t.energy);
+    setTxt('lbl-modal-elev', t.elevation);
+    setTxt('lbl-modal-hr', t.heartRate);
+    setTxt('lbl-modal-gear', t.shoesUsed);
+
+    setTxt('lbl-footer-1', `🏃 ${t.footerTitle}`);
+    setTxt('lbl-footer-2', t.footerSubtitle);
+
+    // Mettre à jour l'état actif des boutons de langue
+    const lang = i18n.getLang();
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      if (btn.getAttribute('data-lang') === lang) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
 
   /**
    * Rendu de l'en-tête athlète
@@ -32,8 +122,10 @@ export class UIRenderer {
     if (locationEl) locationEl.textContent = `${athlete.city || 'Paris'}, ${athlete.country || 'France'}`;
     if (lastSyncEl && dataset.last_updated) {
       const syncDate = new Date(dataset.last_updated);
-      lastSyncEl.textContent = `Sync : ${syncDate.toLocaleDateString('fr-FR')} ${syncDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+      lastSyncEl.textContent = `${i18n.t().lastSync} : ${syncDate.toLocaleDateString(i18n.getLang() === 'fr' ? 'fr-FR' : 'en-US')} ${syncDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
+
+    this.updateStaticLabels();
   }
 
   /**
@@ -51,12 +143,14 @@ export class UIRenderer {
     const calEl = document.getElementById('featured-cal');
     const detailsBtn = document.getElementById('btn-featured-details');
 
+    const cal = calculateCalories(latest);
+
     if (titleEl) titleEl.textContent = latest.name;
     if (dateEl) dateEl.textContent = `${formatDate(latest.start_date_local)} • ${latest.timezone?.split('/')[1] || 'Paris'}`;
     if (distEl) distEl.textContent = formatDistance(latest.distance);
     if (timeEl) timeEl.textContent = formatTimeShort(latest.moving_time);
     if (paceEl) paceEl.textContent = formatPace(latest.average_speed);
-    if (calEl) calEl.textContent = `${latest.calories} kcal`;
+    if (calEl) calEl.textContent = `${cal} kcal`;
 
     if (detailsBtn) {
       detailsBtn.onclick = () => onOpenDetails(latest);
@@ -136,9 +230,9 @@ export class UIRenderer {
     if (progressEl) progressEl.style.width = `${currentShoe.wearPercent}%`;
     if (timeEl) timeEl.textContent = currentShoe.usageTimeFormatted;
     if (percentEl) percentEl.textContent = `${currentShoe.wearPercent}%`;
-    if (badgeEl) badgeEl.textContent = currentShoe.primary ? '⭐ Paire Principale' : 'Paire Rotation';
+    if (badgeEl) badgeEl.textContent = currentShoe.primary ? i18n.t().primaryPair : i18n.t().rotationPair;
     if (countIndicator) {
-      countIndicator.textContent = `Paire ${(this.activeShoeIndex % gearList.length) + 1} sur ${gearList.length}`;
+      countIndicator.textContent = i18n.t().pairCount((this.activeShoeIndex % gearList.length) + 1, gearList.length);
     }
 
     // Pagination Dots
@@ -167,7 +261,7 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu des Records & Best Efforts (Top 3 5k, 10k, 15k+)
+   * Rendu des Records Personnels
    */
   public static renderRecords(dataset: StravaDataset, onSelectActivity?: (id: number) => void): void {
     const top5kContainer = document.getElementById('top-5k-list');
@@ -217,7 +311,7 @@ export class UIRenderer {
       const cell = document.createElement('div');
       cell.className = 'matrix-cell';
       cell.setAttribute('data-level', day.level.toString());
-      cell.title = `${day.date} : ${day.km > 0 ? day.km + ' km' : 'Repos'}`;
+      cell.title = `${day.date} : ${day.km > 0 ? day.km + ' km' : i18n.t().restDay}`;
       container.appendChild(cell);
     });
   }
@@ -239,7 +333,7 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu de la liste des activités récentes
+   * Rendu de la liste des activités récentes (avec calcul réel des calories)
    */
   public static renderActivitiesFeed(
     activities: Activity[],
@@ -251,6 +345,7 @@ export class UIRenderer {
 
     container.innerHTML = '';
     const recentActivities = activities.slice(0, 10);
+    const t = i18n.t();
 
     recentActivities.forEach(activity => {
       const item = document.createElement('div');
@@ -258,6 +353,7 @@ export class UIRenderer {
 
       const gearItem = dataset.gear.find(g => g.id === activity.gear_id);
       const gearName = gearItem ? gearItem.name : 'Running Shoes';
+      const caloriesVal = calculateCalories(activity);
 
       item.innerHTML = `
         <div class="activity-main">
@@ -271,21 +367,21 @@ export class UIRenderer {
         <div class="activity-metrics">
           <div class="act-stat">
             <span class="act-stat-val">${(activity.distance / 1000).toFixed(2)} km</span>
-            <span class="act-stat-unit">Distance</span>
+            <span class="act-stat-unit">${t.distance}</span>
           </div>
           <div class="act-stat">
             <span class="act-stat-val">${formatTimeShort(activity.moving_time)}</span>
-            <span class="act-stat-unit">Temps</span>
+            <span class="act-stat-unit">${t.time}</span>
           </div>
           <div class="act-stat">
             <span class="act-stat-val">${formatPace(activity.average_speed)}</span>
-            <span class="act-stat-unit">Allure</span>
+            <span class="act-stat-unit">${t.pace}</span>
           </div>
           <div class="act-stat">
-            <span class="act-stat-val">${activity.calories} kcal</span>
-            <span class="act-stat-unit">Énergie</span>
+            <span class="act-stat-val">${caloriesVal} kcal</span>
+            <span class="act-stat-unit">${t.energy}</span>
           </div>
-          <span class="act-pill">Détails ↗</span>
+          <span class="act-pill">${t.viewDetails}</span>
         </div>
       `;
 
@@ -312,16 +408,17 @@ export class UIRenderer {
     const gearEl = document.getElementById('modal-activity-gear');
 
     const gearItem = dataset.gear.find(g => g.id === activity.gear_id);
+    const caloriesVal = calculateCalories(activity);
 
     if (titleEl) titleEl.textContent = activity.name;
-    if (dateEl) dateEl.textContent = `Enregistré le ${formatDate(activity.start_date_local)}`;
+    if (dateEl) dateEl.textContent = `${i18n.t().recordedOn} ${formatDate(activity.start_date_local)}`;
     if (distEl) distEl.textContent = formatDistance(activity.distance);
     if (timeEl) timeEl.textContent = formatTimeShort(activity.moving_time);
     if (paceEl) paceEl.textContent = formatPace(activity.average_speed);
-    if (calEl) calEl.textContent = `${activity.calories} kcal`;
+    if (calEl) calEl.textContent = `${caloriesVal} kcal`;
     if (elevEl) elevEl.textContent = `${activity.total_elevation_gain} m D+`;
-    if (hrEl) hrEl.textContent = activity.average_heartrate ? `${activity.average_heartrate} bpm (max ${activity.max_heartrate || '--'})` : 'Non mesuré';
-    if (gearEl) gearEl.textContent = gearItem ? gearItem.name : 'Chaussures par défaut';
+    if (hrEl) hrEl.textContent = activity.average_heartrate ? `${activity.average_heartrate} bpm (max ${activity.max_heartrate || '--'})` : (i18n.getLang() === 'fr' ? 'Non mesuré' : 'Not recorded');
+    if (gearEl) gearEl.textContent = gearItem ? gearItem.name : (i18n.getLang() === 'fr' ? 'Chaussures par défaut' : 'Default shoes');
 
     modal.classList.add('open');
   }

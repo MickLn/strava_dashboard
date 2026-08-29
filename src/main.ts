@@ -3,6 +3,7 @@ import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
 import { initMap, renderActivityTraces } from './components/map.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
+import { i18n, Language } from './utils/i18n.ts';
 
 class App {
   private dataService = DataService.getInstance();
@@ -25,7 +26,7 @@ class App {
 
     } catch (error) {
       console.error("Erreur d'initialisation du dashboard:", error);
-      UIRenderer.showToast('⚠️ Impossible de charger les données Strava.');
+      UIRenderer.showToast('⚠️ Unable to load Strava data.');
     }
   }
 
@@ -82,6 +83,19 @@ class App {
   }
 
   private setupEventListeners(): void {
+    // Boutons de changement de langue (EN / FR)
+    const langButtons = document.querySelectorAll<HTMLButtonElement>('.lang-btn');
+    langButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.getAttribute('data-lang') as Language;
+        if (lang && lang !== i18n.getLang()) {
+          i18n.setLang(lang);
+          this.renderAll();
+          UIRenderer.showToast(lang === 'fr' ? '🇫🇷 Langue : Français' : '🇬🇧 Language : English');
+        }
+      });
+    });
+
     // Boutons de période
     const tabButtons = document.querySelectorAll<HTMLButtonElement>('.tab-btn');
     tabButtons.forEach(btn => {
@@ -92,7 +106,7 @@ class App {
         const period = btn.getAttribute('data-period') as 'all' | 'ytd' | '30d';
         this.currentPeriod = period || 'all';
         this.renderActivitiesForCurrentPeriod();
-        UIRenderer.showToast(`Vue : ${btn.textContent}`);
+        UIRenderer.showToast(`${btn.textContent}`);
       });
     });
 
@@ -100,15 +114,16 @@ class App {
     const refreshBtn = document.getElementById('btn-force-refresh');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
-        refreshBtn.innerHTML = '<span>⏳ Synchronisation...</span>';
+        const t = i18n.t();
+        refreshBtn.innerHTML = `<span>${t.syncing}</span>`;
         try {
           this.dataset = await this.dataService.loadData(true);
           this.renderAll();
-          UIRenderer.showToast('✅ Données Strava actualisées avec succès !');
+          UIRenderer.showToast(t.syncSuccess);
         } catch {
-          UIRenderer.showToast('⚠️ Données locales déjà à jour.');
+          UIRenderer.showToast(t.syncLocal);
         } finally {
-          refreshBtn.innerHTML = '<span>⚡ Forcer MAJ</span>';
+          refreshBtn.innerHTML = `<span>${t.forceRefresh}</span>`;
         }
       });
     }

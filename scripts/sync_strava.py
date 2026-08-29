@@ -182,6 +182,9 @@ def main():
         if not activities_raw:
             break
         runs_page = [a for a in activities_raw if a.get("type") == "Run" or a.get("sport_type") == "Run"]
+        for r in runs_page:
+            if not r.get("calories") or r.get("calories") == 0:
+                r["calories"] = round((r.get("distance", 0) / 1000.0) * 72.5)
         all_runs.extend(runs_page)
         if len(activities_raw) < 200:
             break
