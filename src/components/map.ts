@@ -128,3 +128,76 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
     });
   }
 }
+
+let fullscreenMapInstance: L.Map | null = null;
+let fullscreenLayerGroup: L.LayerGroup | null = null;
+
+export function openFullscreenHeatmap(activities: Activity[]) {
+  const modal = document.getElementById('heatmap-modal');
+  if (!modal) return;
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    if (!fullscreenMapInstance) {
+      fullscreenMapInstance = L.map('fullscreen-heatmap-container', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([48.8566, 2.3522], 12);
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 17,
+        attribution: '&copy; Esri World Light Gray Base'
+      }).addTo(fullscreenMapInstance);
+
+      fullscreenLayerGroup = L.layerGroup().addTo(fullscreenMapInstance);
+    } else {
+      fullscreenMapInstance.invalidateSize();
+    }
+
+    if (fullscreenLayerGroup) {
+      fullscreenLayerGroup.clearLayers();
+      const polylines: L.Polyline[] = [];
+
+      activities.forEach(act => {
+        if (act.map?.summary_polyline) {
+          const coords = decodePolyline(act.map.summary_polyline);
+          if (coords.length > 0) {
+            const polyline = L.polyline(coords, {
+              color: '#E05A36',
+              weight: 3.2,
+              opacity: 0.65,
+              lineJoin: 'round'
+            });
+
+            polyline.bindPopup(`
+              <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 170px; padding: 2px;">
+                <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
+                <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">📅 ${formatDate(act.start_date_local)}</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
+                  ${formatDistance(act.distance)} • ${formatTimeShort(act.moving_time)} • ${formatPace(act.average_speed)}
+                </div>
+              </div>
+            `);
+
+            polyline.addTo(fullscreenLayerGroup!);
+            polylines.push(polyline);
+          }
+        }
+      });
+
+      if (polylines.length > 0) {
+        const group = L.featureGroup(polylines);
+        fullscreenMapInstance.fitBounds(group.getBounds().pad(0.08));
+      }
+    }
+  }, 100);
+}
+
+export function closeFullscreenHeatmap() {
+  const modal = document.getElementById('heatmap-modal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}

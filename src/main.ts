@@ -1,7 +1,7 @@
 import { DataService } from './services/data-service.ts';
 import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
-import { initMap, renderActivityTraces } from './components/map.ts';
+import { initMap, renderActivityTraces, openFullscreenHeatmap, closeFullscreenHeatmap } from './components/map.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
 import { i18n, Language } from './utils/i18n.ts';
 import { generateActivityTags } from './utils/metrics.ts';
@@ -57,6 +57,10 @@ class App {
     renderCharts(this.dataset.activities, 2026);
     UIRenderer.renderYtdStrip(this.dataset);
     UIRenderer.renderConsistencyGrid(this.dataset.activities);
+
+    // Zones d'Effort & Trophées (Étage 3.5)
+    UIRenderer.renderEffortZones(this.dataset.activities);
+    UIRenderer.renderAchievements(this.dataset);
 
     // Carte GPS
     renderActivityTraces(this.dataset.activities);
@@ -199,6 +203,23 @@ class App {
         } finally {
           refreshBtn.innerHTML = `<span>${t.forceRefresh}</span>`;
         }
+      });
+    }
+
+    // Bouton Heatmap plein écran
+    const openHeatmapBtn = document.getElementById('btn-open-heatmap');
+    if (openHeatmapBtn) {
+      openHeatmapBtn.addEventListener('click', () => {
+        if (this.dataset?.activities) {
+          openFullscreenHeatmap(this.dataset.activities);
+        }
+      });
+    }
+
+    const closeHeatmapBtn = document.getElementById('btn-close-heatmap');
+    if (closeHeatmapBtn) {
+      closeHeatmapBtn.addEventListener('click', () => {
+        closeFullscreenHeatmap();
       });
     }
 

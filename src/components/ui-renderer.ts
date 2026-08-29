@@ -12,6 +12,8 @@ import {
   calculateCalories,
   calculateElevationDetails,
   calculateDifficulty,
+  calculateEffortZones,
+  calculateAchievements,
   generateActivityTags,
   generateKilometerSplits,
   renderPolylineSVG
@@ -38,17 +40,18 @@ export class UIRenderer {
     setTxt('lbl-force-refresh', t.forceRefresh);
 
     setTxt('lbl-latest-badge', t.latestRunBadge);
+    setTxt('lbl-btn-heatmap', t.fullscreenHeatmapBtn);
     setTxt('lbl-full-details', t.fullDetailsBtn);
     setTxt('lbl-metric-dist', t.distance);
     setTxt('lbl-metric-time', t.time);
     setTxt('lbl-metric-pace', t.pace);
     setTxt('lbl-metric-cal', t.energy);
 
-    setTxt('lbl-weekly-title', t.weeklyPulseTitle);
-    setTxt('lbl-weekly-subtitle', t.weeklyPulseSubtitle);
-    setTxt('lbl-streak-text', t.consecutiveWeeks);
-    setTxt('lbl-streak-sub', t.activeStreak);
-    setTxt('lbl-active-days', t.activeDaysThisWeek);
+    setTxt('lbl-pulse-title', t.weeklyPulseTitle);
+    setTxt('lbl-pulse-sub', t.weeklyPulseSubtitle);
+    setTxt('lbl-pulse-weeks-text', t.consecutiveWeeks);
+    setTxt('lbl-pulse-streak-legend', t.activeStreak);
+    setTxt('lbl-pulse-days-legend', t.activeDaysThisWeek);
     setTxt('lbl-day-1', t.mon);
     setTxt('lbl-day-2', t.tue);
     setTxt('lbl-day-3', t.wed);
@@ -83,6 +86,12 @@ export class UIRenderer {
     setTxt('lbl-matrix-less', t.less);
     setTxt('lbl-matrix-more', t.more);
     setTxt('lbl-matrix-hint', t.matrixTooltip);
+
+    setTxt('lbl-effort-zones-title', t.effortZonesTitle);
+    setTxt('lbl-effort-zones-sub', t.effortZonesSubtitle);
+    setTxt('lbl-achievements-title', t.achievementsTitle);
+    setTxt('lbl-achievements-sub', t.achievementsSubtitle);
+    setTxt('btn-close-heatmap', t.closeHeatmapBtn);
 
     setTxt('lbl-activities-title', t.recentActivitiesTitle);
     setTxt('lbl-activities-sub', t.recentActivitiesSubtitle);
@@ -233,6 +242,7 @@ export class UIRenderer {
     const badgeEl = document.getElementById('shoe-primary-badge');
     const countIndicator = document.getElementById('shoe-count-indicator');
     const dotsContainer = document.getElementById('shoe-pagination-dots');
+    const healthBadgeEl = document.getElementById('shoe-health-badge');
 
     if (imageEl && currentShoe.image_url) {
       imageEl.src = currentShoe.image_url;
@@ -246,6 +256,17 @@ export class UIRenderer {
     if (badgeEl) badgeEl.textContent = currentShoe.primary ? i18n.t().primaryPair : i18n.t().rotationPair;
     if (countIndicator) {
       countIndicator.textContent = i18n.t().pairCount((this.activeShoeIndex % gearList.length) + 1, gearList.length);
+    }
+
+    if (healthBadgeEl && currentShoe.health) {
+      const isFr = i18n.getLang() === 'fr';
+      const statusText = isFr ? currentShoe.health.statusFr : currentShoe.health.status;
+      const remainingText = currentShoe.health.kmRemaining > 0
+        ? (isFr ? `~${currentShoe.health.kmRemaining} km restants` : `~${currentShoe.health.kmRemaining} km left`)
+        : (isFr ? 'Remplacement recommandé' : 'Replacement recommended');
+      
+      healthBadgeEl.innerHTML = `${currentShoe.health.icon} <strong>${statusText}</strong> • <span>${remainingText}</span>`;
+      healthBadgeEl.className = `shoe-health-badge ${currentShoe.health.badgeClass}`;
     }
 
     // Pagination Dots
@@ -343,6 +364,110 @@ export class UIRenderer {
     if (timeEl) timeEl.textContent = formatTimeShort(ytd.moving_time);
     if (distEl) distEl.textContent = `${Math.round(ytd.distance / 1000).toLocaleString('fr-FR')} km`;
     if (elevEl) elevEl.textContent = `${ytd.elevation_gain.toLocaleString('fr-FR')} m`;
+  }
+
+  /**
+   * Rendu des Zones d'Effort & Allure (Cardio si montre, Modèle Jack Daniels sinon)
+   */
+  public static renderEffortZones(activities: Activity[]): void {
+    const barWrap = document.getElementById('effort-zones-bar');
+    const listWrap = document.getElementById('effort-zones-list');
+    const metaWrap = document.getElementById('effort-source-meta');
+    const totalDistEl = document.getElementById('lbl-effort-total-dist');
+
+    if (!activities || activities.length === 0) return;
+
+    const { zones, hasWatchCount, paceModelCount, totalKm } = calculateEffortZones(activities);
+    const isFr = i18n.getLang() === 'fr';
+
+    if (totalDistEl) {
+      totalDistEl.textContent = `${totalKm.toLocaleString('fr-FR')} km`;
+    }
+
+    if (barWrap) {
+      barWrap.innerHTML = '';
+      zones.forEach(z => {
+        if (z.percentage > 0) {
+          const seg = document.createElement('div');
+          seg.className = 'effort-segment';
+          seg.style.width = `${z.percentage}%`;
+          seg.style.backgroundColor = z.color;
+          seg.title = `${isFr ? z.nameFr : z.name} : ${z.percentage}% (${z.km} km)`;
+          barWrap.appendChild(seg);
+        }
+      });
+    }
+
+    if (listWrap) {
+      listWrap.innerHTML = '';
+      zones.forEach(z => {
+        const item = document.createElement('div');
+        item.className = 'effort-zone-row';
+        item.innerHTML = `
+          <div class="effort-zone-left">
+            <span class="effort-dot" style="background-color: ${z.color};"></span>
+            <div>
+              <strong class="effort-zone-name">${isFr ? z.nameFr : z.name}</strong>
+              <span class="effort-zone-desc">${isFr ? z.descriptionFr : z.description}</span>
+            </div>
+          </div>
+          <div class="effort-zone-right">
+            <span class="effort-zone-km">${z.km.toLocaleString('fr-FR')} km</span>
+            <span class="effort-zone-pct">${z.percentage}%</span>
+          </div>
+        `;
+        listWrap.appendChild(item);
+      });
+    }
+
+    if (metaWrap) {
+      metaWrap.innerHTML = `<span>${i18n.t().watchPaceSplit(hasWatchCount, paceModelCount)}</span>`;
+    }
+  }
+
+  /**
+   * Rendu des Trophées & Badges d'Accomplissement
+   */
+  public static renderAchievements(dataset: StravaDataset): void {
+    const grid = document.getElementById('achievements-grid');
+    const countEl = document.getElementById('lbl-achievements-count');
+    if (!grid) return;
+
+    const achievements = calculateAchievements(dataset);
+    const unlockedCount = achievements.filter(a => a.unlocked).length;
+    const isFr = i18n.getLang() === 'fr';
+
+    if (countEl) {
+      countEl.textContent = isFr
+        ? `${unlockedCount} / ${achievements.length} Débloqués`
+        : `${unlockedCount} / ${achievements.length} Unlocked`;
+    }
+
+    grid.innerHTML = '';
+    achievements.forEach(ach => {
+      const card = document.createElement('div');
+      card.className = `achievement-badge-card ${ach.unlocked ? 'unlocked' : 'locked'}`;
+      card.innerHTML = `
+        <div class="achievement-icon">${ach.icon}</div>
+        <div class="achievement-body">
+          <div class="achievement-title-row">
+            <h4 class="achievement-title">${isFr ? ach.titleFr : ach.title}</h4>
+            <span class="achievement-tag ${ach.unlocked ? 'tag-unlocked' : 'tag-locked'}">
+              ${ach.unlocked ? (isFr ? 'Débloqué' : 'Unlocked') : `${ach.progressPercent}%`}
+            </span>
+          </div>
+          <p class="achievement-desc">${isFr ? ach.descriptionFr : ach.description}</p>
+          <div class="achievement-progress-wrap">
+            <div class="achievement-progress-fill" style="width: ${ach.progressPercent}%;"></div>
+          </div>
+          <div class="achievement-val-row">
+            <span>${ach.currentValue}</span>
+            <span>Objectif : ${ach.targetValue}</span>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
   }
 
   /**

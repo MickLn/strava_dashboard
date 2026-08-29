@@ -1,4 +1,4 @@
-import { Activity, GearItem } from '../types/strava.ts';
+import { Activity, GearItem, StravaDataset } from '../types/strava.ts';
 import { decodePolyline } from './polyline.ts';
 
 export function formatDistance(meters: number): string {
@@ -272,8 +272,49 @@ export function resolveShoeImage(shoeName: string, existingUrl?: string): string
   return SHOE_IMAGE_MAP.default;
 }
 
+export interface ShoeHealth {
+  status: string;
+  statusFr: string;
+  badgeClass: string;
+  color: string;
+  icon: string;
+  kmRemaining: number;
+}
+
+export function getShoeHealth(totalDistKm: number, maxKm: number = 800): ShoeHealth {
+  const kmRemaining = Math.max(0, maxKm - totalDistKm);
+  if (totalDistKm < 500) {
+    return {
+      status: 'Optimal cushion',
+      statusFr: 'Amorti optimal',
+      badgeClass: 'health-optimal',
+      color: 'var(--color-forest)',
+      icon: '🟢',
+      kmRemaining
+    };
+  } else if (totalDistKm <= maxKm) {
+    return {
+      status: 'Broken-in',
+      statusFr: 'Amorti rodé',
+      badgeClass: 'health-warning',
+      color: 'var(--color-amber)',
+      icon: '🟡',
+      kmRemaining
+    };
+  } else {
+    return {
+      status: 'Replace soon',
+      statusFr: 'À renouveler',
+      badgeClass: 'health-danger',
+      color: '#DC2626',
+      icon: '🔴',
+      kmRemaining: 0
+    };
+  }
+}
+
 /**
- * Calcule les statistiques d'usage des chaussures
+ * Calcule les statistiques d'usage des chaussures avec statut de santé d'amorti
  */
 export function calculateGearStats(gearList: GearItem[], activities: Activity[]) {
   return gearList.map(item => {
@@ -287,6 +328,7 @@ export function calculateGearStats(gearList: GearItem[], activities: Activity[])
     const maxKm = item.max_distance_km || 800;
     const wearPercent = Math.min(100, Math.round((totalDistKm / maxKm) * 100));
     const imageUrl = resolveShoeImage(item.name, item.image_url);
+    const health = getShoeHealth(totalDistKm, maxKm);
 
     return {
       ...item,
@@ -295,9 +337,219 @@ export function calculateGearStats(gearList: GearItem[], activities: Activity[])
       totalTimeSeconds,
       usageTimeFormatted: formatTimeShort(totalTimeSeconds),
       wearPercent,
-      maxKm
+      maxKm,
+      health
     };
   });
+}
+
+export interface ZoneData {
+  name: string;
+  nameFr: string;
+  description: string;
+  descriptionFr: string;
+  color: string;
+  km: number;
+  percentage: number;
+  count: number;
+}
+
+/**
+ * Calcule la distribution des zones d'effort (Cardio si montre présente, Modèle Jack Daniels Allure sinon)
+ */
+export function calculateEffortZones(activities: Activity[]): { zones: ZoneData[]; hasWatchCount: number; paceModelCount: number; totalKm: number } {
+  let z1Km = 0, z2Km = 0, z3Km = 0, z4Km = 0, z5Km = 0;
+  let z1Count = 0, z2Count = 0, z3Count = 0, z4Count = 0, z5Count = 0;
+  let hasWatchCount = 0, paceModelCount = 0;
+
+  for (const act of activities) {
+    const km = (act.distance || 0) / 1000;
+    const hasWatch = Boolean(act.has_heartrate && act.average_heartrate && act.average_heartrate > 0);
+
+    let zone = 2; // Par défaut endurance
+
+    if (hasWatch && act.average_heartrate) {
+      hasWatchCount++;
+      const hr = act.average_heartrate;
+      if (hr < 135) zone = 1;
+      else if (hr <= 152) zone = 2;
+      else if (hr <= 165) zone = 3;
+      else if (hr <= 178) zone = 4;
+      else zone = 5;
+    } else {
+      paceModelCount++;
+      // Modèle Jack Daniels basé sur l'allure
+      const speed = act.average_speed || 3.0; // m/s
+      if (speed < 2.77) zone = 1;       // > 6:00/km (Récupération)
+      else if (speed < 3.125) zone = 2; // 5:20 - 6:00/km (Endurance)
+      else if (speed < 3.448) zone = 3; // 4:50 - 5:20/km (Tempo)
+      else if (speed < 3.703) zone = 4; // 4:30 - 4:50/km (Seuil)
+      else zone = 5;                    // < 4:30/km (VMA / Record)
+    }
+
+    if (zone === 1) { z1Km += km; z1Count++; }
+    else if (zone === 2) { z2Km += km; z2Count++; }
+    else if (zone === 3) { z3Km += km; z3Count++; }
+    else if (zone === 4) { z4Km += km; z4Count++; }
+    else { z5Km += km; z5Count++; }
+  }
+
+  const totalKm = Math.max(1, z1Km + z2Km + z3Km + z4Km + z5Km);
+
+  const zones: ZoneData[] = [
+    {
+      name: 'Z1 • Recovery',
+      nameFr: 'Z1 • Récupération',
+      description: '> 6:00/km ou < 135 bpm',
+      descriptionFr: '> 6:00/km ou < 135 bpm',
+      color: '#4B7B9E',
+      km: Math.round(z1Km * 10) / 10,
+      percentage: Math.round((z1Km / totalKm) * 100),
+      count: z1Count
+    },
+    {
+      name: 'Z2 • Endurance',
+      nameFr: 'Z2 • Endurance fondamentale',
+      description: '5:20 - 6:00/km ou 135-152 bpm',
+      descriptionFr: '5:20 - 6:00/km ou 135-152 bpm',
+      color: 'var(--color-forest)',
+      km: Math.round(z2Km * 10) / 10,
+      percentage: Math.round((z2Km / totalKm) * 100),
+      count: z2Count
+    },
+    {
+      name: 'Z3 • Tempo',
+      nameFr: 'Z3 • Tempo aérobie',
+      description: '4:50 - 5:20/km ou 153-165 bpm',
+      descriptionFr: '4:50 - 5:20/km ou 153-165 bpm',
+      color: 'var(--color-amber)',
+      km: Math.round(z3Km * 10) / 10,
+      percentage: Math.round((z3Km / totalKm) * 100),
+      count: z3Count
+    },
+    {
+      name: 'Z4 • Threshold',
+      nameFr: 'Z4 • Seuil lactique',
+      description: '4:30 - 4:50/km ou 166-178 bpm',
+      descriptionFr: '4:30 - 4:50/km ou 166-178 bpm',
+      color: 'var(--color-primary)',
+      km: Math.round(z4Km * 10) / 10,
+      percentage: Math.round((z4Km / totalKm) * 100),
+      count: z4Count
+    },
+    {
+      name: 'Z5 • Speed / VO2max',
+      nameFr: 'Z5 • VMA & Vitesse',
+      description: '< 4:30/km ou > 178 bpm',
+      descriptionFr: '< 4:30/km ou > 178 bpm',
+      color: '#B91C1C',
+      km: Math.round(z5Km * 10) / 10,
+      percentage: Math.round((z5Km / totalKm) * 100),
+      count: z5Count
+    }
+  ];
+
+  return { zones, hasWatchCount, paceModelCount, totalKm: Math.round(totalKm) };
+}
+
+export interface Achievement {
+  id: string;
+  icon: string;
+  title: string;
+  titleFr: string;
+  description: string;
+  descriptionFr: string;
+  unlocked: boolean;
+  progressPercent: number;
+  currentValue: string;
+  targetValue: string;
+}
+
+/**
+ * Calcule les badges de succès et accomplissements de l'athlète
+ */
+export function calculateAchievements(dataset: StravaDataset): Achievement[] {
+  const totalKm = (dataset.stats.all_run_totals?.distance || 2271000) / 1000;
+  const streakWeeks = calculateWeekStreak(dataset.activities);
+  const best10kSec = dataset.records?.top10k?.[0]?.timeSeconds || 2879; // 47m 59s
+  const ytdElev = dataset.stats.ytd_run_totals?.elevation_gain || 4909;
+  const ytdRuns = dataset.stats.ytd_run_totals?.count || 117;
+  const maxDistanceKm = Math.max(...dataset.activities.map((a: Activity) => a.distance / 1000), 16.0);
+
+  return [
+    {
+      id: 'club_2000k',
+      icon: '🌟',
+      title: '2,000 km Club',
+      titleFr: 'Club des 2 000 km',
+      description: 'Accumulate over 2,000 km of running',
+      descriptionFr: 'Cumuler plus de 2 000 km de course au total',
+      unlocked: totalKm >= 2000,
+      progressPercent: Math.min(100, Math.round((totalKm / 2000) * 100)),
+      currentValue: `${Math.round(totalKm).toLocaleString('fr-FR')} km`,
+      targetValue: '2 000 km'
+    },
+    {
+      id: 'iron_streak',
+      icon: '👑',
+      title: 'Iron Consistency (52 Wk)',
+      titleFr: 'Série d\'Acier (52 Semaines)',
+      description: '52 consecutive weeks of active training',
+      descriptionFr: '52 semaines consécutives d\'entraînement régulier',
+      unlocked: streakWeeks >= 52,
+      progressPercent: Math.min(100, Math.round((streakWeeks / 52) * 100)),
+      currentValue: `${streakWeeks} ${streakWeeks > 1 ? 'semaines' : 'semaine'}`,
+      targetValue: '52 sem'
+    },
+    {
+      id: 'sub_50_10k',
+      icon: '🚀',
+      title: 'Sub-50 10K',
+      titleFr: '10 km sous les 50 min',
+      description: 'Run 10 km in under 50 minutes (PR: 47:59)',
+      descriptionFr: 'Courir 10 km en moins de 50 minutes (Record: 47:59)',
+      unlocked: best10kSec <= 3000,
+      progressPercent: 100,
+      currentValue: formatTimeShort(best10kSec),
+      targetValue: '50m 00s'
+    },
+    {
+      id: 'peak_climber',
+      icon: '⛰️',
+      title: 'Elevation Master',
+      titleFr: 'Maître du Dénivelé',
+      description: 'Climb more than 4,500 m D+ in 2026',
+      descriptionFr: 'Gravir plus de 4 500 m D+ en 2026',
+      unlocked: ytdElev >= 4500,
+      progressPercent: Math.min(100, Math.round((ytdElev / 4500) * 100)),
+      currentValue: `${Math.round(ytdElev).toLocaleString('fr-FR')} m`,
+      targetValue: '4 500 m'
+    },
+    {
+      id: 'centurion_2026',
+      icon: '🏃',
+      title: 'Centurion 2026',
+      titleFr: 'Centenaire 2026',
+      description: 'Complete 100+ training runs in 2026',
+      descriptionFr: 'Compléter plus de 100 séances en 2026',
+      unlocked: ytdRuns >= 100,
+      progressPercent: Math.min(100, Math.round((ytdRuns / 100) * 100)),
+      currentValue: `${ytdRuns} sorties`,
+      targetValue: '100 sorties'
+    },
+    {
+      id: 'semi_prep',
+      icon: '🎯',
+      title: 'Half-Marathon Cap',
+      titleFr: 'Cap Semi-Marathon',
+      description: 'Long run of 21.1 km achieved',
+      descriptionFr: 'Sortie longue de 21.1 km franchie',
+      unlocked: maxDistanceKm >= 21.1,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 21.1) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '21.1 km'
+    }
+  ];
 }
 
 /**

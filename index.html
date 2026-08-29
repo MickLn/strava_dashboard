@@ -60,9 +60,14 @@
             <h2 class="featured-title" id="featured-run-title">281/ Morning run</h2>
             <span class="featured-date" id="featured-run-date">Sunday 23 August 2026 • 08:30</span>
           </div>
-          <button id="btn-featured-details" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
-            <span id="lbl-full-details">Full details ↗</span>
-          </button>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btn-open-heatmap" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+              <span id="lbl-btn-heatmap">🔥 Fullscreen Heatmap</span>
+            </button>
+            <button id="btn-featured-details" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+              <span id="lbl-full-details">Full details ↗</span>
+            </button>
+          </div>
         </div>
 
         <!-- Integrated Leaflet map preview -->
@@ -204,6 +209,11 @@
             <span><span id="lbl-shoe-time">Cushioning time</span> : <strong id="shoe-active-time">5d 6h 36m</strong></span>
             <span><span id="lbl-shoe-wear">Wear</span> : <strong id="shoe-active-percent">90%</strong></span>
           </div>
+
+          <!-- Dynamic cushion health status alert -->
+          <div id="shoe-health-badge" class="shoe-health-badge health-optimal">
+            🟢 <strong>Optimal cushion</strong> • <span>~369 km left</span>
+          </div>
         </div>
 
         <!-- Shoe rotator footer : Pagination & Next Pair button -->
@@ -273,6 +283,54 @@
         </div>
         <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;" id="lbl-matrix-hint">
           Hover over a square to view daily distance.
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 4. Floor 3.5 : Effort & Pace Zones + Achievements & Badges Gallery -->
+    <section class="grid-bento-insights">
+      
+      <!-- Effort & Pace Zones Card -->
+      <div class="runner-card effort-zones-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title" id="lbl-effort-zones-title">⚡ Effort & Pace Zones</h3>
+            <span class="section-subtitle" id="lbl-effort-zones-sub">Physiological distribution (Cardio watch or Jack Daniels pace model)</span>
+          </div>
+          <span class="act-pill" id="lbl-effort-total-dist">-- km</span>
+        </div>
+
+        <!-- Segmented multi-color progress bar -->
+        <div class="effort-bar-wrap" id="effort-zones-bar">
+          <div class="effort-segment" style="width: 15%; background-color: #4B7B9E;" title="Z1 Recovery"></div>
+          <div class="effort-segment" style="width: 45%; background-color: var(--color-forest);" title="Z2 Endurance"></div>
+          <div class="effort-segment" style="width: 25%; background-color: var(--color-amber);" title="Z3 Tempo"></div>
+          <div class="effort-segment" style="width: 10%; background-color: var(--color-primary);" title="Z4 Threshold"></div>
+          <div class="effort-segment" style="width: 5%; background-color: #B91C1C;" title="Z5 Speed"></div>
+        </div>
+
+        <div class="effort-zones-list" id="effort-zones-list">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="effort-source-meta" id="effort-source-meta">
+          <span>⌚ 0 sorties avec montre • 🏃 281 sorties avec modèle Jack Daniels</span>
+        </div>
+      </div>
+
+      <!-- Achievements & Milestones Gallery Card -->
+      <div class="runner-card achievements-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title" id="lbl-achievements-title">🏅 Achievements & Milestones</h3>
+            <span class="section-subtitle" id="lbl-achievements-sub">Career badges & unlocked milestones</span>
+          </div>
+          <span class="act-pill" style="background: rgba(46, 107, 86, 0.12); color: var(--color-forest);" id="lbl-achievements-count">5 / 6 Débloqués</span>
+        </div>
+
+        <div class="achievements-grid" id="achievements-grid">
+          <!-- Dynamically populated badges -->
         </div>
       </div>
 
@@ -356,6 +414,18 @@
         <div>👟 <strong id="lbl-modal-gear">Shoes used :</strong> <span id="modal-activity-gear">--</span></div>
       </div>
     </div>
+  </div>
+
+  <!-- Fullscreen Heatmap Modal -->
+  <div class="heatmap-modal-overlay" id="heatmap-modal">
+    <div class="heatmap-modal-header">
+      <div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">🔥 <span id="lbl-modal-heatmap-title">Personal Heatmap • All Activities</span></h3>
+        <span style="font-size: 0.8rem; color: var(--text-secondary);" id="lbl-modal-heatmap-sub">281 runs superimposed across Paris & Île-de-France</span>
+      </div>
+      <button id="btn-close-heatmap" class="btn btn-secondary" style="padding: 6px 14px; font-weight: 700;">✕ Close</button>
+    </div>
+    <div id="fullscreen-heatmap-container" class="heatmap-modal-map"></div>
   </div>
 
   <!-- Toast container -->

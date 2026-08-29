@@ -90,6 +90,26 @@ export const translations = {
     notRecorded: "Not recorded",
     hoverTip: "Hover to expand GPS trace & detailed kilometer splits",
 
+    // Heatmap & Maps
+    fullscreenHeatmapBtn: "🔥 Fullscreen Heatmap",
+    closeHeatmapBtn: "✕ Close",
+
+    // Effort Zones
+    effortZonesTitle: "⚡ Effort & Pace Zones",
+    effortZonesSubtitle: "Physiological distribution (Cardio watch or Jack Daniels pace model)",
+    totalEffortAnalyzed: "Total analyzed",
+    watchPaceSplit: (watches: number, paces: number) => `${watches} runs with watch • ${paces} runs with Jack Daniels pace model`,
+
+    // Achievements
+    achievementsTitle: "🏅 Achievements & Milestones",
+    achievementsSubtitle: "Career badges & unlocked milestones",
+    unlockedBadge: "Unlocked",
+    inProgressBadge: "In progress",
+
+    // Shoe health
+    cushionHealth: "Cushion health",
+    kmRemainingText: (km: number) => `~${km} km remaining`,
+
     // Footer
     footerTitle: "Personal runner dashboard • Deployed on GitHub Pages",
     footerSubtitle: "Modern runner bento • 0ms serverless API"
@@ -98,10 +118,10 @@ export const translations = {
     // Header
     stravaConnected: "Connecté Strava",
     lastSync: "Sync",
-    allTime: "Tout",
-    ytd: "2026 (YTD)",
+    allTime: "Depuis le début",
+    ytd: "2026 (Cumul annuel)",
     days30: "30 jours",
-    forceRefresh: "⚡ Forcer MAJ",
+    forceRefresh: "⚡ Synchroniser",
     syncing: "⏳ Synchronisation...",
     syncSuccess: "✅ Données Strava actualisées avec succès !",
     syncLocal: "⚠️ Données locales déjà à jour.",
@@ -110,33 +130,33 @@ export const translations = {
     latestRunBadge: "🔥 Dernière sortie",
     fullDetailsBtn: "Détails complets ↗",
     distance: "Distance",
-    time: "Chrono",
+    time: "Durée",
     pace: "Allure",
-    energy: "Calories",
+    energy: "Énergie",
     elevation: "Dénivelé",
     avgPace: "Allure moyenne",
     heartRate: "Fréquence cardiaque",
     shoesUsed: "Chaussures utilisées",
-    recordedOn: "Enregistré le",
+    recordedOn: "Enregistrée le",
     selectedActivity: "🔥 Séance sélectionnée",
     startPoint: "📍 Départ",
     finishPoint: "🏁 Arrivée",
 
     // Weekly Pulse
-    weeklyPulseTitle: "⚡ Weekly pulse",
-    weeklyPulseSubtitle: "Régularité & streak",
-    consecutiveWeeks: "semaines d'entraînement consécutives",
-    activeStreak: "Streak actif • Objectif régularité",
+    weeklyPulseTitle: "⚡ Rythme hebdomadaire",
+    weeklyPulseSubtitle: "Régularité & série active",
+    consecutiveWeeks: "semaines consécutives actives",
+    activeStreak: "Série active • Objectif régularité",
     activeDaysThisWeek: "Jours actifs cette semaine",
-    runsPerWeek: "Sorties / semaine",
-    timePerWeek: "Temps / semaine",
-    distPerWeek: "Distance / semaine",
-    calPerWeek: "Calories / semaine",
+    runsPerWeek: "Sorties / sem",
+    timePerWeek: "Temps / sem",
+    distPerWeek: "Distance / sem",
+    calPerWeek: "Calories / sem",
     mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam", sun: "Dim",
 
     // Records
-    recordsTitle: "🏆 Records & best efforts",
-    recordsSubtitle: "Meilleures performances",
+    recordsTitle: "🏆 Records personnels",
+    recordsSubtitle: "Meilleures performances historiques",
     top5k: "Top 3 - 5 km",
     top10k: "Top 3 - 10 km",
     top15k: "Top 3 - Sorties longues (15k+)",
@@ -145,29 +165,29 @@ export const translations = {
     shoeLockerTitle: "👟 Parc de chaussures",
     pairCount: (curr: number, total: number) => `Paire ${curr} sur ${total}`,
     primaryPair: "⭐ Paire principale",
-    rotationPair: "Paire rotation",
+    rotationPair: "Paire de rotation",
     cushioningTime: "Temps d'amorti",
     wear: "Usure",
     nextShoeBtn: "Paire suivante ↻",
 
     // Season
-    ytdTitle: "📈 Évolution année en cours (YTD cumulé)",
+    ytdTitle: "📈 Progression de la saison (2026)",
     ytdBadge: "Objectif 2026",
-    ytdRuns: "Sorties YTD",
-    ytdTime: "Temps YTD",
-    ytdDist: "Dist. YTD",
-    ytdElev: "D+ YTD",
+    ytdRuns: "Sorties 2026",
+    ytdTime: "Temps 2026",
+    ytdDist: "Distance 2026",
+    ytdElev: "Dénivelé 2026",
 
     // Matrix
-    matrixTitle: "📅 Matrice de constance (52 semaines)",
-    matrixTooltip: "Survolez une case pour voir le détail des kilomètres",
+    matrixTitle: "📅 Matrice de régularité (52 semaines)",
+    matrixTooltip: "Survolez une case pour voir la distance du jour",
     less: "Moins",
     more: "Plus",
     restDay: "Repos",
 
     // Feed & Hover Drawer
-    recentActivitiesTitle: "🕒 Journal des dernières activités",
-    recentActivitiesSubtitle: "Survolez une séance pour dérouler le tracé et la télémétrie",
+    recentActivitiesTitle: "🕒 Activités récentes",
+    recentActivitiesSubtitle: "Survolez une séance pour dérouler la carte du tracé & la télémétrie",
     viewDetails: "Survoler pour dérouler ▾",
     searchPlaceholder: "Rechercher par titre, chaussure, date ou tag (#10k, #matin, #brooks)...",
     filterAll: "Toutes",
@@ -177,15 +197,35 @@ export const translations = {
     elevGain: "Dénivelé positif (D+)",
     elevLoss: "Dénivelé négatif (D-)",
     altitude: "Altitude",
-    device: "Montre / GPS",
+    device: "Montre / Appareil",
     difficulty: "Score d'effort",
     splits: "Allures par kilomètre (Splits)",
     notRecorded: "Non mesuré",
-    hoverTip: "Survolez pour dérouler le tracé GPS et le détail des kilomètres",
+    hoverTip: "Survolez pour afficher le tracé GPS et le détail des kilomètres",
+
+    // Heatmap & Maps
+    fullscreenHeatmapBtn: "🔥 Heatmap Plein Écran",
+    closeHeatmapBtn: "✕ Fermer",
+
+    // Effort Zones
+    effortZonesTitle: "⚡ Zones d'Effort & Allure",
+    effortZonesSubtitle: "Répartition physiologique (Montre cardio ou Modèle Jack Daniels)",
+    totalEffortAnalyzed: "Total analysé",
+    watchPaceSplit: (watches: number, paces: number) => `${watches} sorties avec montre • ${paces} sorties avec modèle Jack Daniels`,
+
+    // Achievements
+    achievementsTitle: "🏅 Trophées & Badges",
+    achievementsSubtitle: "Jalons et accomplissements de carrière",
+    unlockedBadge: "Débloqué",
+    inProgressBadge: "En cours",
+
+    // Shoe health
+    cushionHealth: "Santé de l'amorti",
+    kmRemainingText: (km: number) => `~${km} km restants`,
 
     // Footer
-    footerTitle: "Tableau de bord de course à pied • Déployé sur GitHub Pages",
-    footerSubtitle: "Modern runner bento • 0ms serverless API"
+    footerTitle: "Tableau de bord de course personnel • Déployé sur GitHub Pages",
+    footerSubtitle: "Bento moderne de runner • API serverless 0ms"
   }
 };
 
