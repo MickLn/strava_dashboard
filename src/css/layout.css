@@ -1,0 +1,194 @@
+/* Modern Runner Bento Layout */
+.dashboard-container {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: var(--space-md) var(--space-lg) var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* Header & Top Bar */
+.top-header {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.athlete-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.athlete-avatar-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-forest));
+  flex-shrink: 0;
+}
+
+.athlete-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--bg-surface-subtle);
+  border: 2px solid #FFFFFF;
+}
+
+.athlete-info h1 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.athlete-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  background-color: var(--color-forest-light);
+  color: var(--color-forest);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.live-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-forest);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Sections & Bento Grids */
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: 2px;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.section-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 1. Bento Étage 1 : Live Hub (Dernière Sortie 60% / Weekly Pulse 40%) */
+.grid-bento-hero {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+
+/* 2. Bento Étage 2 : Records & Chaussures (50% / 50%) */
+.grid-bento-middle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+
+/* 3. Bento Étage 3 : Saison & Graphiques */
+.grid-bento-season {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+/* Footer */
+.dashboard-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-light);
+  background-color: var(--bg-surface);
+  padding: var(--space-lg) var(--space-md);
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.footer-content {
+  max-width: 1360px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1024px) {
+  .grid-bento-hero,
+  .grid-bento-middle,
+  .grid-bento-season {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: var(--space-sm) var(--space-sm) var(--space-xl);
+    gap: var(--space-lg);
+  }
+
+  .top-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+}
