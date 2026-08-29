@@ -1,4 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Tailwind v4 Theme Tokens Integration */
+@theme {
+  --color-canvas: #FBF9F5;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F6F2EC;
+  --color-surface-hover: #F0EAE1;
+  --color-surface-active: #E8E1D5;
+
+  --color-runner-primary: #E05A36;
+  --color-runner-primary-light: #FDF1ED;
+  --color-runner-primary-hover: #C94926;
+
+  --color-runner-forest: #2E6B56;
+  --color-runner-forest-light: #EEF6F2;
+
+  --color-runner-cobalt: #2B5B84;
+  --color-runner-cobalt-light: #EDF4FA;
+
+  --color-runner-amber: #D9822B;
+  --color-runner-amber-light: #FEF7EE;
+
+  --color-runner-charcoal: #1C1E21;
+  --color-runner-slate: #5C626C;
+  --color-runner-muted: #8C929C;
+  --color-runner-border: #ECE6DC;
+
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
 :root {
   /* Palette "Editorial / Runner Paper" */
