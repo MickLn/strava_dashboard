@@ -121,10 +121,6 @@ class App {
       this.dataset,
       (hoveredActivity: Activity) => {
         renderActivityTraces(this.dataset!.activities, hoveredActivity.id);
-      },
-      (selectedActivity: Activity) => {
-        UIRenderer.openActivityModal(selectedActivity, this.dataset!);
-        renderActivityTraces(this.dataset!.activities, selectedActivity.id);
       }
     );
   }

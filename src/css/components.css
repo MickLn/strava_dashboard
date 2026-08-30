@@ -739,13 +739,25 @@
   color: #FFFFFF;
 }
 
-/* Hover Accordion Drawer (Déroulé fluide au survol) */
+.activity-item {
+  cursor: pointer;
+  user-select: none;
+}
+
+.activity-top-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+/* Accordion Drawer */
 .activity-drawer {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
-  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, margin-top 0.3s ease;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin-top 0.25s ease;
   width: 100%;
 }
 
@@ -754,19 +766,19 @@
   max-height: 600px;
   opacity: 1;
   pointer-events: auto;
-  margin-top: 14px;
+  margin-top: 12px;
   padding-top: 14px;
   border-top: 1px dashed var(--border-light);
 }
 
 .drawer-content-grid {
   display: grid;
-  grid-template-columns: 260px 1fr 280px;
+  grid-template-columns: 260px 1fr 260px;
   gap: var(--space-md);
-  align-items: flex-start;
+  align-items: stretch;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1024px) {
   .drawer-content-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -778,62 +790,80 @@
   }
 }
 
-/* 1. Map column */
+/* 1. Mini-Map Column with real street tiles */
 .drawer-map-box {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.drawer-map-title {
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.mini-trace-svg {
   width: 100%;
-  max-width: 260px;
-  height: 130px;
-  display: block;
+  height: 140px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-surface-subtle);
+  position: relative;
 }
 
-/* 2. Telemetry details column */
+.drawer-minimap-canvas {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-surface-subtle);
+}
+
+/* 2. Telemetry 2-Column Airy & Compact Bento Grid */
 .drawer-telemetry-col {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.telemetry-row {
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  height: 100%;
+}
+
+.telemetry-tile {
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.telemetry-tile-full {
+  grid-column: 1 / -1;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--bg-surface-subtle);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.78rem;
 }
 
-.telemetry-lbl {
+.telemetry-tile-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-secondary);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
-.telemetry-val {
+.telemetry-tile-val {
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.telemetry-tile-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .effort-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 2px 8px;
   border-radius: var(--radius-pill);
   font-size: 0.72rem;
   font-weight: 700;
@@ -841,17 +871,10 @@
   border: 1px solid var(--border-light);
 }
 
-.activity-tags-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
-}
-
 .act-tag-badge {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
   background-color: var(--bg-surface-subtle);
   color: var(--text-secondary);
@@ -862,20 +885,12 @@
 .drawer-splits-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.splits-header {
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-secondary);
 }
 
 .splits-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   max-height: 140px;
   overflow-y: auto;
   padding-right: 4px;
@@ -885,19 +900,21 @@
 .split-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
+  gap: 6px;
+  font-size: 0.74rem;
 }
 
 .split-km {
-  width: 38px;
+  width: 34px;
   font-weight: 600;
+  font-size: 0.72rem;
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .split-bar-track {
   flex: 1;
-  height: 6px;
+  height: 5px;
   background-color: var(--bg-surface-subtle);
   border-radius: 3px;
   overflow: hidden;
@@ -917,23 +934,53 @@
 .split-pace {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.76rem;
-  width: 52px;
-  text-align: right;
+  font-size: 0.74rem;
   color: var(--text-primary);
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
 }
 
 .split-zone-badge {
   font-family: var(--font-display);
-  font-size: 0.66rem;
+  font-size: 0.65rem;
   font-weight: 800;
   padding: 1px 5px;
   border-radius: 4px;
   line-height: 1.2;
-  min-width: 24px;
+  min-width: 23px;
   text-align: center;
   flex-shrink: 0;
   letter-spacing: 0.02em;
+}
+
+.split-zone-badge.z1 {
+  background-color: rgba(75, 123, 158, 0.18);
+  color: #315d7e;
+  border: 1px solid rgba(75, 123, 158, 0.4);
+}
+
+.split-zone-badge.z2 {
+  background-color: rgba(46, 107, 86, 0.18);
+  color: #1f4f3e;
+  border: 1px solid rgba(46, 107, 86, 0.4);
+}
+
+.split-zone-badge.z3 {
+  background-color: rgba(217, 119, 6, 0.18);
+  color: #a14800;
+  border: 1px solid rgba(217, 119, 6, 0.4);
+}
+
+.split-zone-badge.z4 {
+  background-color: rgba(224, 90, 54, 0.18);
+  color: #b53800;
+  border: 1px solid rgba(224, 90, 54, 0.4);
+}
+
+.split-zone-badge.z5 {
+  background-color: rgba(220, 38, 38, 0.18);
+  color: #a81111;
+  border: 1px solid rgba(220, 38, 38, 0.4);
 }
 
 /* Button & Tabs */

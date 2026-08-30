@@ -277,7 +277,6 @@ export interface ShoeHealth {
   statusFr: string;
   badgeClass: string;
   color: string;
-  icon: string;
   kmRemaining: number;
 }
 
@@ -289,7 +288,6 @@ export function getShoeHealth(totalDistKm: number, maxKm: number = 800): ShoeHea
       statusFr: 'Amorti optimal',
       badgeClass: 'health-optimal',
       color: 'var(--color-forest)',
-      icon: '🟢',
       kmRemaining
     };
   } else if (totalDistKm <= maxKm) {
@@ -298,7 +296,6 @@ export function getShoeHealth(totalDistKm: number, maxKm: number = 800): ShoeHea
       statusFr: 'Amorti rodé',
       badgeClass: 'health-warning',
       color: 'var(--color-amber)',
-      icon: '🟡',
       kmRemaining
     };
   } else {
@@ -307,7 +304,6 @@ export function getShoeHealth(totalDistKm: number, maxKm: number = 800): ShoeHea
       statusFr: 'À renouveler',
       badgeClass: 'health-danger',
       color: '#DC2626',
-      icon: '🔴',
       kmRemaining: 0
     };
   }
@@ -510,7 +506,7 @@ export function calculateAchievements(dataset: StravaDataset): Achievement[] {
   return [
     {
       id: 'club_2000k',
-      icon: '🌟',
+      icon: '2K',
       title: '2,000 km Club',
       titleFr: 'Club des 2 000 km',
       description: 'Accumulate over 2,000 km of running',
@@ -522,7 +518,7 @@ export function calculateAchievements(dataset: StravaDataset): Achievement[] {
     },
     {
       id: 'iron_streak',
-      icon: '👑',
+      icon: '52W',
       title: 'Iron Consistency (52 Wk)',
       titleFr: 'Série d\'Acier (52 Semaines)',
       description: '52 consecutive weeks of active training',
@@ -534,7 +530,7 @@ export function calculateAchievements(dataset: StravaDataset): Achievement[] {
     },
     {
       id: 'sub_50_10k',
-      icon: '🚀',
+      icon: '10K',
       title: 'Sub-50 10K',
       titleFr: '10 km sous les 50 min',
       description: 'Run 10 km in under 50 minutes (PR: 47:59)',
@@ -546,7 +542,7 @@ export function calculateAchievements(dataset: StravaDataset): Achievement[] {
     },
     {
       id: 'peak_climber',
-      icon: '⛰️',
+      icon: 'D+',
       title: 'Elevation Master',
       titleFr: 'Maître du Dénivelé',
       description: 'Climb more than 4,500 m D+ in 2026',
@@ -558,7 +554,7 @@ export function calculateAchievements(dataset: StravaDataset): Achievement[] {
     },
     {
       id: 'centurion_2026',
-      icon: '🏃',
+      icon: '100',
       title: 'Centurion 2026',
       titleFr: 'Centenaire 2026',
       description: 'Complete 100+ training runs in 2026',
@@ -570,7 +566,7 @@ export function calculateAchievements(dataset: StravaDataset): Achievement[] {
     },
     {
       id: 'semi_prep',
-      icon: '🎯',
+      icon: '21K',
       title: 'Half-Marathon Cap',
       titleFr: 'Cap Semi-Marathon',
       description: 'Long run of 21.1 km achieved',

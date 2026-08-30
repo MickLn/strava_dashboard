@@ -1,4 +1,6 @@
+import L from 'leaflet';
 import { StravaDataset, Activity, RecordItem } from '../types/strava.ts';
+import { decodePolyline } from '../utils/polyline.ts';
 import {
   formatDistance,
   formatPace,
@@ -16,13 +18,13 @@ import {
   getActivityEffortZone,
   calculateAchievements,
   generateActivityTags,
-  generateKilometerSplits,
-  renderPolylineSVG
+  generateKilometerSplits
 } from '../utils/metrics.ts';
 import { i18n } from '../utils/i18n.ts';
 
 export class UIRenderer {
   private static activeShoeIndex: number = 0;
+  private static miniMapInstances: Map<number, L.Map> = new Map();
 
   /**
    * Met à jour tous les libellés statiques selon la langue choisie (EN / FR)
@@ -266,7 +268,7 @@ export class UIRenderer {
         ? (isFr ? `~${currentShoe.health.kmRemaining} km restants` : `~${currentShoe.health.kmRemaining} km left`)
         : (isFr ? 'Remplacement recommandé' : 'Replacement recommended');
       
-      healthBadgeEl.innerHTML = `${currentShoe.health.icon} <strong>${statusText}</strong> • <span>${remainingText}</span>`;
+      healthBadgeEl.innerHTML = `<strong>${statusText}</strong> • <span>${remainingText}</span>`;
       healthBadgeEl.className = `shoe-health-badge ${currentShoe.health.badgeClass}`;
     }
 
@@ -472,16 +474,65 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu de la liste des activités avec tiroir de télémétrie dépliant au survol
+   * Initialise ou rafraîchit la mini-carte Leaflet pour une activité dans son tiroir
+   */
+  public static initOrUpdateMiniMap(activityId: number, summaryPolyline: string): void {
+    const container = document.getElementById(`drawer-minimap-${activityId}`);
+    if (!container || !summaryPolyline) return;
+
+    if (this.miniMapInstances.has(activityId)) {
+      const existingMap = this.miniMapInstances.get(activityId)!;
+      setTimeout(() => existingMap.invalidateSize(), 60);
+      return;
+    }
+
+    const points = decodePolyline(summaryPolyline);
+    if (points.length === 0) return;
+
+    const latlngs = points.map(p => [p[0], p[1]] as [number, number]);
+
+    try {
+      const map = L.map(container, {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        boxZoom: false,
+        keyboard: false
+      });
+
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 16
+      }).addTo(map);
+
+      const polyline = L.polyline(latlngs, {
+        color: '#E05A36',
+        weight: 3.5,
+        opacity: 0.95,
+        lineJoin: 'round',
+        lineCap: 'round'
+      }).addTo(map);
+
+      map.fitBounds(polyline.getBounds(), { padding: [10, 10] });
+      this.miniMapInstances.set(activityId, map);
+      setTimeout(() => map.invalidateSize(), 80);
+    } catch (e) {
+      console.warn('MiniMap init note:', e);
+    }
+  }
+
+  /**
+   * Rendu du flux des activités récentes avec tiroir interactif au survol et clic
    */
   public static renderActivitiesFeed(
     activities: Activity[],
-    dataset: StravaDataset,
-    onHoverActivity: (activity: Activity) => void,
-    onSelectActivity: (activity: Activity) => void
+    dataset: StravaDataset | null,
+    onHoverActivity: (act: Activity) => void
   ): void {
     const container = document.getElementById('activities-feed-list');
-    if (!container) return;
+    if (!container || !dataset) return;
 
     container.innerHTML = '';
     const t = i18n.t();
@@ -490,7 +541,7 @@ export class UIRenderer {
     if (activities.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 32px 16px; color: var(--text-secondary); background: var(--bg-surface-subtle); border-radius: var(--radius-sm);">
-          🔍 ${isFr ? 'Aucune activité trouvée pour cette recherche.' : 'No activities matching this search.'}
+          ${isFr ? 'Aucune activité trouvée pour cette recherche.' : 'No activities matching this search.'}
         </div>
       `;
       return;
@@ -508,21 +559,24 @@ export class UIRenderer {
       const diff = calculateDifficulty(activity);
       const tags = generateActivityTags(activity, gearName);
       const splits = generateKilometerSplits(activity);
-      const svgMap = renderPolylineSVG(activity.map?.summary_polyline || '', 250, 130);
+      const zoneRes = getActivityEffortZone(activity);
 
       // HTML des splits par kilomètre avec badge de Zone (Z1, Z2, Z3...)
-      const splitsHtml = splits.map(s => `
+      const splitsHtml = splits.map(s => {
+        const zoneClass = s.zoneBadge.toLowerCase();
+        return `
         <div class="split-row">
           <span class="split-km">${s.kmLabel}</span>
           <div class="split-bar-track">
             <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
           </div>
           <span class="split-pace">${s.paceFormatted}</span>
-          <span class="split-zone-badge" style="background-color: ${s.zoneColor}20; color: ${s.zoneColor}; border: 1px solid ${s.zoneColor}40;">${s.zoneBadge}</span>
+          <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
-      // HTML des tags
+      // HTML des tags (placés en haut, au-dessus du trait en pointillés)
       const tagsHtml = tags.map(tag => `<span class="act-tag-badge">${tag}</span>`).join('');
 
       item.innerHTML = `
@@ -531,9 +585,13 @@ export class UIRenderer {
           <div class="activity-main">
             <div class="activity-title">${activity.name}</div>
             <div class="activity-date">
-              <span>📅 ${formatDate(activity.start_date_local)}</span>
+              <span>${formatDate(activity.start_date_local)}</span>
               <span>•</span>
-              <span>👟 ${gearName}</span>
+              <span>${gearName}</span>
+            </div>
+            <!-- Tags placés en haut au-dessus du trait en pointillés -->
+            <div class="activity-top-tags">
+              ${tagsHtml}
             </div>
           </div>
           <div class="activity-metrics">
@@ -553,66 +611,58 @@ export class UIRenderer {
               <span class="act-stat-val">${caloriesVal} kcal</span>
               <span class="act-stat-unit">${t.energy}</span>
             </div>
-            <span class="act-pill">${t.viewDetails}</span>
           </div>
         </div>
 
-        <!-- Telemetry Hover Drawer (Déroulé interactif au survol) -->
+        <!-- Telemetry Accordion Drawer -->
         <div class="activity-drawer">
           <div class="drawer-content-grid">
             
-            <!-- Col 1 : Tracé GPS SVG vectoriel -->
+            <!-- Col 1 : Carte Leaflet du tracé avec réseau routier -->
             <div class="drawer-map-box">
-              <span class="drawer-map-title">🗺️ ${isFr ? 'Tracé du parcours' : 'Route trace'}</span>
-              ${svgMap}
+              <div id="drawer-minimap-${activity.id}" class="drawer-minimap-canvas"></div>
             </div>
 
-            <!-- Col 2 : Télémétrie complète (Dénivelé +/-, BPM, Montre, Effort, Tags) -->
+            <!-- Col 2 : Télémétrie aérée et compacte en grille bento 2 colonnes -->
             <div class="drawer-telemetry-col">
-              <div class="telemetry-row">
-                <span class="telemetry-lbl">⛰️ ${t.elevation} (D+ / D-) :</span>
-                <span class="telemetry-val" style="color: var(--color-primary);">▲ +${elev.gain}m <span style="color: var(--color-forest); margin-left: 4px;">▼ -${elev.loss}m</span></span>
-              </div>
+              <div class="telemetry-grid">
+                
+                <div class="telemetry-tile">
+                  <span class="telemetry-tile-lbl">${t.elevation} (D+ / D-)</span>
+                  <span class="telemetry-tile-val text-primary">+${elev.gain}m <span class="text-forest" style="margin-left: 3px;">-${elev.loss}m</span></span>
+                  ${elev.minAlt !== null && elev.maxAlt !== null ? `<span class="telemetry-tile-sub">${elev.minAlt}m - ${elev.maxAlt}m alt</span>` : ''}
+                </div>
 
-              ${elev.minAlt !== null && elev.maxAlt !== null ? `
-              <div class="telemetry-row">
-                <span class="telemetry-lbl">📍 ${t.altitude} :</span>
-                <span class="telemetry-val">${elev.minAlt}m min • ${elev.maxAlt}m max</span>
-              </div>` : ''}
+                <div class="telemetry-tile">
+                  <span class="telemetry-tile-lbl">${t.heartRate}</span>
+                  <span class="telemetry-tile-val">${activity.average_heartrate ? `${activity.average_heartrate} bpm` : t.notRecorded}</span>
+                  ${activity.max_heartrate ? `<span class="telemetry-tile-sub">max ${activity.max_heartrate} bpm</span>` : ''}
+                </div>
 
-              <div class="telemetry-row">
-                <span class="telemetry-lbl">❤️ ${t.heartRate} :</span>
-                <span class="telemetry-val">${activity.average_heartrate ? `${activity.average_heartrate} bpm (max ${activity.max_heartrate || '--'})` : t.notRecorded}</span>
-              </div>
+                <div class="telemetry-tile">
+                  <span class="telemetry-tile-lbl">${t.device}</span>
+                  <span class="telemetry-tile-val">${activity.device_name || 'Strava App'}</span>
+                </div>
 
-              <div class="telemetry-row">
-                <span class="telemetry-lbl">⌚ ${t.device} :</span>
-                <span class="telemetry-val">${activity.device_name || 'Strava GPS App'}</span>
-              </div>
+                <div class="telemetry-tile">
+                  <span class="telemetry-tile-lbl">${t.difficulty}</span>
+                  <span class="effort-badge" style="color: ${diff.color}; border-color: ${diff.color}50; background-color: ${diff.color}15;">
+                    ${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}
+                  </span>
+                </div>
 
-              <div class="telemetry-row">
-                <span class="telemetry-lbl">⚡ ${t.difficulty} :</span>
-                <span class="effort-badge" style="color: ${diff.color}; border-color: ${diff.color}40;">
-                  ${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}
-                </span>
-              </div>
+                <div class="telemetry-tile telemetry-tile-full">
+                  <span class="telemetry-tile-lbl">${isFr ? "Zone d'effort" : 'Effort zone'}</span>
+                  <span class="effort-badge" style="color: ${zoneRes.badgeColor}; border-color: ${zoneRes.badgeColor}50; background-color: ${zoneRes.badgeColor}18;">
+                    ${isFr ? zoneRes.zoneNameFr : zoneRes.zoneName} (${isFr ? zoneRes.methodLabelFr : zoneRes.methodLabel})
+                  </span>
+                </div>
 
-              <!-- Zone d'Effort (Cardio si BPM présent, Modèle Jack Daniels sinon) -->
-              <div class="telemetry-row">
-                <span class="telemetry-lbl">🎯 ${isFr ? "Zone d'effort" : 'Effort zone'} :</span>
-                <span class="effort-badge" style="color: ${getActivityEffortZone(activity).badgeColor}; border-color: ${getActivityEffortZone(activity).badgeColor}40; background-color: ${getActivityEffortZone(activity).badgeColor}15;">
-                  ${isFr ? getActivityEffortZone(activity).zoneNameFr : getActivityEffortZone(activity).zoneName} (${isFr ? getActivityEffortZone(activity).methodLabelFr : getActivityEffortZone(activity).methodLabel})
-                </span>
-              </div>
-
-              <div class="activity-tags-list">
-                ${tagsHtml}
               </div>
             </div>
 
             <!-- Col 3 : Détail des allures km par km (Splits) -->
             <div class="drawer-splits-col">
-              <span class="splits-header">⏱️ ${t.splits}</span>
               <div class="splits-list">
                 ${splitsHtml}
               </div>
@@ -622,24 +672,25 @@ export class UIRenderer {
         </div>
       `;
 
-      // Déclencheur au survol : Synchronisation de la carte principale
+      // Déclencheur au survol : Synchronisation de la carte principale + initialisation mini-carte
       let hoverTimeout: any = null;
       item.addEventListener('mouseenter', () => {
         hoverTimeout = setTimeout(() => {
           onHoverActivity(activity);
+          UIRenderer.initOrUpdateMiniMap(activity.id, activity.map?.summary_polyline || '');
         }, 120);
       });
       item.addEventListener('mouseleave', () => {
         if (hoverTimeout) clearTimeout(hoverTimeout);
       });
 
-      // Clic pour épingler / déplier sur mobile
-      item.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains('act-pill') || target.closest('.activity-header-row')) {
-          item.classList.toggle('expanded');
-          onSelectActivity(activity);
+      // Clic pour étendre / masquer (reste étendu jusqu'au prochain clic)
+      item.addEventListener('click', () => {
+        const isCurrentlyExpanded = item.classList.toggle('expanded');
+        if (isCurrentlyExpanded) {
+          UIRenderer.initOrUpdateMiniMap(activity.id, activity.map?.summary_polyline || '');
         }
+        onHoverActivity(activity);
       });
 
       container.appendChild(item);

@@ -8,14 +8,14 @@ export const translations = {
     allTime: "All-time",
     ytd: "2026 (YTD)",
     days30: "30 days",
-    forceRefresh: "⚡ Sync now",
-    syncing: "⏳ Syncing...",
-    syncSuccess: "✅ Strava data refreshed successfully!",
-    syncLocal: "⚠️ Local data already up to date.",
+    forceRefresh: "Sync now",
+    syncing: "Syncing...",
+    syncSuccess: "Strava data refreshed successfully",
+    syncLocal: "Local data already up to date",
 
     // Latest Run
-    latestRunBadge: "🔥 Latest run",
-    fullDetailsBtn: "Full details ↗",
+    latestRunBadge: "Latest run",
+    fullDetailsBtn: "Full details",
     distance: "Distance",
     time: "Time",
     pace: "Pace",
@@ -25,12 +25,12 @@ export const translations = {
     heartRate: "Heart rate",
     shoesUsed: "Shoes used",
     recordedOn: "Recorded on",
-    selectedActivity: "🔥 Selected run",
-    startPoint: "📍 Start",
-    finishPoint: "🏁 Finish",
+    selectedActivity: "Selected run",
+    startPoint: "Start",
+    finishPoint: "Finish",
 
     // Weekly Pulse
-    weeklyPulseTitle: "⚡ Weekly pulse",
+    weeklyPulseTitle: "Weekly pulse",
     weeklyPulseSubtitle: "Consistency & streak",
     consecutiveWeeks: "consecutive active weeks",
     activeStreak: "Active streak • Consistency goal",
@@ -42,23 +42,23 @@ export const translations = {
     mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
 
     // Records
-    recordsTitle: "🏆 Personal records",
+    recordsTitle: "Personal records",
     recordsSubtitle: "All-time best efforts",
     top5k: "Top 3 - 5 km",
     top10k: "Top 3 - 10 km",
     top15k: "Top 3 - Long runs (15k+)",
 
     // Shoe locker
-    shoeLockerTitle: "👟 Shoe locker",
+    shoeLockerTitle: "Shoe locker",
     pairCount: (curr: number, total: number) => `Pair ${curr} of ${total}`,
-    primaryPair: "⭐ Primary pair",
+    primaryPair: "Primary pair",
     rotationPair: "Rotation pair",
     cushioningTime: "Cushioning time",
     wear: "Wear",
-    nextShoeBtn: "Next pair ↻",
+    nextShoeBtn: "Next pair",
 
     // Season
-    ytdTitle: "📈 Year-to-date progress (2026)",
+    ytdTitle: "Year-to-date progress (2026)",
     ytdBadge: "2026 goal",
     ytdRuns: "YTD runs",
     ytdTime: "YTD time",
@@ -66,16 +66,16 @@ export const translations = {
     ytdElev: "YTD elevation",
 
     // Matrix
-    matrixTitle: "📅 52-week consistency matrix",
+    matrixTitle: "52-week consistency matrix",
     matrixTooltip: "Hover over a square to view daily distance",
     less: "Less",
     more: "More",
     restDay: "Rest day",
 
     // Feed & Hover Drawer
-    recentActivitiesTitle: "🕒 Recent activities",
-    recentActivitiesSubtitle: "Hover over a session to expand route map & telemetry",
-    viewDetails: "Hover to expand ▾",
+    recentActivitiesTitle: "Recent activities",
+    recentActivitiesSubtitle: "Click to expand session telemetry & route",
+    viewDetails: "Details",
     searchPlaceholder: "Search by title, shoes, date, or tags (#10k, #morning, #brooks)...",
     filterAll: "All",
     filterLong: "Long runs (15k+)",
@@ -86,22 +86,22 @@ export const translations = {
     altitude: "Altitude",
     device: "Watch / Device",
     difficulty: "Effort score",
-    splits: "Kilometer splits (Pace breakdown)",
+    splits: "Kilometer splits",
     notRecorded: "Not recorded",
-    hoverTip: "Hover to expand GPS trace & detailed kilometer splits",
+    hoverTip: "Click to expand GPS trace & detailed kilometer splits",
 
     // Heatmap & Maps
-    fullscreenHeatmapBtn: "🔥 Fullscreen Heatmap",
-    closeHeatmapBtn: "✕ Close",
+    fullscreenHeatmapBtn: "Fullscreen Heatmap",
+    closeHeatmapBtn: "Close",
 
     // Effort Zones
-    effortZonesTitle: "⚡ Effort & Pace Zones",
+    effortZonesTitle: "Effort & Pace Zones",
     effortZonesSubtitle: "Physiological distribution (Cardio watch or Jack Daniels pace model)",
     totalEffortAnalyzed: "Total analyzed",
-    watchPaceSplit: (watches: number, paces: number) => `${watches} runs with watch • ${paces} runs with Jack Daniels pace model`,
+    watchPaceSplit: (watches: number, paces: number) => `${watches} runs with heart rate • ${paces} runs with Jack Daniels model`,
 
     // Achievements
-    achievementsTitle: "🏅 Achievements & Milestones",
+    achievementsTitle: "Achievements & Milestones",
     achievementsSubtitle: "Career badges & unlocked milestones",
     unlockedBadge: "Unlocked",
     inProgressBadge: "In progress",
@@ -121,14 +121,14 @@ export const translations = {
     allTime: "Depuis le début",
     ytd: "2026 (Cumul annuel)",
     days30: "30 jours",
-    forceRefresh: "⚡ Synchroniser",
-    syncing: "⏳ Synchronisation...",
-    syncSuccess: "✅ Données Strava actualisées avec succès !",
-    syncLocal: "⚠️ Données locales déjà à jour.",
+    forceRefresh: "Synchroniser",
+    syncing: "Synchronisation...",
+    syncSuccess: "Données Strava actualisées avec succès",
+    syncLocal: "Données locales déjà à jour",
 
     // Latest Run
-    latestRunBadge: "🔥 Dernière sortie",
-    fullDetailsBtn: "Détails complets ↗",
+    latestRunBadge: "Dernière sortie",
+    fullDetailsBtn: "Détails",
     distance: "Distance",
     time: "Durée",
     pace: "Allure",
@@ -138,12 +138,12 @@ export const translations = {
     heartRate: "Fréquence cardiaque",
     shoesUsed: "Chaussures utilisées",
     recordedOn: "Enregistrée le",
-    selectedActivity: "🔥 Séance sélectionnée",
-    startPoint: "📍 Départ",
-    finishPoint: "🏁 Arrivée",
+    selectedActivity: "Séance sélectionnée",
+    startPoint: "Départ",
+    finishPoint: "Arrivée",
 
     // Weekly Pulse
-    weeklyPulseTitle: "⚡ Rythme hebdomadaire",
+    weeklyPulseTitle: "Rythme hebdomadaire",
     weeklyPulseSubtitle: "Régularité & série active",
     consecutiveWeeks: "semaines consécutives actives",
     activeStreak: "Série active • Objectif régularité",
@@ -155,23 +155,23 @@ export const translations = {
     mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam", sun: "Dim",
 
     // Records
-    recordsTitle: "🏆 Records personnels",
+    recordsTitle: "Records personnels",
     recordsSubtitle: "Meilleures performances historiques",
     top5k: "Top 3 - 5 km",
     top10k: "Top 3 - 10 km",
     top15k: "Top 3 - Sorties longues (15k+)",
 
     // Shoe locker
-    shoeLockerTitle: "👟 Parc de chaussures",
+    shoeLockerTitle: "Parc de chaussures",
     pairCount: (curr: number, total: number) => `Paire ${curr} sur ${total}`,
-    primaryPair: "⭐ Paire principale",
+    primaryPair: "Paire principale",
     rotationPair: "Paire de rotation",
     cushioningTime: "Temps d'amorti",
     wear: "Usure",
-    nextShoeBtn: "Paire suivante ↻",
+    nextShoeBtn: "Paire suivante",
 
     // Season
-    ytdTitle: "📈 Progression de la saison (2026)",
+    ytdTitle: "Progression de la saison (2026)",
     ytdBadge: "Objectif 2026",
     ytdRuns: "Sorties 2026",
     ytdTime: "Temps 2026",
@@ -179,16 +179,16 @@ export const translations = {
     ytdElev: "Dénivelé 2026",
 
     // Matrix
-    matrixTitle: "📅 Matrice de régularité (52 semaines)",
+    matrixTitle: "Matrice de régularité (52 semaines)",
     matrixTooltip: "Survolez une case pour voir la distance du jour",
     less: "Moins",
     more: "Plus",
     restDay: "Repos",
 
     // Feed & Hover Drawer
-    recentActivitiesTitle: "🕒 Activités récentes",
-    recentActivitiesSubtitle: "Survolez une séance pour dérouler la carte du tracé & la télémétrie",
-    viewDetails: "Survoler pour dérouler ▾",
+    recentActivitiesTitle: "Activités récentes",
+    recentActivitiesSubtitle: "Cliquez pour dérouler les détails et le tracé de la séance",
+    viewDetails: "Détails",
     searchPlaceholder: "Rechercher par titre, chaussure, date ou tag (#10k, #matin, #brooks)...",
     filterAll: "Toutes",
     filterLong: "Sorties longues (15k+)",
@@ -197,24 +197,24 @@ export const translations = {
     elevGain: "Dénivelé positif (D+)",
     elevLoss: "Dénivelé négatif (D-)",
     altitude: "Altitude",
-    device: "Montre / Appareil",
+    device: "Appareil",
     difficulty: "Score d'effort",
-    splits: "Allures par kilomètre (Splits)",
+    splits: "Allures par kilomètre",
     notRecorded: "Non mesuré",
-    hoverTip: "Survolez pour afficher le tracé GPS et le détail des kilomètres",
+    hoverTip: "Cliquez pour afficher le tracé GPS et le détail des kilomètres",
 
     // Heatmap & Maps
-    fullscreenHeatmapBtn: "🔥 Heatmap Plein Écran",
-    closeHeatmapBtn: "✕ Fermer",
+    fullscreenHeatmapBtn: "Heatmap Plein Écran",
+    closeHeatmapBtn: "Fermer",
 
     // Effort Zones
-    effortZonesTitle: "⚡ Zones d'Effort & Allure",
-    effortZonesSubtitle: "Répartition physiologique (Montre cardio ou Modèle Jack Daniels)",
+    effortZonesTitle: "Zones d'Effort & Allure",
+    effortZonesSubtitle: "Répartition physiologique (Cardio ou Modèle Jack Daniels)",
     totalEffortAnalyzed: "Total analysé",
-    watchPaceSplit: (watches: number, paces: number) => `${watches} sorties avec montre • ${paces} sorties avec modèle Jack Daniels`,
+    watchPaceSplit: (watches: number, paces: number) => `${watches} sorties avec cardio • ${paces} sorties avec modèle Jack Daniels`,
 
     // Achievements
-    achievementsTitle: "🏅 Trophées & Badges",
+    achievementsTitle: "Trophées & Badges",
     achievementsSubtitle: "Jalons et accomplissements de carrière",
     unlockedBadge: "Débloqué",
     inProgressBadge: "En cours",
