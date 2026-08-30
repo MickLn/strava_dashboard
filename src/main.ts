@@ -2,6 +2,7 @@ import { DataService } from './services/data-service.ts';
 import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
 import { initMap, renderActivityTraces, openFullscreenHeatmap, closeFullscreenHeatmap } from './components/map.ts';
+import { InteractivePreloader } from './components/preloader.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
 import { i18n, Language } from './utils/i18n.ts';
 import { generateActivityTags } from './utils/metrics.ts';
@@ -12,14 +13,19 @@ class App {
   private currentPeriod: 'all' | 'ytd' | '30d' = 'all';
   private searchQuery: string = '';
   private activeTagFilter: string = 'all';
+  private preloader = new InteractivePreloader();
 
   public async init(): Promise<void> {
     try {
+      // 0. Lancement de l'animation d'entrée interactive
+      this.preloader.start();
+
       // 1. Initialisation de la carte Leaflet
       initMap('leaflet-map');
 
       // 2. Chargement des données Strava
       this.dataset = await this.dataService.loadData();
+      this.preloader.setDatasetReady(this.dataset.activities);
 
       // 3. Rendu du Bento Dashboard
       this.renderAll();
@@ -207,6 +213,14 @@ class App {
         } finally {
           refreshBtn.innerHTML = `<span>${t.forceRefresh}</span>`;
         }
+      });
+    }
+
+    // Bouton Rejouer / Toggle Animation d'entrée
+    const togglePreloaderBtn = document.getElementById('btn-toggle-preloader');
+    if (togglePreloaderBtn) {
+      togglePreloaderBtn.addEventListener('click', () => {
+        this.preloader.replay(this.dataset?.activities);
       });
     }
 

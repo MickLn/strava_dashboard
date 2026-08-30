@@ -9,8 +9,28 @@
   <link rel="stylesheet" href="./src/css/design-system.css">
   <link rel="stylesheet" href="./src/css/layout.css">
   <link rel="stylesheet" href="./src/css/components.css">
+  <link rel="stylesheet" href="./src/css/preloader.css">
 </head>
 <body>
+  <!-- Interactive Ribbon Preloader & Entrance Animation -->
+  <div id="preloader-overlay" class="preloader-overlay">
+    <canvas id="preloader-canvas" class="preloader-canvas"></canvas>
+
+    <div class="preloader-footer">
+      <div class="preloader-status">
+        <span id="preloader-status-text" class="preloader-status-text">Initialisation des tracés GPS...</span>
+        <div class="preloader-progress-track">
+          <div id="preloader-progress-bar" class="preloader-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="preloader-counter-wrap">
+        <span id="preloader-counter" class="preloader-counter">00</span>
+        <span class="preloader-counter-unit">%</span>
+      </div>
+    </div>
+  </div>
+
   <div class="dashboard-container">
     
     <!-- 1. Header & athlete profile -->
@@ -31,6 +51,12 @@
       </div>
 
       <div class="header-controls">
+        <!-- CTA Toggle / Rejouer l'animation des tracés -->
+        <button id="btn-toggle-preloader" class="btn btn-outline preloader-toggle-cta" title="Rejouer l'animation des tracés" aria-label="Rejouer l'animation des tracés">
+          <span class="cta-pulse-dot"></span>
+          <span id="lbl-btn-preloader">Intro FX</span>
+        </button>
+
         <!-- Language selector EN / FR -->
         <div class="lang-switcher" id="lang-switcher">
           <button class="lang-btn active" data-lang="en">EN</button>
