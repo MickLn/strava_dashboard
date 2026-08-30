@@ -193,6 +193,37 @@ def main():
             break
         page += 1
 
+    # Récupérer les splits_metric authentiques pour les courses récentes (dans la limite API de Strava)
+    # Charger l'ancien cache pour ne pas re-télécharger les splits déjà présents
+    existing_splits_cache = {}
+    if os.path.exists(OUTPUT_PATH):
+        try:
+            with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
+                old_data = json.load(f)
+                for old_act in old_data.get("activities", []):
+                    if old_act.get("splits_metric"):
+                        existing_splits_cache[old_act.get("id")] = old_act["splits_metric"]
+        except Exception:
+            pass
+
+    detail_fetch_count = 0
+    for act in all_runs:
+        act_id = act.get("id")
+        if act_id in existing_splits_cache:
+            act["splits_metric"] = existing_splits_cache[act_id]
+        elif detail_fetch_count < 80:
+            try:
+                detailed = fetch_strava(f"activities/{act_id}", token)
+                if detailed and detailed.get("splits_metric"):
+                    act["splits_metric"] = detailed.get("splits_metric")
+                    if detailed.get("elev_high") is not None:
+                        act["elev_high"] = detailed.get("elev_high")
+                    if detailed.get("elev_low") is not None:
+                        act["elev_low"] = detailed.get("elev_low")
+                    detail_fetch_count += 1
+            except Exception as e:
+                print(f"Note splits {act_id}: {e}")
+
     # 4. Chaussures
     shoes = athlete.get("shoes", [])
     gear_items = []

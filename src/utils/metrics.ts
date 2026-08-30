@@ -673,12 +673,10 @@ export function generateActivityTags(activity: Activity, gearName?: string): str
 
 /**
  * Génère la décomposition de l'allure kilomètre par kilomètre (Splits) avec badge de Zone (Z1 à Z5)
+ * Utilise les données réelles et authentiques de Strava (splits_metric) si disponibles
  */
 export function generateKilometerSplits(activity: Activity) {
-  const kmTotal = (activity.distance || 0) / 1000;
-  const fullKm = Math.floor(kmTotal);
-  const remainder = kmTotal - fullKm;
-  const avgPaceSec = (activity.moving_time || 0) / Math.max(0.1, kmTotal);
+  const avgPaceSec = (activity.moving_time || 0) / Math.max(0.1, (activity.distance || 0) / 1000);
 
   const getPaceZone = (paceSec: number) => {
     if (paceSec > 360) return { badge: 'Z1', color: '#4B7B9E' };       // > 6:00
@@ -688,13 +686,47 @@ export function generateKilometerSplits(activity: Activity) {
     return { badge: 'Z5', color: '#B91C1C' };                                  // < 4:30
   };
 
+  // 1. Si les vrais splits authentiques de l'API Strava sont présents
+  if (activity.splits_metric && activity.splits_metric.length > 0) {
+    return activity.splits_metric.map((sm, index) => {
+      const isLast = index === activity.splits_metric!.length - 1;
+      const isPartial = isLast && sm.distance < 900;
+      const kmLabel = isPartial ? `+${Math.round(sm.distance)}m` : `Km ${sm.split}`;
+
+      // Allure réelle calculée au kilomètre
+      const kmPaceSec = sm.moving_time > 0 && sm.distance > 0
+        ? Math.round((sm.moving_time / sm.distance) * 1000)
+        : (sm.average_speed > 0 ? Math.round(1000 / sm.average_speed) : Math.round(avgPaceSec));
+
+      const mins = Math.floor(kmPaceSec / 60);
+      const secs = Math.floor(kmPaceSec % 60);
+      const isFaster = kmPaceSec <= avgPaceSec;
+      const zoneInfo = getPaceZone(kmPaceSec);
+      const relativePercent = Math.min(100, Math.max(25, Math.round(((400 - kmPaceSec) / 150) * 100)));
+
+      return {
+        kmLabel,
+        paceFormatted: `${mins}:${secs.toString().padStart(2, '0')}`,
+        paceSec: kmPaceSec,
+        relativePercent,
+        isFaster,
+        zoneBadge: zoneInfo.badge,
+        zoneColor: zoneInfo.color
+      };
+    });
+  }
+
+  // 2. Fallback d'estimation si splits_metric n'est pas encore synchronisé
+  const kmTotal = (activity.distance || 0) / 1000;
+  const fullKm = Math.floor(kmTotal);
+  const remainder = kmTotal - fullKm;
+
   const splits: Array<{ kmLabel: string; paceFormatted: string; paceSec: number; relativePercent: number; isFaster: boolean; zoneBadge: string; zoneColor: string }> = [];
 
-  // Variabilité naturelle de course (chauffe au début, régulier au milieu, accélération finale)
   for (let i = 1; i <= fullKm; i++) {
     let variance = 0;
-    if (i === 1) variance = 0.04; // km 1 un peu plus lent
-    else if (i === fullKm) variance = -0.03; // dernier km plus rapide
+    if (i === 1) variance = 0.04;
+    else if (i === fullKm) variance = -0.03;
     else variance = (Math.sin(i * 1.5) * 0.02);
 
     const kmPaceSec = Math.round(avgPaceSec * (1 + variance));
@@ -702,8 +734,6 @@ export function generateKilometerSplits(activity: Activity) {
     const secs = Math.floor(kmPaceSec % 60);
     const isFaster = kmPaceSec <= avgPaceSec;
     const zoneInfo = getPaceZone(kmPaceSec);
-
-    // Pourcentage de barre (relativement à une allure type 4:00 - 6:30)
     const relativePercent = Math.min(100, Math.max(25, Math.round(((400 - kmPaceSec) / 150) * 100)));
 
     splits.push({
@@ -717,7 +747,6 @@ export function generateKilometerSplits(activity: Activity) {
     });
   }
 
-  // Fraction résiduelle si > 100m
   if (remainder >= 0.15) {
     const remPaceSec = Math.round(avgPaceSec * 0.97);
     const mins = Math.floor(remPaceSec / 60);

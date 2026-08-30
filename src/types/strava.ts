@@ -18,6 +18,18 @@ export interface ActivityMap {
   resource_state?: number;
 }
 
+export interface SplitMetric {
+  distance: number;
+  elapsed_time: number;
+  elevation_difference?: number;
+  moving_time: number;
+  split: number;
+  average_speed: number;
+  average_grade_adjusted_speed?: number;
+  pace_zone?: number;
+  average_heartrate?: number;
+}
+
 export interface Activity {
   id: number;
   name: string;
@@ -44,6 +56,7 @@ export interface Activity {
   device_name?: string;
   elev_high?: number;
   elev_low?: number;
+  splits_metric?: SplitMetric[];
 }
 
 export interface GearItem {
