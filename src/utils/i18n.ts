@@ -65,12 +65,19 @@ export const translations = {
     ytdDist: "YTD distance",
     ytdElev: "YTD elevation",
 
-    // Matrix
-    matrixTitle: "52-week consistency matrix",
-    matrixTooltip: "Hover over a square to view daily distance",
-    less: "Less",
-    more: "More",
-    restDay: "Rest day",
+    // Monthly Training Calendar (Strava style)
+    calendarTitle: "Monthly training calendar",
+    calendarSubtitle: "Training log & distance distribution",
+    prevMonth: "Previous month",
+    nextMonth: "Next month",
+    daysHeader: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    legendLess10: "< 10 km",
+    legendLess15: "< 15 km",
+    legendLess20: "< 20 km",
+    legendSemi: "Semi (SM)",
+    legendLess30: "< 30 km",
+    legendMarathon: "Marathon (M)",
+    runsLogged: (runs: number, km: number) => `${km} km • ${runs} ${runs > 1 ? 'runs' : 'run'}`,
 
     // Feed & Hover Drawer
     recentActivitiesTitle: "Recent activities",
@@ -178,12 +185,19 @@ export const translations = {
     ytdDist: "Distance 2026",
     ytdElev: "Dénivelé 2026",
 
-    // Matrix
-    matrixTitle: "Matrice de régularité (52 semaines)",
-    matrixTooltip: "Survolez une case pour voir la distance du jour",
-    less: "Moins",
-    more: "Plus",
-    restDay: "Repos",
+    // Monthly Training Calendar (Strava style)
+    calendarTitle: "Calendrier d'entraînement",
+    calendarSubtitle: "Log des séances et répartition des distances",
+    prevMonth: "Mois précédent",
+    nextMonth: "Mois suivant",
+    daysHeader: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+    legendLess10: "< 10 km",
+    legendLess15: "< 15 km",
+    legendLess20: "< 20 km",
+    legendSemi: "Semi (SM)",
+    legendLess30: "< 30 km",
+    legendMarathon: "Marathon (M)",
+    runsLogged: (runs: number, km: number) => `${km} km • ${runs} ${runs > 1 ? 'sorties' : 'sortie'}`,
 
     // Feed & Hover Drawer
     recentActivitiesTitle: "Activités récentes",

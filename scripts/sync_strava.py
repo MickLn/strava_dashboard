@@ -103,60 +103,116 @@ def format_pace(meters_per_sec):
     return f"{m}:{s:02d} /km"
 
 def extract_records(activities):
-    """Calcule les Top 3 pour 5k, 10k et sorties longues (>15k)"""
-    top5k = []
-    top10k = []
-    top15k = []
+    """Calcule les Top 3 authentiques pour 5k, 10k et sorties longues (>15k) par segments contigus et courses globales"""
+    efforts_5k = []
+    efforts_10k = []
+    efforts_15k = []
 
-    # Filtrer les courses d'au moins 4.8 km pour le 5k
-    runs_5k = [a for a in activities if 4800 <= a.get("distance", 0) <= 6500]
-    runs_5k.sort(key=lambda a: a.get("moving_time", 999999))
-    for idx, r in enumerate(runs_5k[:3]):
-        top5k.append({
-            "rank": idx + 1,
-            "timeFormatted": format_time_short(r.get("moving_time", 0)),
-            "timeSeconds": r.get("moving_time", 0),
-            "activityName": r.get("name", "Run"),
-            "activityId": r.get("id"),
-            "date": r.get("start_date_local", "").split("T")[0],
-            "distanceKm": round(r.get("distance", 0) / 1000, 1),
-            "paceFormatted": format_pace(r.get("average_speed", 0))
-        })
+    def format_pace_exact(sec_total, dist_meters):
+        if not dist_meters or dist_meters <= 0:
+            return "--:-- /km"
+        sec_per_km = sec_total / (dist_meters / 1000.0)
+        m = int(sec_per_km // 60)
+        s = int(sec_per_km % 60)
+        return f"{m}:{s:02d} /km"
 
-    # Filtrer pour le 10k (9.5k à 12k)
-    runs_10k = [a for a in activities if 9500 <= a.get("distance", 0) <= 12500]
-    runs_10k.sort(key=lambda a: a.get("moving_time", 999999))
-    for idx, r in enumerate(runs_10k[:3]):
-        top10k.append({
-            "rank": idx + 1,
-            "timeFormatted": format_time_short(r.get("moving_time", 0)),
-            "timeSeconds": r.get("moving_time", 0),
-            "activityName": r.get("name", "Run"),
-            "activityId": r.get("id"),
-            "date": r.get("start_date_local", "").split("T")[0],
-            "distanceKm": round(r.get("distance", 0) / 1000, 1),
-            "paceFormatted": format_pace(r.get("average_speed", 0))
-        })
+    for act in activities:
+        act_id = act.get("id")
+        name = act.get("name", "Run")
+        date_str = act.get("start_date_local", "").split("T")[0]
+        dist = act.get("distance", 0)
+        time_s = act.get("moving_time", 0)
 
-    # Filtrer pour les sorties longues (>= 14.5 km)
-    runs_long = [a for a in activities if a.get("distance", 0) >= 14500]
-    runs_long.sort(key=lambda a: a.get("moving_time", 999999))
-    for idx, r in enumerate(runs_long[:3]):
-        top15k.append({
-            "rank": idx + 1,
-            "timeFormatted": format_time_short(r.get("moving_time", 0)),
-            "timeSeconds": r.get("moving_time", 0),
-            "activityName": r.get("name", "Run"),
-            "activityId": r.get("id"),
-            "date": r.get("start_date_local", "").split("T")[0],
-            "distanceKm": round(r.get("distance", 0) / 1000, 1),
-            "paceFormatted": format_pace(r.get("average_speed", 0))
-        })
+        # 1. Vérifier les segments contigus depuis les splits kilométriques réels
+        splits = act.get("splits_metric", [])
+        if splits and len(splits) >= 5:
+            for start in range(len(splits) - 4):
+                w_dist = sum(s.get("distance", 0) for s in splits[start:start+5])
+                w_time = sum(s.get("moving_time", 0) for s in splits[start:start+5])
+                if w_dist >= 4900:
+                    scale = 5000.0 / w_dist
+                    t_5k = int(w_time * scale)
+                    efforts_5k.append({
+                        "timeSeconds": t_5k,
+                        "timeFormatted": format_time_short(t_5k),
+                        "activityName": name,
+                        "activityId": act_id,
+                        "date": date_str,
+                        "distanceKm": 5.0,
+                        "paceFormatted": format_pace_exact(t_5k, 5000)
+                    })
+
+        if splits and len(splits) >= 10:
+            for start in range(len(splits) - 9):
+                w_dist = sum(s.get("distance", 0) for s in splits[start:start+10])
+                w_time = sum(s.get("moving_time", 0) for s in splits[start:start+10])
+                if w_dist >= 9800:
+                    scale = 10000.0 / w_dist
+                    t_10k = int(w_time * scale)
+                    efforts_10k.append({
+                        "timeSeconds": t_10k,
+                        "timeFormatted": format_time_short(t_10k),
+                        "activityName": name,
+                        "activityId": act_id,
+                        "date": date_str,
+                        "distanceKm": 10.0,
+                        "paceFormatted": format_pace_exact(t_10k, 10000)
+                    })
+
+        # 2. Vérifier les courses isolées
+        if 4800 <= dist <= 6500 and time_s > 0:
+            scale = 5000.0 / dist if dist < 5000 else 1.0
+            t_adj = int(time_s * scale) if dist < 5000 else time_s
+            efforts_5k.append({
+                "timeSeconds": t_adj,
+                "timeFormatted": format_time_short(t_adj),
+                "activityName": name,
+                "activityId": act_id,
+                "date": date_str,
+                "distanceKm": round(dist / 1000, 1),
+                "paceFormatted": format_pace(act.get("average_speed", 0))
+            })
+
+        if 9500 <= dist <= 12500 and time_s > 0:
+            scale = 10000.0 / dist if dist < 10000 else 1.0
+            t_adj = int(time_s * scale) if dist < 10000 else time_s
+            efforts_10k.append({
+                "timeSeconds": t_adj,
+                "timeFormatted": format_time_short(t_adj),
+                "activityName": name,
+                "activityId": act_id,
+                "date": date_str,
+                "distanceKm": round(dist / 1000, 1),
+                "paceFormatted": format_pace(act.get("average_speed", 0))
+            })
+
+        if dist >= 14500 and time_s > 0:
+            efforts_15k.append({
+                "timeSeconds": time_s,
+                "timeFormatted": format_time_short(time_s),
+                "activityName": name,
+                "activityId": act_id,
+                "date": date_str,
+                "distanceKm": round(dist / 1000, 1),
+                "paceFormatted": format_pace(act.get("average_speed", 0))
+            })
+
+    def dedupe_and_rank(items):
+        seen = {}
+        for item in items:
+            aid = item["activityId"]
+            if aid not in seen or item["timeSeconds"] < seen[aid]["timeSeconds"]:
+                seen[aid] = item
+        ranked = list(seen.values())
+        ranked.sort(key=lambda x: x["timeSeconds"])
+        for idx, r in enumerate(ranked[:3]):
+            r["rank"] = idx + 1
+        return ranked[:3]
 
     return {
-        "top5k": top5k,
-        "top10k": top10k,
-        "top15k": top15k
+        "top5k": dedupe_and_rank(efforts_5k),
+        "top10k": dedupe_and_rank(efforts_10k),
+        "top15k": dedupe_and_rank(efforts_15k)
     }
 
 def main():

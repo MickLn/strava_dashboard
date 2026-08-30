@@ -224,98 +224,98 @@
   "records": {
     "top5k": [
       {
-        "rank": 1,
-        "timeFormatted": "24m 55s",
-        "timeSeconds": 1495,
-        "activityName": "265/ Run du soir (06/07)",
-        "activityId": 19206398024,
-        "date": "2026-07-06",
+        "timeSeconds": 1385,
+        "timeFormatted": "23m 05s",
+        "activityName": "241/ Run du soir (20/05)",
+        "activityId": 18586537537,
+        "date": "2026-05-20",
         "distanceKm": 5.0,
-        "paceFormatted": "4:58 /km"
+        "paceFormatted": "4:37 /km",
+        "rank": 1
       },
       {
-        "rank": 2,
-        "timeFormatted": "25m 01s",
-        "timeSeconds": 1501,
-        "activityName": "262/ Run du soir (28/06)",
-        "activityId": 19111984954,
-        "date": "2026-06-29",
+        "timeSeconds": 1397,
+        "timeFormatted": "23m 17s",
+        "activityName": "238/ Run du soir (15/05)",
+        "activityId": 18520649357,
+        "date": "2026-05-15",
         "distanceKm": 5.0,
-        "paceFormatted": "4:58 /km"
+        "paceFormatted": "4:39 /km",
+        "rank": 2
       },
       {
-        "rank": 3,
-        "timeFormatted": "25m 06s",
-        "timeSeconds": 1506,
-        "activityName": "65/ Run after class (25/04)",
-        "activityId": 14282964032,
-        "date": "2025-04-25",
+        "timeSeconds": 1416,
+        "timeFormatted": "23m 36s",
+        "activityName": "235/ 10km UNICEF (10/05)",
+        "activityId": 18448161498,
+        "date": "2026-05-10",
         "distanceKm": 5.0,
-        "paceFormatted": "5:00 /km"
+        "paceFormatted": "4:43 /km",
+        "rank": 3
       }
     ],
     "top10k": [
       {
-        "rank": 1,
-        "timeFormatted": "47m 59s",
-        "timeSeconds": 2879,
+        "timeSeconds": 2823,
+        "timeFormatted": "47m 03s",
+        "activityName": "238/ Run du soir (15/05)",
+        "activityId": 18520649357,
+        "date": "2026-05-15",
+        "distanceKm": 10.0,
+        "paceFormatted": "4:42 /km",
+        "rank": 1
+      },
+      {
+        "timeSeconds": 2868,
+        "timeFormatted": "47m 48s",
         "activityName": "235/ 10km UNICEF (10/05)",
         "activityId": 18448161498,
         "date": "2026-05-10",
         "distanceKm": 10.0,
-        "paceFormatted": "4:46 /km"
+        "paceFormatted": "4:46 /km",
+        "rank": 2
       },
       {
-        "rank": 2,
-        "timeFormatted": "49m 41s",
-        "timeSeconds": 2981,
+        "timeSeconds": 2977,
+        "timeFormatted": "49m 37s",
         "activityName": "251/ Run du 10km d’Adidas (07/06)",
         "activityId": 18819484303,
         "date": "2026-06-07",
         "distanceKm": 10.0,
-        "paceFormatted": "5:01 /km"
-      },
-      {
-        "rank": 3,
-        "timeFormatted": "50m 04s",
-        "timeSeconds": 3004,
-        "activityName": "213/ Run du soir (31/03)",
-        "activityId": 17927161939,
-        "date": "2026-03-31",
-        "distanceKm": 10.2,
-        "paceFormatted": "4:55 /km"
+        "paceFormatted": "4:57 /km",
+        "rank": 3
       }
     ],
     "top15k": [
       {
-        "rank": 1,
-        "timeFormatted": "1h 19m",
         "timeSeconds": 4787,
+        "timeFormatted": "1h 19m",
         "activityName": "271/ Run du matin (20/07)",
         "activityId": 19385492225,
         "date": "2026-07-20",
         "distanceKm": 15.0,
-        "paceFormatted": "5:19 /km"
+        "paceFormatted": "5:19 /km",
+        "rank": 1
       },
       {
-        "rank": 2,
-        "timeFormatted": "1h 20m",
         "timeSeconds": 4815,
+        "timeFormatted": "1h 20m",
         "activityName": "238/ Run du soir (15/05)",
         "activityId": 18520649357,
         "date": "2026-05-15",
         "distanceKm": 16.0,
-        "paceFormatted": "5:00 /km"
+        "paceFormatted": "5:00 /km",
+        "rank": 2
       },
       {
-        "rank": 3,
-        "timeFormatted": "1h 23m",
         "timeSeconds": 4995,
+        "timeFormatted": "1h 23m",
         "activityName": "227/ Run matinal (25/04)",
         "activityId": 18248595705,
         "date": "2026-04-25",
         "distanceKm": 15.1,
-        "paceFormatted": "5:31 /km"
+        "paceFormatted": "5:31 /km",
+        "rank": 3
       }
     ]
   },

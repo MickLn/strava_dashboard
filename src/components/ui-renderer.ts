@@ -9,7 +9,6 @@ import {
   getCurrentWeekDays,
   calculateWeekStreak,
   calculateWeeklyAverages,
-  calculateConsistencyGrid,
   calculateGearStats,
   calculateCalories,
   calculateElevationDetails,
@@ -18,7 +17,8 @@ import {
   getActivityEffortZone,
   calculateAchievements,
   generateActivityTags,
-  generateKilometerSplits
+  generateKilometerSplits,
+  getMonthCalendarData
 } from '../utils/metrics.ts';
 import { i18n } from '../utils/i18n.ts';
 
@@ -85,10 +85,19 @@ export class UIRenderer {
     setTxt('lbl-ytd-dist', t.ytdDist);
     setTxt('lbl-ytd-elev', t.ytdElev);
 
-    setTxt('lbl-matrix-title', t.matrixTitle);
-    setTxt('lbl-matrix-less', t.less);
-    setTxt('lbl-matrix-more', t.more);
-    setTxt('lbl-matrix-hint', t.matrixTooltip);
+    setTxt('lbl-calendar-title', t.calendarTitle);
+    setTxt('lbl-calendar-sub', t.calendarSubtitle);
+    setTxt('lbl-leg-10', t.legendLess10);
+    setTxt('lbl-leg-15', t.legendLess15);
+    setTxt('lbl-leg-20', t.legendLess20);
+    setTxt('lbl-leg-sm', t.legendSemi);
+    setTxt('lbl-leg-30', t.legendLess30);
+    setTxt('lbl-leg-m', t.legendMarathon);
+
+    const weekdaysRow = document.getElementById('calendar-weekdays-row');
+    if (weekdaysRow) {
+      weekdaysRow.innerHTML = t.daysHeader.map(d => `<span>${d}</span>`).join('');
+    }
 
     setTxt('lbl-effort-zones-title', t.effortZonesTitle);
     setTxt('lbl-effort-zones-sub', t.effortZonesSubtitle);
@@ -103,9 +112,9 @@ export class UIRenderer {
     if (searchInput) searchInput.placeholder = t.searchPlaceholder;
 
     setTxt('chip-all', t.filterAll);
-    setTxt('chip-long', `🏃 ${t.filterLong}`);
-    setTxt('chip-fast', `⚡ ${t.filterFast}`);
-    setTxt('chip-elev', `⛰️ ${t.filterElevation}`);
+    setTxt('chip-long', t.filterLong);
+    setTxt('chip-fast', t.filterFast);
+    setTxt('chip-elev', t.filterElevation);
 
     setTxt('lbl-modal-dist', t.distance);
     setTxt('lbl-modal-time', t.time);
@@ -334,22 +343,118 @@ export class UIRenderer {
     }
   }
 
+  public static currentCalendarYear: number = 2026;
+  public static currentCalendarMonth: number = 7; // Août 2026 (0-indexed)
+  private static isCalendarNavInit: boolean = false;
+
   /**
-   * Rendu de la grille de constance 52 semaines
+   * Initialise les contrôles de navigation du calendrier
    */
-  public static renderConsistencyGrid(activities: Activity[]): void {
-    const container = document.getElementById('consistency-grid');
-    if (!container) return;
+  public static setupCalendarNavigation(activities: Activity[], onSelectActivity?: (act: Activity) => void): void {
+    if (this.isCalendarNavInit) return;
+    this.isCalendarNavInit = true;
 
-    container.innerHTML = '';
-    const days = calculateConsistencyGrid(activities);
+    const prevBtn = document.getElementById('btn-prev-month');
+    const nextBtn = document.getElementById('btn-next-month');
 
-    days.forEach(day => {
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (this.currentCalendarMonth === 0) {
+          this.currentCalendarMonth = 11;
+          this.currentCalendarYear--;
+        } else {
+          this.currentCalendarMonth--;
+        }
+        this.renderMonthlyCalendar(activities, onSelectActivity);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (this.currentCalendarMonth === 11) {
+          this.currentCalendarMonth = 0;
+          this.currentCalendarYear++;
+        } else {
+          this.currentCalendarMonth++;
+        }
+        this.renderMonthlyCalendar(activities, onSelectActivity);
+      });
+    }
+  }
+
+  /**
+   * Rendu du Calendrier Mensuel d'Entraînement (Style Strava Training Log)
+   */
+  public static renderMonthlyCalendar(
+    activities: Activity[],
+    onSelectActivity?: (act: Activity) => void
+  ): void {
+    const gridContainer = document.getElementById('calendar-days-grid');
+    const monthLabel = document.getElementById('lbl-current-month');
+    const totalPill = document.getElementById('lbl-calendar-month-total');
+    if (!gridContainer || !activities) return;
+
+    gridContainer.innerHTML = '';
+    const isFr = i18n.getLang() === 'fr';
+
+    const monthNamesEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNamesFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+    const calData = getMonthCalendarData(activities, this.currentCalendarYear, this.currentCalendarMonth);
+
+    if (monthLabel) {
+      const mName = isFr ? monthNamesFr[this.currentCalendarMonth] : monthNamesEn[this.currentCalendarMonth];
+      monthLabel.textContent = `${mName} ${this.currentCalendarYear}`;
+    }
+
+    if (totalPill) {
+      totalPill.textContent = `${calData.monthTotalKm} km • ${calData.monthRunCount} ${isFr ? (calData.monthRunCount > 1 ? 'sorties' : 'sortie') : (calData.monthRunCount > 1 ? 'runs' : 'run')}`;
+    }
+
+    calData.days.forEach(day => {
       const cell = document.createElement('div');
-      cell.className = 'matrix-cell';
-      cell.setAttribute('data-level', day.level.toString());
-      cell.title = `${day.date} : ${day.km > 0 ? day.km + ' km' : i18n.t().restDay}`;
-      container.appendChild(cell);
+      cell.className = `cal-day-cell ${!day.isCurrentMonth ? 'empty' : ''}`;
+
+      if (!day.isCurrentMonth) {
+        gridContainer.appendChild(cell);
+        return;
+      }
+
+      const numEl = document.createElement('span');
+      numEl.className = 'cal-day-num';
+      numEl.textContent = day.dayNumber.toString();
+      cell.appendChild(numEl);
+
+      if (day.activities.length > 0 && day.tier) {
+        cell.classList.add('has-activity');
+        
+        const pill = document.createElement('div');
+        pill.className = `cal-activity-pill ${day.tier.tierId}`;
+        pill.style.borderColor = day.tier.borderColor;
+        pill.style.backgroundColor = day.tier.bg;
+        pill.style.color = day.tier.color;
+
+        const mainAct = day.activities[0];
+        const distKmFormatted = day.totalDistanceKm.toFixed(1) + 'k';
+        
+        let pillContent = `<span class="cal-pill-dist">${distKmFormatted}</span>`;
+        if (day.tier.badge) {
+          pillContent += `<span class="cal-pill-badge">${day.tier.badge}</span>`;
+        }
+        pill.innerHTML = pillContent;
+
+        const actTitle = day.activities.map(a => a.name).join(' + ');
+        const tooltip = `${day.dateStr} : ${actTitle} (${day.totalDistanceKm.toFixed(1)} km)`;
+        cell.title = tooltip;
+
+        if (onSelectActivity) {
+          cell.addEventListener('click', () => onSelectActivity(mainAct));
+        }
+
+        cell.appendChild(pill);
+      }
+
+      gridContainer.appendChild(cell);
     });
   }
 

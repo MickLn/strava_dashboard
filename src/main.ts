@@ -53,10 +53,15 @@ class App {
     });
     UIRenderer.renderShoeRotator(this.dataset);
 
-    // Saison 2026 & Constance (Étage 3)
+    // Saison 2026 & Calendrier Mensuel d'Entraînement (Étage 3)
     renderCharts(this.dataset.activities, 2026);
     UIRenderer.renderYtdStrip(this.dataset);
-    UIRenderer.renderConsistencyGrid(this.dataset.activities);
+    UIRenderer.setupCalendarNavigation(this.dataset.activities, (act: Activity) => {
+      renderActivityTraces(this.dataset!.activities, act.id);
+    });
+    UIRenderer.renderMonthlyCalendar(this.dataset.activities, (act: Activity) => {
+      renderActivityTraces(this.dataset!.activities, act.id);
+    });
 
     // Zones d'Effort & Trophées (Étage 3.5)
     UIRenderer.renderEffortZones(this.dataset.activities);

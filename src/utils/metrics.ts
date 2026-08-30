@@ -172,12 +172,15 @@ export function calculateWeeklyAverages(activities: Activity[], totalWeeks: numb
 }
 
 /**
- * Calcule les données pour le graphique YTD mensuel et cumulatif
+ * Calcule les données pour le graphique YTD mensuel, le cumulatif et le bento mensuel
  */
 export function calculateYtdMonthlyData(activities: Activity[], targetYear: number = 2026) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthsFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
   const monthlyDistances = new Array(12).fill(0);
   const monthlyCalories = new Array(12).fill(0);
+  const monthlyRuns = new Array(12).fill(0);
+  const monthlyElevation = new Array(12).fill(0);
   const cumulativeDistance = new Array(12).fill(0);
 
   const ytdActivities = activities.filter(a => new Date(a.start_date_local).getFullYear() === targetYear);
@@ -187,27 +190,64 @@ export function calculateYtdMonthlyData(activities: Activity[], targetYear: numb
     const month = d.getMonth();
     monthlyDistances[month] += act.distance / 1000;
     monthlyCalories[month] += calculateCalories(act);
+    monthlyRuns[month] += 1;
+    monthlyElevation[month] += act.total_elevation_gain || 0;
   }
 
-  // Si l'activité est vide (démo), injecter les valeurs conformes au screenshot
   const fallbackDistances = [125, 145, 168, 155, 142, 118, 100, 42, 0, 0, 0, 0];
   const fallbackCalories = [11800, 13400, 15600, 14600, 13200, 11000, 9500, 3950, 0, 0, 0, 0];
+  const fallbackRuns = [14, 16, 18, 17, 15, 13, 12, 5, 0, 0, 0, 0];
+  const fallbackElevation = [580, 640, 780, 710, 690, 540, 480, 190, 0, 0, 0, 0];
 
   const hasRealData = monthlyDistances.some(v => v > 0);
   const distances = hasRealData ? monthlyDistances.map(d => Math.round(d)) : fallbackDistances;
   const calories = hasRealData ? monthlyCalories.map(c => Math.round(c)) : fallbackCalories;
+  const runs = hasRealData ? monthlyRuns : fallbackRuns;
+  const elevation = hasRealData ? monthlyElevation.map(e => Math.round(e)) : fallbackElevation;
 
   let sum = 0;
+  let activeMonthCount = 0;
+  let totalKm = 0;
+  let totalElev = 0;
+  let totalRuns = 0;
+  let peakDist = 0;
+  let peakMonthIndex = 0;
+
   for (let i = 0; i < 12; i++) {
     sum += distances[i];
     cumulativeDistance[i] = sum;
+    if (distances[i] > 0) {
+      activeMonthCount++;
+      totalKm += distances[i];
+      totalElev += elevation[i];
+      totalRuns += runs[i];
+      if (distances[i] > peakDist) {
+        peakDist = distances[i];
+        peakMonthIndex = i;
+      }
+    }
   }
+
+  const avgDistance = activeMonthCount > 0 ? Math.round(totalKm / activeMonthCount) : 0;
+  const avgRuns = activeMonthCount > 0 ? (totalRuns / activeMonthCount).toFixed(1) : '0';
 
   return {
     labels: months,
+    labelsFr: monthsFr,
     distances,
     calories,
-    cumulativeDistance
+    runs,
+    elevation,
+    cumulativeDistance,
+    stats: {
+      peakDistanceKm: peakDist,
+      peakMonthName: months[peakMonthIndex],
+      peakMonthNameFr: monthsFr[peakMonthIndex],
+      avgDistanceKm: avgDistance,
+      avgRunsPerMonth: avgRuns,
+      totalElevationYtd: totalElev,
+      activeMonthsCount: activeMonthCount
+    }
   };
 }
 
@@ -808,7 +848,115 @@ export function renderPolylineSVG(encodedPolyline: string, width: number = 260, 
     <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="mini-trace-svg" style="border-radius: var(--radius-sm); background: radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F5EFE6 100%); border: 1px solid var(--border-light);">
       <path d="${pathD}" fill="none" stroke="#E05A36" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 5px rgba(224, 90, 54, 0.25));" />
       <circle cx="${startPt[0]}" cy="${startPt[1]}" r="4" fill="#2E6B56" stroke="#FFFFFF" stroke-width="1.5" />
-      <circle cx="${endPt[0]}" cy="${endPt[1]}" r="4" fill="#E05A36" stroke="#FFFFFF" stroke-width="1.5" />
+      <circle cx="${endPt[0]}" cy="${endPt[1]}" r="4" fill="#D32F2F" stroke="#FFFFFF" stroke-width="1.5" />
     </svg>
   `;
+}
+
+export interface DistanceTier {
+  color: string;
+  bg: string;
+  borderColor: string;
+  label: string;
+  badge?: string;
+  tierId: string;
+}
+
+/**
+ * Tranches de distance harmonisées avec la charte graphique :
+ * <10k (Bleu ardoise), <15k (Vert forêt), <20k (Ambre), Semi <22k (Terracotta SM), <30k (Brique), Marathon <40k+ (Pourpre M)
+ */
+export function getDistanceTier(distanceMeters: number): DistanceTier {
+  const km = distanceMeters / 1000;
+  if (km < 10) {
+    return { color: '#4B7B9E', bg: '#4B7B9E20', borderColor: '#4B7B9E60', label: '< 10 km', tierId: 't10' };
+  } else if (km < 15) {
+    return { color: '#2D5A47', bg: '#2D5A4720', borderColor: '#2D5A4760', label: '< 15 km', tierId: 't15' };
+  } else if (km < 20) {
+    return { color: '#C47A1E', bg: '#C47A1E20', borderColor: '#C47A1E60', label: '< 20 km', tierId: 't20' };
+  } else if (km <= 22) {
+    return { color: '#E05A36', bg: '#E05A3622', borderColor: '#E05A3670', label: 'Semi-Marathon', badge: 'SM', tierId: 'tsm' };
+  } else if (km < 30) {
+    return { color: '#B83B19', bg: '#B83B1922', borderColor: '#B83B1970', label: '< 30 km', tierId: 't30' };
+  } else {
+    return { color: '#7C2D12', bg: '#7C2D1222', borderColor: '#7C2D1270', label: 'Marathon', badge: 'M', tierId: 'tm' };
+  }
+}
+
+export interface MonthCalendarDay {
+  dateStr: string;
+  dayNumber: number;
+  dayOfWeek: number;
+  activities: Activity[];
+  totalDistanceKm: number;
+  tier?: DistanceTier;
+  isCurrentMonth: boolean;
+}
+
+/**
+ * Calcule la grille du calendrier d'entraînement par mois
+ */
+export function getMonthCalendarData(activities: Activity[], year: number, monthIndex: number) {
+  const firstDay = new Date(year, monthIndex, 1);
+  const lastDay = new Date(year, monthIndex + 1, 0);
+  const totalDays = lastDay.getDate();
+  
+  // Jour de la semaine du 1er du mois (0 = Lundi, 6 = Dimanche)
+  const startDayOfWeek = (firstDay.getDay() + 6) % 7;
+  
+  const actMap = new Map<string, Activity[]>();
+  let monthTotalDistance = 0;
+  let monthRunCount = 0;
+  
+  for (const act of activities) {
+    const d = new Date(act.start_date_local);
+    if (d.getFullYear() === year && d.getMonth() === monthIndex) {
+      const key = act.start_date_local.split('T')[0];
+      if (!actMap.has(key)) actMap.set(key, []);
+      actMap.get(key)!.push(act);
+      monthTotalDistance += act.distance / 1000;
+      monthRunCount++;
+    }
+  }
+
+  const days: MonthCalendarDay[] = [];
+  
+  // Jours vides au début du mois pour caler le premier jour
+  for (let i = 0; i < startDayOfWeek; i++) {
+    days.push({
+      dateStr: '',
+      dayNumber: 0,
+      dayOfWeek: i,
+      activities: [],
+      totalDistanceKm: 0,
+      isCurrentMonth: false
+    });
+  }
+  
+  for (let day = 1; day <= totalDays; day++) {
+    const mStr = String(monthIndex + 1).padStart(2, '0');
+    const dStr = String(day).padStart(2, '0');
+    const dateKey = `${year}-${mStr}-${dStr}`;
+    const dayActs = actMap.get(dateKey) || [];
+    const dayDist = dayActs.reduce((acc, a) => acc + a.distance, 0) / 1000;
+    const tier = dayActs.length > 0 ? getDistanceTier(dayActs.reduce((acc, a) => acc + a.distance, 0)) : undefined;
+    
+    days.push({
+      dateStr: dateKey,
+      dayNumber: day,
+      dayOfWeek: (startDayOfWeek + day - 1) % 7,
+      activities: dayActs,
+      totalDistanceKm: dayDist,
+      tier,
+      isCurrentMonth: true
+    });
+  }
+
+  return {
+    year,
+    monthIndex,
+    days,
+    monthTotalKm: Math.round(monthTotalDistance * 10) / 10,
+    monthRunCount
+  };
 }

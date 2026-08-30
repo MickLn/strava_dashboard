@@ -264,25 +264,58 @@
         </div>
       </div>
 
-      <!-- 52-week consistency matrix -->
-      <div class="runner-card matrix-card">
-        <div class="chart-header">
-          <h3 class="chart-title" id="lbl-matrix-title">52-week consistency matrix</h3>
-          <div class="matrix-legend">
-            <span id="lbl-matrix-less">Less</span>
-            <div class="matrix-cell" data-level="0"></div>
-            <div class="matrix-cell" data-level="1"></div>
-            <div class="matrix-cell" data-level="2"></div>
-            <div class="matrix-cell" data-level="3"></div>
-            <div class="matrix-cell" data-level="4"></div>
-            <span id="lbl-matrix-more">More</span>
+      <!-- Monthly Training Calendar (Strava Training Log Style) -->
+      <div class="runner-card calendar-card" id="monthly-calendar-card">
+        <div class="calendar-header-wrap">
+          <div>
+            <h3 class="chart-title" id="lbl-calendar-title">Monthly training calendar</h3>
+            <span class="section-subtitle" id="lbl-calendar-sub" style="margin-bottom: 0;">Training log & distance distribution</span>
+          </div>
+          
+          <div class="calendar-controls">
+            <div class="calendar-nav-group">
+              <button class="calendar-nav-btn" id="btn-prev-month" aria-label="Previous month">&larr;</button>
+              <span class="calendar-current-month" id="lbl-current-month">August 2026</span>
+              <button class="calendar-nav-btn" id="btn-next-month" aria-label="Next month">&rarr;</button>
+            </div>
+            <span class="act-pill" id="lbl-calendar-month-total">-- km • -- runs</span>
           </div>
         </div>
-        <div class="matrix-grid-scroll">
-          <div class="matrix-grid" id="consistency-grid"></div>
+
+        <!-- Distance Tiers Legend -->
+        <div class="calendar-legend-bar">
+          <div class="cal-legend-item">
+            <span class="cal-legend-dot" style="background: #4B7B9E;"></span>
+            <span id="lbl-leg-10">&lt; 10 km</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-dot" style="background: #2D5A47;"></span>
+            <span id="lbl-leg-15">&lt; 15 km</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-dot" style="background: #C47A1E;"></span>
+            <span id="lbl-leg-20">&lt; 20 km</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-dot" style="background: #E05A36;"></span>
+            <span id="lbl-leg-sm">Semi (SM)</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-dot" style="background: #B83B19;"></span>
+            <span id="lbl-leg-30">&lt; 30 km</span>
+          </div>
+          <div class="cal-legend-item">
+            <span class="cal-legend-dot" style="background: #7C2D12;"></span>
+            <span id="lbl-leg-m">Marathon (M)</span>
+          </div>
         </div>
-        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;" id="lbl-matrix-hint">
-          Hover over a square to view daily distance.
+
+        <!-- 7-day Header & Month Days Grid -->
+        <div class="calendar-grid-wrap">
+          <div class="calendar-weekdays-row" id="calendar-weekdays-row">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="calendar-days-grid" id="calendar-days-grid"></div>
         </div>
       </div>
 
