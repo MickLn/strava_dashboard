@@ -162,33 +162,72 @@
   gap: var(--space-md);
 }
 
-/* Responsive Media Queries */
+/* Responsive Media Queries Mobile-First */
 @media (max-width: 1024px) {
   .grid-bento-hero,
   .grid-bento-middle,
-  .grid-bento-season {
+  .grid-bento-season,
+  .grid-bento-insights {
     grid-template-columns: 1fr;
+    gap: var(--space-md);
   }
 }
 
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: var(--space-sm) var(--space-sm) var(--space-xl);
+    padding: var(--space-sm) 12px calc(var(--space-xl) + var(--safe-area-bottom));
     gap: var(--space-lg);
   }
 
   .top-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .athlete-brand {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .header-controls {
     width: 100%;
+    display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .period-selector {
+    flex: 1;
+    display: flex;
+  }
+
+  .period-btn {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.72rem;
   }
 
   .footer-content {
     flex-direction: column;
     gap: var(--space-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 8px 10px calc(var(--space-xl) + var(--safe-area-bottom));
+    gap: 14px;
+  }
+
+  .section-title {
+    font-size: 1.05rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.75rem;
   }
 }

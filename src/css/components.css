@@ -1568,8 +1568,253 @@
   height: 100%;
 }
 
+/* ==========================================================================
+   MOBILE-FIRST RESPONSIVE SUITE (< 1024px, < 768px, < 640px, < 480px)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .drawer-content-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+
+  .drawer-splits-col {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 850px) {
+  .drawer-content-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .drawer-map-box {
+    min-height: 175px;
+    height: 175px;
+    width: 100%;
+  }
+
+  .drawer-telemetry-col {
+    height: auto;
+    width: 100%;
+  }
+
+  .drawer-splits-col {
+    grid-column: auto;
+    height: auto;
+    width: 100%;
+  }
+
+  .splits-list {
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Filtres & Recherche */
+  .activities-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .activities-search-wrap {
+    max-width: 100%;
+    min-width: 100%;
+  }
+
+  .activities-tag-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .activities-tag-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tag-chip {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Carte Dernière Sortie */
+  .featured-map-wrap {
+    height: 190px;
+  }
+
+  /* Calendrier Mensuel */
+  .calendar-header-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .calendar-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .calendar-legend-bar {
+    gap: 6px 10px;
+    padding: 6px 8px;
+    font-size: 0.68rem;
+  }
+}
+
 @media (max-width: 640px) {
+  /* Étage 1 : Métriques en 2x2 */
   .featured-metrics-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .featured-metric-value {
+    font-size: 1.1rem;
+  }
+
+  /* Étage 2 : Weekly Pulse, Chaussures & Records */
+  .pulse-streak-box {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .streak-big-num {
+    font-size: 1.8rem;
+  }
+
+  .week-days-tracker {
+    gap: 4px;
+  }
+
+  .day-box {
+    height: 32px;
+    font-size: 0.70rem;
+  }
+
+  .shoe-rotator-card {
+    min-height: auto;
+  }
+
+  .shoe-image-wrap {
+    height: 180px;
+    padding: 8px;
+  }
+
+  .records-card {
+    min-height: auto;
+  }
+
+  .record-activity-name {
+    max-width: 140px;
+  }
+
+  /* Étage 3 : Calendrier Mensuel */
+  .calendar-days-grid {
+    gap: 3px;
+  }
+
+  .cal-day-cell {
+    min-height: 42px;
+    padding: 2px 3px;
+  }
+
+  .cal-day-num {
+    font-size: 0.62rem;
+  }
+
+  .cal-activity-pill {
+    padding: 1px 3px;
+    font-size: 0.64rem;
+  }
+
+  .cal-pill-badge {
+    font-size: 0.55rem;
+    padding: 0 2px;
+  }
+
+  /* Étage 3.5 : Zones & Badges */
+  .effort-zone-row {
+    padding: 6px 8px;
+  }
+
+  .effort-zone-name {
+    font-size: 0.78rem;
+  }
+
+  .effort-zone-desc {
+    font-size: 0.66rem;
+  }
+
+  .achievements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Étage 4 : Activités */
+  .activity-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .activity-metrics {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px dashed var(--border-light);
+    padding-top: 6px;
+    gap: 8px;
+  }
+
+  .act-stat {
+    align-items: flex-start;
+  }
+
+  .act-stat-val {
+    font-size: 0.90rem;
+  }
+
+  /* Modale Bottom Sheet Mobile */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-box {
+    border-radius: 20px 20px 0 0;
+    max-height: 88vh;
+    max-width: 100%;
+    padding: 18px 16px calc(24px + var(--safe-area-bottom));
+    transform: translateY(100%);
+  }
+
+  .modal-overlay.open .modal-box {
+    transform: translateY(0);
+  }
+
+  .modal-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .record-activity-name {
+    max-width: 110px;
+  }
+
+  .featured-metric-value {
+    font-size: 1.0rem;
+  }
+
+  .calendar-current-month {
+    min-width: 95px;
+    font-size: 0.80rem;
   }
 }
