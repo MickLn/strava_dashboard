@@ -918,9 +918,22 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.76rem;
-  width: 58px;
+  width: 52px;
   text-align: right;
   color: var(--text-primary);
+}
+
+.split-zone-badge {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  line-height: 1.2;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
 /* Button & Tabs */

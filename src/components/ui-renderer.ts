@@ -13,6 +13,7 @@ import {
   calculateElevationDetails,
   calculateDifficulty,
   calculateEffortZones,
+  getActivityEffortZone,
   calculateAchievements,
   generateActivityTags,
   generateKilometerSplits,
@@ -377,7 +378,7 @@ export class UIRenderer {
 
     if (!activities || activities.length === 0) return;
 
-    const { zones, hasWatchCount, paceModelCount, totalKm } = calculateEffortZones(activities);
+    const { zones, hasBpmCount, paceModelCount, totalKm } = calculateEffortZones(activities);
     const isFr = i18n.getLang() === 'fr';
 
     if (totalDistEl) {
@@ -421,7 +422,7 @@ export class UIRenderer {
     }
 
     if (metaWrap) {
-      metaWrap.innerHTML = `<span>${i18n.t().watchPaceSplit(hasWatchCount, paceModelCount)}</span>`;
+      metaWrap.innerHTML = `<span>❤️ ${hasBpmCount} ${isFr ? 'sorties avec cardio (BPM)' : 'runs with heart rate (BPM)'} • 🏃 ${paceModelCount} ${isFr ? 'sorties avec modèle Jack Daniels' : 'runs with Jack Daniels model'}</span>`;
     }
   }
 
@@ -509,7 +510,7 @@ export class UIRenderer {
       const splits = generateKilometerSplits(activity);
       const svgMap = renderPolylineSVG(activity.map?.summary_polyline || '', 250, 130);
 
-      // HTML des splits par kilomètre
+      // HTML des splits par kilomètre avec badge de Zone (Z1, Z2, Z3...)
       const splitsHtml = splits.map(s => `
         <div class="split-row">
           <span class="split-km">${s.kmLabel}</span>
@@ -517,6 +518,7 @@ export class UIRenderer {
             <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
           </div>
           <span class="split-pace">${s.paceFormatted}</span>
+          <span class="split-zone-badge" style="background-color: ${s.zoneColor}20; color: ${s.zoneColor}; border: 1px solid ${s.zoneColor}40;">${s.zoneBadge}</span>
         </div>
       `).join('');
 
@@ -592,6 +594,14 @@ export class UIRenderer {
                 <span class="telemetry-lbl">⚡ ${t.difficulty} :</span>
                 <span class="effort-badge" style="color: ${diff.color}; border-color: ${diff.color}40;">
                   ${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}
+                </span>
+              </div>
+
+              <!-- Zone d'Effort (Cardio si BPM présent, Modèle Jack Daniels sinon) -->
+              <div class="telemetry-row">
+                <span class="telemetry-lbl">🎯 ${isFr ? "Zone d'effort" : 'Effort zone'} :</span>
+                <span class="effort-badge" style="color: ${getActivityEffortZone(activity).badgeColor}; border-color: ${getActivityEffortZone(activity).badgeColor}40; background-color: ${getActivityEffortZone(activity).badgeColor}15;">
+                  ${isFr ? getActivityEffortZone(activity).zoneNameFr : getActivityEffortZone(activity).zoneName} (${isFr ? getActivityEffortZone(activity).methodLabelFr : getActivityEffortZone(activity).methodLabel})
                 </span>
               </div>
 

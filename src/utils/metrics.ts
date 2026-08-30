@@ -354,43 +354,74 @@ export interface ZoneData {
   count: number;
 }
 
+export interface ActivityZoneResult {
+  zoneIndex: number;
+  zoneName: string;
+  zoneNameFr: string;
+  badgeColor: string;
+  method: 'bpm' | 'jack_daniels';
+  methodLabel: string;
+  methodLabelFr: string;
+}
+
 /**
- * Calcule la distribution des zones d'effort (Cardio si montre présente, Modèle Jack Daniels Allure sinon)
+ * Détermine la zone d'effort d'une séance spécifique :
+ * - Si BPM enregistré (> 0) : calcul classique selon la fréquence cardiaque
+ * - Sinon : calcul selon le modèle d'allure Jack Daniels
  */
-export function calculateEffortZones(activities: Activity[]): { zones: ZoneData[]; hasWatchCount: number; paceModelCount: number; totalKm: number } {
+export function getActivityEffortZone(activity: Activity): ActivityZoneResult {
+  const hasBpm = Boolean(activity.average_heartrate && activity.average_heartrate > 0);
+
+  if (hasBpm && activity.average_heartrate) {
+    const hr = Math.round(activity.average_heartrate);
+    if (hr < 135) {
+      return { zoneIndex: 1, zoneName: 'Z1 • Recovery', zoneNameFr: 'Z1 • Récupération', badgeColor: '#4B7B9E', method: 'bpm', methodLabel: `${hr} bpm`, methodLabelFr: `${hr} bpm` };
+    } else if (hr <= 152) {
+      return { zoneIndex: 2, zoneName: 'Z2 • Endurance', zoneNameFr: 'Z2 • Endurance', badgeColor: 'var(--color-forest)', method: 'bpm', methodLabel: `${hr} bpm`, methodLabelFr: `${hr} bpm` };
+    } else if (hr <= 165) {
+      return { zoneIndex: 3, zoneName: 'Z3 • Tempo', zoneNameFr: 'Z3 • Tempo', badgeColor: 'var(--color-amber)', method: 'bpm', methodLabel: `${hr} bpm`, methodLabelFr: `${hr} bpm` };
+    } else if (hr <= 178) {
+      return { zoneIndex: 4, zoneName: 'Z4 • Threshold', zoneNameFr: 'Z4 • Seuil lactique', badgeColor: 'var(--color-primary)', method: 'bpm', methodLabel: `${hr} bpm`, methodLabelFr: `${hr} bpm` };
+    } else {
+      return { zoneIndex: 5, zoneName: 'Z5 • VO2max / Speed', zoneNameFr: 'Z5 • VMA & Vitesse', badgeColor: '#B91C1C', method: 'bpm', methodLabel: `${hr} bpm`, methodLabelFr: `${hr} bpm` };
+    }
+  }
+
+  // Modèle Jack Daniels basé sur l'allure (quand aucun BPM n'est enregistré)
+  const speed = activity.average_speed || 3.0; // m/s
+  const paceStr = formatPace(speed);
+  if (speed < 2.77) {
+    return { zoneIndex: 1, zoneName: 'Z1 • Recovery', zoneNameFr: 'Z1 • Récupération', badgeColor: '#4B7B9E', method: 'jack_daniels', methodLabel: `${paceStr} (Jack Daniels)`, methodLabelFr: `${paceStr} (Jack Daniels)` };
+  } else if (speed < 3.125) {
+    return { zoneIndex: 2, zoneName: 'Z2 • Endurance', zoneNameFr: 'Z2 • Endurance', badgeColor: 'var(--color-forest)', method: 'jack_daniels', methodLabel: `${paceStr} (Jack Daniels)`, methodLabelFr: `${paceStr} (Jack Daniels)` };
+  } else if (speed < 3.448) {
+    return { zoneIndex: 3, zoneName: 'Z3 • Tempo', zoneNameFr: 'Z3 • Tempo', badgeColor: 'var(--color-amber)', method: 'jack_daniels', methodLabel: `${paceStr} (Jack Daniels)`, methodLabelFr: `${paceStr} (Jack Daniels)` };
+  } else if (speed < 3.703) {
+    return { zoneIndex: 4, zoneName: 'Z4 • Threshold', zoneNameFr: 'Z4 • Seuil', badgeColor: 'var(--color-primary)', method: 'jack_daniels', methodLabel: `${paceStr} (Jack Daniels)`, methodLabelFr: `${paceStr} (Jack Daniels)` };
+  } else {
+    return { zoneIndex: 5, zoneName: 'Z5 • VO2max / Speed', zoneNameFr: 'Z5 • VMA & Vitesse', badgeColor: '#B91C1C', method: 'jack_daniels', methodLabel: `${paceStr} (Jack Daniels)`, methodLabelFr: `${paceStr} (Jack Daniels)` };
+  }
+}
+
+/**
+ * Calcule la distribution des zones d'effort (Cardio si BPM présent, Modèle Jack Daniels Allure sinon)
+ */
+export function calculateEffortZones(activities: Activity[]): { zones: ZoneData[]; hasBpmCount: number; paceModelCount: number; totalKm: number } {
   let z1Km = 0, z2Km = 0, z3Km = 0, z4Km = 0, z5Km = 0;
   let z1Count = 0, z2Count = 0, z3Count = 0, z4Count = 0, z5Count = 0;
-  let hasWatchCount = 0, paceModelCount = 0;
+  let hasBpmCount = 0, paceModelCount = 0;
 
   for (const act of activities) {
     const km = (act.distance || 0) / 1000;
-    const hasWatch = Boolean(act.has_heartrate && act.average_heartrate && act.average_heartrate > 0);
+    const res = getActivityEffortZone(act);
 
-    let zone = 2; // Par défaut endurance
+    if (res.method === 'bpm') hasBpmCount++;
+    else paceModelCount++;
 
-    if (hasWatch && act.average_heartrate) {
-      hasWatchCount++;
-      const hr = act.average_heartrate;
-      if (hr < 135) zone = 1;
-      else if (hr <= 152) zone = 2;
-      else if (hr <= 165) zone = 3;
-      else if (hr <= 178) zone = 4;
-      else zone = 5;
-    } else {
-      paceModelCount++;
-      // Modèle Jack Daniels basé sur l'allure
-      const speed = act.average_speed || 3.0; // m/s
-      if (speed < 2.77) zone = 1;       // > 6:00/km (Récupération)
-      else if (speed < 3.125) zone = 2; // 5:20 - 6:00/km (Endurance)
-      else if (speed < 3.448) zone = 3; // 4:50 - 5:20/km (Tempo)
-      else if (speed < 3.703) zone = 4; // 4:30 - 4:50/km (Seuil)
-      else zone = 5;                    // < 4:30/km (VMA / Record)
-    }
-
-    if (zone === 1) { z1Km += km; z1Count++; }
-    else if (zone === 2) { z2Km += km; z2Count++; }
-    else if (zone === 3) { z3Km += km; z3Count++; }
-    else if (zone === 4) { z4Km += km; z4Count++; }
+    if (res.zoneIndex === 1) { z1Km += km; z1Count++; }
+    else if (res.zoneIndex === 2) { z2Km += km; z2Count++; }
+    else if (res.zoneIndex === 3) { z3Km += km; z3Count++; }
+    else if (res.zoneIndex === 4) { z4Km += km; z4Count++; }
     else { z5Km += km; z5Count++; }
   }
 
@@ -449,7 +480,7 @@ export function calculateEffortZones(activities: Activity[]): { zones: ZoneData[
     }
   ];
 
-  return { zones, hasWatchCount, paceModelCount, totalKm: Math.round(totalKm) };
+  return { zones, hasBpmCount, paceModelCount, totalKm: Math.round(totalKm) };
 }
 
 export interface Achievement {
@@ -645,7 +676,7 @@ export function generateActivityTags(activity: Activity, gearName?: string): str
 }
 
 /**
- * Génère la décomposition de l'allure kilomètre par kilomètre (Splits)
+ * Génère la décomposition de l'allure kilomètre par kilomètre (Splits) avec badge de Zone (Z1 à Z5)
  */
 export function generateKilometerSplits(activity: Activity) {
   const kmTotal = (activity.distance || 0) / 1000;
@@ -653,7 +684,15 @@ export function generateKilometerSplits(activity: Activity) {
   const remainder = kmTotal - fullKm;
   const avgPaceSec = (activity.moving_time || 0) / Math.max(0.1, kmTotal);
 
-  const splits: Array<{ kmLabel: string; paceFormatted: string; paceSec: number; relativePercent: number; isFaster: boolean }> = [];
+  const getPaceZone = (paceSec: number) => {
+    if (paceSec > 360) return { badge: 'Z1', color: '#4B7B9E' };       // > 6:00
+    if (paceSec >= 320) return { badge: 'Z2', color: 'var(--color-forest)' }; // 5:20 - 6:00
+    if (paceSec >= 290) return { badge: 'Z3', color: 'var(--color-amber)' };  // 4:50 - 5:20
+    if (paceSec >= 270) return { badge: 'Z4', color: 'var(--color-primary)' };// 4:30 - 4:50
+    return { badge: 'Z5', color: '#B91C1C' };                                  // < 4:30
+  };
+
+  const splits: Array<{ kmLabel: string; paceFormatted: string; paceSec: number; relativePercent: number; isFaster: boolean; zoneBadge: string; zoneColor: string }> = [];
 
   // Variabilité naturelle de course (chauffe au début, régulier au milieu, accélération finale)
   for (let i = 1; i <= fullKm; i++) {
@@ -666,6 +705,7 @@ export function generateKilometerSplits(activity: Activity) {
     const mins = Math.floor(kmPaceSec / 60);
     const secs = Math.floor(kmPaceSec % 60);
     const isFaster = kmPaceSec <= avgPaceSec;
+    const zoneInfo = getPaceZone(kmPaceSec);
 
     // Pourcentage de barre (relativement à une allure type 4:00 - 6:30)
     const relativePercent = Math.min(100, Math.max(25, Math.round(((400 - kmPaceSec) / 150) * 100)));
@@ -675,7 +715,9 @@ export function generateKilometerSplits(activity: Activity) {
       paceFormatted: `${mins}:${secs.toString().padStart(2, '0')}`,
       paceSec: kmPaceSec,
       relativePercent,
-      isFaster
+      isFaster,
+      zoneBadge: zoneInfo.badge,
+      zoneColor: zoneInfo.color
     });
   }
 
@@ -684,12 +726,15 @@ export function generateKilometerSplits(activity: Activity) {
     const remPaceSec = Math.round(avgPaceSec * 0.97);
     const mins = Math.floor(remPaceSec / 60);
     const secs = Math.floor(remPaceSec % 60);
+    const zoneInfo = getPaceZone(remPaceSec);
     splits.push({
       kmLabel: `+${Math.round(remainder * 1000)}m`,
       paceFormatted: `${mins}:${secs.toString().padStart(2, '0')}`,
       paceSec: remPaceSec,
       relativePercent: 85,
-      isFaster: true
+      isFaster: true,
+      zoneBadge: zoneInfo.badge,
+      zoneColor: zoneInfo.color
     });
   }
 

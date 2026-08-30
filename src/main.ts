@@ -112,6 +112,9 @@ class App {
       });
     }
 
+    // Rendu dynamique des zones d'effort pour la sélection actuelle
+    UIRenderer.renderEffortZones(filtered);
+
     // Rendu avec fonction de synchronisation de la carte au survol
     UIRenderer.renderActivitiesFeed(
       filtered,
