@@ -139,24 +139,36 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu de l'en-tête athlète
+   * Rendu de l'en-tête et du profil athlète
    */
   public static renderHeader(dataset: StravaDataset): void {
     const athlete = dataset.athlete;
-    const avatarEl = document.getElementById('athlete-avatar') as HTMLImageElement;
-    const nameEl = document.getElementById('athlete-name');
-    const locationEl = document.getElementById('athlete-location');
+    const navAvatarEl = document.getElementById('navbar-athlete-avatar') as HTMLImageElement;
+    const navNameEl = document.getElementById('navbar-athlete-name');
+    const modalAvatarEl = document.getElementById('modal-profile-avatar') as HTMLImageElement;
+    const modalNameEl = document.getElementById('modal-profile-name');
+    const modalLocationEl = document.getElementById('modal-profile-location');
     const lastSyncEl = document.getElementById('last-sync-time');
 
-    if (avatarEl && athlete.profile) {
-      avatarEl.src = athlete.profile;
-      avatarEl.alt = `${athlete.firstname} ${athlete.lastname}`;
+    const fullName = `${athlete.firstname} ${athlete.lastname}`;
+    const shortName = `${athlete.firstname} ${athlete.lastname ? athlete.lastname.charAt(0) + '.' : ''}`;
+
+    if (navAvatarEl && athlete.profile) {
+      navAvatarEl.src = athlete.profile;
+      navAvatarEl.alt = fullName;
     }
-    if (nameEl) nameEl.textContent = `${athlete.firstname} ${athlete.lastname}`;
-    if (locationEl) locationEl.textContent = `${athlete.city || 'Paris'}, ${athlete.country || 'France'}`;
+    if (navNameEl) navNameEl.textContent = shortName;
+
+    if (modalAvatarEl && athlete.profile) {
+      modalAvatarEl.src = athlete.profile;
+      modalAvatarEl.alt = fullName;
+    }
+    if (modalNameEl) modalNameEl.textContent = fullName;
+    if (modalLocationEl) modalLocationEl.textContent = `${athlete.city || 'Paris'}, ${athlete.country || 'France'}`;
+
     if (lastSyncEl && dataset.last_updated) {
       const syncDate = new Date(dataset.last_updated);
-      lastSyncEl.textContent = `${i18n.t().lastSync} : ${syncDate.toLocaleDateString(i18n.getLang() === 'fr' ? 'fr-FR' : 'en-US')} ${syncDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      lastSyncEl.textContent = `${syncDate.toLocaleDateString(i18n.getLang() === 'fr' ? 'fr-FR' : 'en-US')} ${syncDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
 
     this.updateStaticLabels();
@@ -629,12 +641,14 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu du flux des activités récentes avec tiroir interactif au survol et clic
+   * Rendu du flux des activités récentes a
    */
   public static renderActivitiesFeed(
     activities: Activity[],
     dataset: StravaDataset | null,
-    onHoverActivity: (act: Activity) => void
+    onHoverActivity: (act: Activity) => void,
+    visibleLimit: number = 10,
+    onLoadMore?: () => void
   ): void {
     const container = document.getElementById('activities-feed-list');
     if (!container || !dataset) return;
@@ -652,7 +666,9 @@ export class UIRenderer {
       return;
     }
 
-    activities.forEach((activity) => {
+    const visibleActivities = activities.slice(0, visibleLimit);
+
+    visibleActivities.forEach((activity) => {
       const item = document.createElement('div');
       item.className = 'activity-item';
       item.setAttribute('data-activity-id', activity.id.toString());
@@ -766,10 +782,13 @@ export class UIRenderer {
               </div>
             </div>
 
-            <!-- Col 3 : Détail des allures km par km (Splits) -->
+            <!-- Col 3 : Allure au kilomètre (Splits) avec badge de Zone -->
             <div class="drawer-splits-col">
-              <div class="splits-list">
-                ${splitsHtml}
+              <div class="splits-container-inner">
+                <span class="splits-title">${t.splits}</span>
+                <div class="splits-list-custom">
+                  ${splitsHtml}
+                </div>
               </div>
             </div>
 
@@ -777,14 +796,15 @@ export class UIRenderer {
         </div>
       `;
 
-      // Déclencheur au survol : Synchronisation de la carte principale + initialisation mini-carte
       let hoverTimeout: any = null;
+
+      // Survol : déclenche l'affichage du tracé sur la carte principale
       item.addEventListener('mouseenter', () => {
         hoverTimeout = setTimeout(() => {
           onHoverActivity(activity);
-          UIRenderer.initOrUpdateMiniMap(activity.id, activity.map?.summary_polyline || '');
-        }, 120);
+        }, 80);
       });
+
       item.addEventListener('mouseleave', () => {
         if (hoverTimeout) clearTimeout(hoverTimeout);
       });
@@ -800,6 +820,31 @@ export class UIRenderer {
 
       container.appendChild(item);
     });
+
+    // Bouton de pagination / charger plus de sorties
+    if (activities.length > visibleLimit && onLoadMore) {
+      const loadMoreWrap = document.createElement('div');
+      loadMoreWrap.className = 'feed-load-more-wrap';
+      const remaining = activities.length - visibleLimit;
+      const nextBatch = Math.min(10, remaining);
+
+      loadMoreWrap.innerHTML = `
+        <button id="btn-load-more-activities" class="btn-load-more">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>${isFr ? `Afficher plus de sorties (+${nextBatch})` : `Load more activities (+${nextBatch})`}</span>
+          <span style="opacity: 0.65; font-size: 0.75rem; margin-left: 4px;">(${visibleLimit}/${activities.length})</span>
+        </button>
+      `;
+
+      const btn = loadMoreWrap.querySelector<HTMLButtonElement>('#btn-load-more-activities');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          onLoadMore();
+        });
+      }
+
+      container.appendChild(loadMoreWrap);
+    }
   }
 
   /**

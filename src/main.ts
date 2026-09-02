@@ -1,83 +1,147 @@
 import { DataService } from './services/data-service.ts';
 import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
-import { initMap, renderActivityTraces, openFullscreenHeatmap, closeFullscreenHeatmap } from './components/map.ts';
+import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap } from './components/map.ts';
 import { InteractivePreloader } from './components/preloader.ts';
+import { Router, PageId } from './components/router.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
 import { i18n, Language } from './utils/i18n.ts';
 import { generateActivityTags } from './utils/metrics.ts';
 
+const INTRO_FX_KEY = 'strava_intro_fx_enabled';
+
 class App {
   private dataService = DataService.getInstance();
+  private router = Router.getInstance();
   private dataset: StravaDataset | null = null;
   private currentPeriod: 'all' | 'ytd' | '30d' = 'all';
   private searchQuery: string = '';
   private activeTagFilter: string = 'all';
+  private feedLimit: number = 10;
   private preloader = new InteractivePreloader();
 
   public async init(): Promise<void> {
     try {
-      // 0. Lancement de l'animation d'entrée interactive
-      this.preloader.start();
+      // 0. Lancement conditionnel de l'animation d'entrée selon le toggle persistant
+      const introFxEnabled = localStorage.getItem(INTRO_FX_KEY) !== 'false';
+      if (introFxEnabled) {
+        this.preloader.start();
+      } else {
+        const overlay = document.getElementById('preloader-overlay');
+        if (overlay) overlay.style.display = 'none';
+      }
 
-      // 1. Initialisation de la carte Leaflet
+      // 1. Initialisation de la navigation multi-pages
+      this.router.init();
+      this.router.onPageChange((page: PageId) => {
+        this.handlePageSwitch(page);
+      });
+
+      // 2. Initialisation de la carte Leaflet du Dashboard
       initMap('leaflet-map');
 
-      // 2. Chargement des données Strava
+      // 3. Chargement des données Strava
       this.dataset = await this.dataService.loadData();
-      this.preloader.setDatasetReady(this.dataset.activities);
+      if (introFxEnabled) {
+        this.preloader.setDatasetReady(this.dataset.activities);
+      }
 
-      // 3. Rendu du Bento Dashboard
+      // 4. Rendu des composants sur leurs pages dédiées
       this.renderAll();
 
-      // 4. Écouteurs d'événements
+      // 5. Écouteurs d'événements
       this.setupEventListeners();
+
+      // 6. Gestion de la page courante au chargement
+      this.handlePageSwitch(this.router.getCurrentPage());
 
     } catch (error) {
       console.error("Erreur d'initialisation du dashboard:", error);
-      UIRenderer.showToast('⚠️ Unable to load Strava data.');
+      UIRenderer.showToast('Unable to load Strava data.');
+    }
+  }
+
+  private handlePageSwitch(page: PageId): void {
+    if (!this.dataset) return;
+
+    if (page === 'dashboard') {
+      setTimeout(() => {
+        invalidateMapSize();
+        if (this.dataset?.activities) {
+          renderActivityTraces(this.dataset.activities);
+        }
+      }, 50);
+    } else if (page === 'analytics') {
+      setTimeout(() => {
+        if (this.dataset?.activities) {
+          renderCharts(this.dataset.activities, 2026);
+        }
+      }, 50);
+    } else if (page === 'map') {
+      setTimeout(() => {
+        if (this.dataset?.activities) {
+          initPageAtlasMap('page-heatmap-container', this.dataset.activities);
+        }
+      }, 50);
     }
   }
 
   private renderAll(): void {
     if (!this.dataset) return;
 
-    // Header & Live Hub (Étage 1)
+    // Header & Navigation i18n
     UIRenderer.renderHeader(this.dataset);
+    this.updateNavLabels();
+
+    // Page 1 : Dashboard (Dernière sortie, Weekly Pulse, Calendrier mensuel)
     UIRenderer.renderFeaturedLatestRun(this.dataset.activities, (act: Activity) => {
       UIRenderer.openActivityModal(act, this.dataset!);
     });
     UIRenderer.renderWeeklyPulse(this.dataset);
-
-    // Records & Parc de Chaussures Rotatif (Étage 2)
-    UIRenderer.renderRecords(this.dataset, (activityId) => {
-      const act = this.dataset?.activities.find(a => a.id === activityId);
-      if (act) {
-        UIRenderer.openActivityModal(act, this.dataset!);
-        renderActivityTraces(this.dataset!.activities, act.id);
-      }
-    });
-    UIRenderer.renderShoeRotator(this.dataset);
-
-    // Saison 2026 & Calendrier Mensuel d'Entraînement (Étage 3)
-    renderCharts(this.dataset.activities, 2026);
-    UIRenderer.renderYtdStrip(this.dataset);
     UIRenderer.setupCalendarNavigation(this.dataset.activities, (act: Activity) => {
       renderActivityTraces(this.dataset!.activities, act.id);
     });
     UIRenderer.renderMonthlyCalendar(this.dataset.activities, (act: Activity) => {
       renderActivityTraces(this.dataset!.activities, act.id);
     });
+    renderActivityTraces(this.dataset.activities);
+    this.renderActivitiesForCurrentPeriod();
 
-    // Zones d'Effort & Trophées (Étage 3.5)
-    UIRenderer.renderEffortZones(this.dataset.activities);
+    // Page 2 : Analytics (Progression YTD & Objectif)
+    renderCharts(this.dataset.activities, 2026);
+    UIRenderer.renderYtdStrip(this.dataset);
+
+    // Page 3 : Records & Trophées
+    UIRenderer.renderRecords(this.dataset, (activityId) => {
+      const act = this.dataset?.activities.find(a => a.id === activityId);
+      if (act) {
+        UIRenderer.openActivityModal(act, this.dataset!);
+      }
+    });
     UIRenderer.renderAchievements(this.dataset);
 
-    // Carte GPS
-    renderActivityTraces(this.dataset.activities);
+    // Page 4 : Shoe Locker
+    UIRenderer.renderShoeRotator(this.dataset);
 
-    // Flux des activités avec recherche et tiroir interactif (Étage 4)
-    this.renderActivitiesForCurrentPeriod();
+    // Page 5 : Atlas GPS Heatmap
+    if (this.router.getCurrentPage() === 'map') {
+      initPageAtlasMap('page-heatmap-container', this.dataset.activities);
+    }
+  }
+
+  private updateNavLabels(): void {
+    const t = i18n.t();
+    const lblDash = document.getElementById('lbl-nav-dashboard');
+    const lblAnalytics = document.getElementById('lbl-nav-analytics');
+    const lblRecords = document.getElementById('lbl-nav-records');
+    const lblShoes = document.getElementById('lbl-nav-shoes');
+    const lblMap = document.getElementById('lbl-nav-map');
+
+    if (lblDash) lblDash.textContent = t.navDashboard;
+    if (lblAnalytics) lblAnalytics.textContent = t.navAnalytics;
+    if (lblRecords) lblRecords.textContent = t.navRecords;
+    if (lblShoes) lblShoes.textContent = t.navShoes;
+    if (lblMap) lblMap.textContent = t.navMap;
   }
 
   private renderActivitiesForCurrentPeriod(): void {
@@ -123,44 +187,31 @@ class App {
       });
     }
 
-    // Rendu dynamique des zones d'effort pour la sélection actuelle
-    UIRenderer.renderEffortZones(filtered);
-
-    // Rendu avec fonction de synchronisation de la carte au survol
     UIRenderer.renderActivitiesFeed(
       filtered,
       this.dataset,
-      (hoveredActivity: Activity) => {
-        renderActivityTraces(this.dataset!.activities, hoveredActivity.id);
+      (act) => {
+        renderActivityTraces(this.dataset!.activities, act.id);
+      },
+      this.feedLimit,
+      () => {
+        this.feedLimit += 10;
+        this.renderActivitiesForCurrentPeriod();
       }
     );
   }
 
   private setupEventListeners(): void {
-    // Boutons de changement de langue (EN / FR)
-    const langButtons = document.querySelectorAll<HTMLButtonElement>('.lang-btn');
-    langButtons.forEach(btn => {
+    // Sélecteur de langue EN / FR
+    const langBtns = document.querySelectorAll<HTMLButtonElement>('.lang-btn');
+    langBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const lang = btn.getAttribute('data-lang') as Language;
-        if (lang && lang !== i18n.getLang()) {
-          i18n.setLang(lang);
+        const selectedLang = btn.getAttribute('data-lang') as Language;
+        if (selectedLang && selectedLang !== i18n.getLang()) {
+          i18n.setLang(selectedLang);
+          langBtns.forEach(b => b.classList.toggle('active', b === btn));
           this.renderAll();
-          UIRenderer.showToast(lang === 'fr' ? '🇫🇷 Langue : Français' : '🇬🇧 Language : English');
         }
-      });
-    });
-
-    // Boutons de période
-    const tabButtons = document.querySelectorAll<HTMLButtonElement>('.tab-btn');
-    tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const period = btn.getAttribute('data-period') as 'all' | 'ytd' | '30d';
-        this.currentPeriod = period || 'all';
-        this.renderActivitiesForCurrentPeriod();
-        UIRenderer.showToast(`${btn.textContent}`);
       });
     });
 
@@ -171,6 +222,7 @@ class App {
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.searchQuery = (e.target as HTMLInputElement).value;
+        this.feedLimit = 10;
         if (clearBtn) {
           clearBtn.style.display = this.searchQuery ? 'block' : 'none';
         }
@@ -182,6 +234,7 @@ class App {
       clearBtn.addEventListener('click', () => {
         searchInput.value = '';
         this.searchQuery = '';
+        this.feedLimit = 10;
         clearBtn.style.display = 'none';
         this.renderActivitiesForCurrentPeriod();
       });
@@ -194,11 +247,12 @@ class App {
         tagChips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         this.activeTagFilter = chip.getAttribute('data-tag') || 'all';
+        this.feedLimit = 10;
         this.renderActivitiesForCurrentPeriod();
       });
     });
 
-    // Bouton de rafraîchissement forcé
+    // Bouton de rafraîchissement forcé dans le modal de profil
     const refreshBtn = document.getElementById('btn-force-refresh');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
@@ -216,11 +270,50 @@ class App {
       });
     }
 
-    // Bouton Rejouer / Toggle Animation d'entrée
+    // Bouton Switch Intro FX (ON / OFF) Persistant
     const togglePreloaderBtn = document.getElementById('btn-toggle-preloader');
     if (togglePreloaderBtn) {
+      const isCurrentlyEnabled = localStorage.getItem(INTRO_FX_KEY) !== 'false';
+      togglePreloaderBtn.classList.toggle('active', isCurrentlyEnabled);
+
       togglePreloaderBtn.addEventListener('click', () => {
-        this.preloader.replay(this.dataset?.activities);
+        const isNowActive = togglePreloaderBtn.classList.toggle('active');
+        localStorage.setItem(INTRO_FX_KEY, isNowActive ? 'true' : 'false');
+        const isFr = i18n.getLang() === 'fr';
+        if (isNowActive) {
+          this.preloader.replay(this.dataset?.activities);
+          UIRenderer.showToast(isFr ? "Intro FX activée (jouée au chargement)" : "Intro FX enabled (plays on reload)");
+        } else {
+          UIRenderer.showToast(isFr ? "Intro FX désactivée (accès direct au rechargement)" : "Intro FX disabled (instant dashboard on reload)");
+        }
+      });
+    }
+
+    // Gestion de l'ouverture / fermeture du modal de Profil
+    const openProfileBtn = document.getElementById('btn-open-profile');
+    const profileModal = document.getElementById('profile-modal');
+    const closeProfileBtn = document.getElementById('btn-close-profile');
+
+    if (openProfileBtn && profileModal) {
+      openProfileBtn.addEventListener('click', () => {
+        profileModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+
+    if (closeProfileBtn && profileModal) {
+      closeProfileBtn.addEventListener('click', () => {
+        profileModal.classList.remove('active');
+        document.body.style.overflow = '';
+      });
+    }
+
+    if (profileModal) {
+      profileModal.addEventListener('click', (e) => {
+        if (e.target === profileModal) {
+          profileModal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
       });
     }
 

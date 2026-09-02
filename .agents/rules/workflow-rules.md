@@ -1,19 +1,48 @@
-# Project Workflow & Execution Rules
+# Global Agent Workflow & Execution Rules
 
-## 1. Request Analysis & Mandatory Skill Check
-- Before performing any work or writing code, systematically review and activate the most relevant downloaded skills:
-  - **Design & UI changes**: MUST use `design-system-consistency`, `ui-ux-pro-max`, and `frontend-design`. Follow established design tokens (Editorial Runner Paper), never add breaking styles or heavy 3D/animation effects without approval.
-  - **New features / Architecture**: Use `brainstorming`.
-  - **Bugs / Unexpected behavior**: Use `systematic-debugging`.
-  - **Credentials & API handling**: Use `security-and-hardening` and `credentials`.
+Ces règles s'appliquent systématiquement à toutes les interventions de l'agent sur l'ensemble des projets.
 
-## 2. Step-by-Step Execution Plan
-- Clearly formulate the step-by-step approach before executing.
-- Test and verify builds (`npm run build`) after modifying code.
+---
 
-## 3. Git Commit Protocol (Strict User Approval Required)
-- Structure changes into clean, atomic commits.
-- **NEVER execute `git commit` without explicit prior user approval.**
-- Always propose the commit message and list of files to the user first.
-- Write all commit messages in **simple English** (e.g., `feat: add shoe rotator with images`, `fix: adjust map zoom on current activity`).
-- Wait for user validation before running `git commit`.
+## 1. Déclenchement Automatique des Skills Spécialisés
+Avant toute action ou modification de code, identifier et activer obligatoirement les compétences adaptées :
+
+- **Design, UI & Expérience Utilisateur :**
+  - Activer `design-system-consistency`, `ui-ux-pro-max`, et `frontend-design`.
+  - Respecter scrupuleusement la charte graphique et les tokens existants (typographie, palette, contrastes, espacements).
+  - Vérifier systématiquement la cohérence responsive (mobile et desktop).
+  - Interdiction d'ajouter des bibliothèques lourdes ou de modifier drastiquement le style sans accord préalable.
+
+- **Rédaction & Contenu Textuel (Anti-Slop IA) :**
+  - Activer `anti-ai-writing`, `human-copywriter`, et `editorial-polisher`.
+  - Éliminer le rythme ternaire systématique, le vocabulaire creux (*synergie, catalyseur, etc.*) et les intros/outros artificielles.
+  - Viser un ton authentique, direct et humain (portfolios, README, interfaces, e-mails, retours).
+
+- **Architecture, Nouvelles Fonctionnalités & Refactoring :**
+  - Activer `brainstorming`.
+  - Valider la cohérence architecturale avant d'ajouter des dépendances ou des structures complexes.
+
+- **Résolution de Bugs & Dysfonctionnements :**
+  - Activer `systematic-debugging`.
+  - Isoler la cause racine avant de tenter une correction.
+
+- **Sécurité, Données & Gestion des Secrets :**
+  - Activer `security-and-hardening` et `credentials`.
+  - Ne **jamais** écrire de clé API, token ou secret en clair dans le code source (toujours utiliser `.env` et vérifier le `.gitignore`).
+
+---
+
+## 2. Intégrité du Code & Validation Technique
+- **Préservation de l'existant :** Ne jamais supprimer ni écraser de fonctionnalités sans accord explicite.
+- **Validation continue :** Après toute modification de code, vérifier l'absence d'erreurs (build, types TypeScript, linter).
+- **Propreté & Minimalisme :** Ne pas ajouter de complexité superflue ni de fichiers inutiles.
+
+---
+
+## 3. Protocole Git & Validation Humaine (Strict)
+- **Commits Atomiques :** Grouper les changements par unité logique (un bug = un commit, une feature = un commit).
+- **ZÉRO commit automatique :** Il est formellement interdit d'exécuter `git commit` sans l'accord préalable explicite de l'utilisateur.
+- **Format de proposition :**
+  1. Présenter la liste exacte des fichiers modifiés.
+  2. Proposer un message de commit concis, clair et rédigé en **anglais simple** (ex: `fix: center modal on mobile screen`, `feat: add strava shoe wear indicator`).
+  3. **Attendre impérativement la validation de l'utilisateur** avant de lancer la commande.

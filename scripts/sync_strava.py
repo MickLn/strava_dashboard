@@ -55,7 +55,7 @@ def get_shoe_image(shoe_name):
 def refresh_access_token():
     """Échange le refresh token contre un access token éphémère"""
     if not (STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET and STRAVA_REFRESH_TOKEN):
-        print("⚠️ Secrets Strava non trouvés. Utilisation du dataset existant.")
+        print("⚠️ Secrets Strava non trouvés. Utilisation du dataset existant.", flush=True)
         return None
 
     url = "https://www.strava.com/oauth/token"
@@ -68,11 +68,11 @@ def refresh_access_token():
 
     req = urllib.request.Request(url, data=payload, method="POST")
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             res = json.loads(response.read().decode("utf-8"))
             return res.get("access_token")
     except Exception as e:
-        print(f"❌ Erreur lors du refresh token: {e}")
+        print(f"❌ Erreur lors du refresh token: {e}", flush=True)
         return None
 
 def fetch_strava(endpoint, access_token):
@@ -80,10 +80,10 @@ def fetch_strava(endpoint, access_token):
     url = f"https://www.strava.com/api/v3/{endpoint}"
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {access_token}"})
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             return json.loads(response.read().decode("utf-8"))
     except Exception as e:
-        print(f"❌ Erreur API Strava ({endpoint}): {e}")
+        print(f"❌ Erreur API Strava ({endpoint}): {e}", flush=True)
         return None
 
 def format_time_short(seconds):
@@ -249,27 +249,36 @@ def main():
             break
         page += 1
 
-    # Récupérer les splits_metric authentiques pour les courses récentes (dans la limite API de Strava)
+    # Récupérer les splits_metric authentiques pour les nouvelles courses (dans la limite API de Strava)
     # Charger l'ancien cache pour ne pas re-télécharger les splits déjà présents
-    existing_splits_cache = {}
+    existing_activities_cache = {}
+    existing_gear_cache = {}
     if os.path.exists(OUTPUT_PATH):
         try:
             with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
                 old_data = json.load(f)
                 for old_act in old_data.get("activities", []):
-                    if old_act.get("splits_metric"):
-                        existing_splits_cache[old_act.get("id")] = old_act["splits_metric"]
+                    aid_str = str(old_act.get("id"))
+                    existing_activities_cache[aid_str] = old_act
+                for old_gear in old_data.get("gear", []):
+                    gid_str = str(old_gear.get("id"))
+                    existing_gear_cache[gid_str] = old_gear
         except Exception:
             pass
 
     detail_fetch_count = 0
     for act in all_runs:
-        act_id = act.get("id")
-        if act_id in existing_splits_cache:
-            act["splits_metric"] = existing_splits_cache[act_id]
-        elif detail_fetch_count < 80:
+        aid_str = str(act.get("id"))
+        if aid_str in existing_activities_cache and existing_activities_cache[aid_str].get("splits_metric"):
+            cached_act = existing_activities_cache[aid_str]
+            act["splits_metric"] = cached_act.get("splits_metric")
+            if cached_act.get("elev_high") is not None:
+                act["elev_high"] = cached_act.get("elev_high")
+            if cached_act.get("elev_low") is not None:
+                act["elev_low"] = cached_act.get("elev_low")
+        elif detail_fetch_count < 10:
             try:
-                detailed = fetch_strava(f"activities/{act_id}", token)
+                detailed = fetch_strava(f"activities/{aid_str}", token)
                 if detailed and detailed.get("splits_metric"):
                     act["splits_metric"] = detailed.get("splits_metric")
                     if detailed.get("elev_high") is not None:
@@ -278,25 +287,37 @@ def main():
                         act["elev_low"] = detailed.get("elev_low")
                     detail_fetch_count += 1
             except Exception as e:
-                print(f"Note splits {act_id}: {e}")
+                print(f"Note splits {aid_str}: {e}", flush=True)
 
     # 4. Chaussures
     shoes = athlete.get("shoes", [])
     gear_items = []
     for s in shoes:
-        s_id = s.get("id")
-        gear_detail = fetch_strava(f"gear/{s_id}", token) or s
-        name = gear_detail.get("name") or s.get("name", "Running Shoes")
-        gear_items.append({
-            "id": s_id,
-            "primary": s.get("primary", False),
-            "name": name,
-            "distance": gear_detail.get("distance", s.get("distance", 0)),
-            "brand_name": gear_detail.get("brand_name", ""),
-            "model_name": gear_detail.get("model_name", ""),
-            "max_distance_km": 1000 if "evo" in name.lower() else 800,
-            "image_url": get_shoe_image(name)
-        })
+        s_id = str(s.get("id"))
+        if s_id in existing_gear_cache and existing_gear_cache[s_id].get("brand_name"):
+            cached_g = existing_gear_cache[s_id]
+            gear_items.append({
+                "id": s.get("id"),
+                "primary": s.get("primary", False),
+                "name": cached_g.get("name") or s.get("name", "Running Shoes"),
+                "distance": s.get("distance", cached_g.get("distance", 0)),
+                "brand_name": cached_g.get("brand_name", ""),
+                "model_name": cached_g.get("model_name", ""),
+                "max_distance_km": cached_g.get("max_distance_km", 800),
+                "image_url": cached_g.get("image_url") or get_shoe_image(s.get("name", ""))
+            })
+        else:
+            name = s.get("name", "Running Shoes")
+            gear_items.append({
+                "id": s.get("id"),
+                "primary": s.get("primary", False),
+                "name": name,
+                "distance": s.get("distance", 0),
+                "brand_name": "Adidas" if "adizero" in name.lower() or "ultraboost" in name.lower() else "Nike",
+                "model_name": name,
+                "max_distance_km": 1500 if "evo" in name.lower() else 800,
+                "image_url": get_shoe_image(name)
+            })
 
     # Si aucune chaussure n'est retournée par l'API, créer les paires par défaut
     if not gear_items:
