@@ -13,14 +13,23 @@ export const translations = {
     syncSuccess: "Strava data refreshed successfully",
     syncLocal: "Local data already up to date",
 
-    // Latest Run
-    latestRunBadge: "Latest run",
-    fullDetailsBtn: "Full details",
+    // Navigation
+    navDashboard: "Hub",
+    navAnalytics: "Charts",
+    navRecords: "Records & Badges",
+    navShoes: "Shoes",
+    navMap: "Map",
+
+    // Common
     distance: "Distance",
     time: "Time",
     pace: "Pace",
     energy: "Energy",
     elevation: "Elevation",
+
+    // Latest Run
+    latestRunBadge: "Latest run",
+    fullDetailsBtn: "Full details",
     avgPace: "Average pace",
     heartRate: "Heart rate",
     shoesUsed: "Shoes used",
@@ -132,6 +141,13 @@ export const translations = {
     syncing: "Synchronisation...",
     syncSuccess: "Données Strava actualisées avec succès",
     syncLocal: "Données locales déjà à jour",
+
+    // Navigation
+    navDashboard: "Hub",
+    navAnalytics: "Graphiques",
+    navRecords: "Records & Trophées",
+    navShoes: "Matériel",
+    navMap: "Carte",
 
     // Latest Run
     latestRunBadge: "Dernière sortie",

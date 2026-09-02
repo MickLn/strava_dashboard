@@ -7,6 +7,9 @@ import { formatDistance, formatPace, formatTimeShort, formatDate } from '../util
 let mapInstance: L.Map | null = null;
 let currentLayerGroup: L.LayerGroup | null = null;
 
+let atlasMapInstance: L.Map | null = null;
+let atlasLayerGroup: L.LayerGroup | null = null;
+
 export function initMap(elementId: string = 'leaflet-map'): L.Map | null {
   const container = document.getElementById(elementId);
   if (!container) return null;
@@ -31,6 +34,15 @@ export function initMap(elementId: string = 'leaflet-map'): L.Map | null {
   currentLayerGroup = L.layerGroup().addTo(mapInstance);
 
   return mapInstance;
+}
+
+export function invalidateMapSize(): void {
+  if (mapInstance) {
+    mapInstance.invalidateSize();
+  }
+  if (atlasMapInstance) {
+    atlasMapInstance.invalidateSize();
+  }
 }
 
 export function renderActivityTraces(activities: Activity[], highlightActivityId?: number) {
@@ -59,7 +71,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         polyline.bindPopup(`
           <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 170px; padding: 2px;">
             <strong style="font-size: 0.88rem; color: #1C1E21; display: block; margin-bottom: 2px;">${activity.name}</strong>
-            <div style="font-size: 0.75rem; color: #5C626C; margin-bottom: 4px;">📅 ${formatDate(activity.start_date_local)}</div>
+            <div style="font-size: 0.75rem; color: #5C626C; margin-bottom: 4px;">${formatDate(activity.start_date_local)}</div>
             <div style="font-size: 0.8rem; font-weight: 700; color: #E05A36;">
               ${formatDistance(activity.distance)} • ${formatTimeShort(activity.moving_time)} • ${formatPace(activity.average_speed)}
             </div>
@@ -84,9 +96,9 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
       mainPolyline.bindPopup(`
         <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 190px; padding: 4px;">
-          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #E05A36; margin-bottom: 2px;">🔥 Selected run</div>
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #E05A36; margin-bottom: 2px;">Selected run</div>
           <strong style="font-size: 0.92rem; color: #1C1E21; display: block; margin-bottom: 4px;">${targetActivity.name}</strong>
-          <div style="font-size: 0.78rem; color: #5C626C; margin-bottom: 6px;">📅 ${formatDate(targetActivity.start_date_local)}</div>
+          <div style="font-size: 0.78rem; color: #5C626C; margin-bottom: 6px;">${formatDate(targetActivity.start_date_local)}</div>
           <div style="display: flex; justify-content: space-between; font-size: 0.82rem; border-top: 1px solid #ECE6DC; padding-top: 6px;">
             <span><strong>${formatDistance(targetActivity.distance)}</strong></span>
             <span><strong>${formatTimeShort(targetActivity.moving_time)}</strong></span>
@@ -106,7 +118,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         weight: 2.5,
         fillColor: '#2E6B56',
         fillOpacity: 1
-      }).bindTooltip("📍 Start", { permanent: false }).addTo(currentLayerGroup!);
+      }).bindTooltip("Start", { permanent: false }).addTo(currentLayerGroup!);
 
       // Marqueur d'arrivée (terracotta)
       const endPt = coords[coords.length - 1];
@@ -116,7 +128,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         weight: 2.5,
         fillColor: '#E05A36',
         fillOpacity: 1
-      }).bindTooltip("🏁 Finish", { permanent: false }).addTo(currentLayerGroup!);
+      }).bindTooltip("Finish", { permanent: false }).addTo(currentLayerGroup!);
     }
   }
 
@@ -126,6 +138,67 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
       padding: [25, 25],
       maxZoom: 14
     });
+  }
+}
+
+/**
+ * Initialise la carte Atlas GPS sur la Page 5
+ */
+export function initPageAtlasMap(elementId: string = 'page-heatmap-container', activities: Activity[] = []): void {
+  const container = document.getElementById(elementId);
+  if (!container) return;
+
+  if (!atlasMapInstance) {
+    atlasMapInstance = L.map(elementId, {
+      zoomControl: true,
+      attributionControl: false
+    }).setView([48.8566, 2.3522], 12);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 17,
+      attribution: '&copy; Esri World Light Gray Base'
+    }).addTo(atlasMapInstance);
+
+    atlasLayerGroup = L.layerGroup().addTo(atlasMapInstance);
+  } else {
+    atlasMapInstance.invalidateSize();
+  }
+
+  if (atlasLayerGroup && activities.length > 0) {
+    atlasLayerGroup.clearLayers();
+    const polylines: L.Polyline[] = [];
+
+    activities.forEach(act => {
+      if (act.map?.summary_polyline) {
+        const coords = decodePolyline(act.map.summary_polyline);
+        if (coords.length > 0) {
+          const polyline = L.polyline(coords, {
+            color: '#E05A36',
+            weight: 3.2,
+            opacity: 0.65,
+            lineJoin: 'round'
+          });
+
+          polyline.bindPopup(`
+            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 170px; padding: 2px;">
+              <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
+              <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">${formatDate(act.start_date_local)}</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
+                ${formatDistance(act.distance)} • ${formatTimeShort(act.moving_time)} • ${formatPace(act.average_speed)}
+              </div>
+            </div>
+          `);
+
+          polyline.addTo(atlasLayerGroup!);
+          polylines.push(polyline);
+        }
+      }
+    });
+
+    if (polylines.length > 0) {
+      const group = L.featureGroup(polylines);
+      atlasMapInstance.fitBounds(group.getBounds().pad(0.08));
+    }
   }
 }
 
@@ -174,7 +247,7 @@ export function openFullscreenHeatmap(activities: Activity[]) {
             polyline.bindPopup(`
               <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 170px; padding: 2px;">
                 <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
-                <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">📅 ${formatDate(act.start_date_local)}</div>
+                <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">${formatDate(act.start_date_local)}</div>
                 <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
                   ${formatDistance(act.distance)} • ${formatTimeShort(act.moving_time)} • ${formatPace(act.average_speed)}
                 </div>

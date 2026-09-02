@@ -1,0 +1,292 @@
+/* Floating Pill Navigation Bar (Desktop Top / Mobile Bottom) */
+.floating-navbar-wrap {
+  position: sticky;
+  top: 32px;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  margin-bottom: 32px;
+  pointer-events: none;
+  transition: all var(--transition-normal);
+}
+
+.floating-navbar {
+  pointer-events: auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 5px;
+  box-shadow: 0 8px 30px rgba(35, 25, 15, 0.08), 0 2px 8px rgba(35, 25, 15, 0.04);
+  gap: 4px;
+  max-width: 100%;
+}
+
+/* Sliding Pill Active Indicator - Strict Design System : Terracotta Orange (NO BLACK) */
+.nav-sliding-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-pill);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), width 0.28s cubic-bezier(0.16, 1, 0.3, 1), height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: none;
+}
+
+.nav-link {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+}
+
+.nav-link.active {
+  color: #FFFFFF;
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+  stroke: currentColor;
+  fill: none;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.nav-link:hover .nav-icon {
+  transform: scale(1.08);
+}
+
+.nav-link.active .nav-icon {
+  transform: scale(1.05);
+}
+
+.nav-label {
+  line-height: 1;
+}
+
+/* Right Header Controls (FX Toggle + Profile Trigger) */
+.nav-controls-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-light);
+}
+
+/* Intro FX Switch ON/OFF */
+.fx-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.fx-toggle-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.fx-switch-track {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  background-color: var(--border-light);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--transition-fast);
+}
+
+.fx-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.fx-toggle-btn.active .fx-switch-track {
+  background-color: var(--color-primary);
+}
+
+.fx-toggle-btn.active .fx-switch-thumb {
+  transform: translateX(12px);
+}
+
+.fx-toggle-btn.active {
+  color: var(--color-primary);
+}
+
+/* Profile Trigger Button in Navbar */
+.nav-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px 3px 3px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-profile-btn:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.nav-profile-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--bg-surface-active);
+}
+
+.status-dot-mini {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-forest);
+  box-shadow: 0 0 0 2px rgba(46, 107, 86, 0.2);
+}
+
+/* Page Views System */
+.page-view {
+  display: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  width: 100%;
+}
+
+.page-view.page-active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mobile Bottom Navigation Bar */
+@media (max-width: 768px) {
+  .floating-navbar-wrap {
+    position: fixed;
+    top: auto;
+    bottom: calc(12px + var(--safe-area-bottom));
+    left: 0;
+    right: 0;
+    padding: 0 12px;
+  }
+
+  .floating-navbar {
+    width: 100%;
+    max-width: 460px;
+    justify-content: space-between;
+    padding: 4px;
+    box-shadow: 0 10px 30px rgba(35, 25, 15, 0.16);
+  }
+
+  .nav-link {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 3px;
+    font-size: 0.64rem;
+  }
+
+  .nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nav-controls-right {
+    display: none;
+  }
+}
+
+/* Profile Modal Sheet */
+.profile-modal-box {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-avatar-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid var(--color-primary-light);
+  object-fit: cover;
+}
+
+.profile-info-block h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-top: 6px;
+  color: var(--text-primary);
+}
+
+.profile-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
