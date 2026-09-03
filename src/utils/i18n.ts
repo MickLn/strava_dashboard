@@ -16,7 +16,7 @@ export const translations = {
     // Navigation
     navDashboard: "Hub",
     navAnalytics: "Charts",
-    navRecords: "Records & Badges",
+    navRecords: "Records",
     navShoes: "Shoes",
     navMap: "Map",
 
@@ -75,8 +75,8 @@ export const translations = {
     ytdElev: "YTD elevation",
 
     // Monthly Training Calendar (Strava style)
-    calendarTitle: "Monthly training calendar",
-    calendarSubtitle: "Training log & distance distribution",
+    calendarTitle: "Monthly consistency",
+    calendarSubtitle: "",
     prevMonth: "Previous month",
     nextMonth: "Next month",
     daysHeader: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -86,11 +86,12 @@ export const translations = {
     legendSemi: "Semi (SM)",
     legendLess30: "< 30 km",
     legendMarathon: "Marathon (M)",
+    legendBtn: "Legend",
     runsLogged: (runs: number, km: number) => `${km} km • ${runs} ${runs > 1 ? 'runs' : 'run'}`,
 
     // Feed & Hover Drawer
-    recentActivitiesTitle: "Recent activities",
-    recentActivitiesSubtitle: "Click to expand session telemetry & route",
+    recentActivitiesTitle: "Activities",
+    recentActivitiesSubtitle: "",
     viewDetails: "Details",
     searchPlaceholder: "Search by title, shoes, date, or tags (#10k, #morning, #brooks)...",
     filterAll: "All",
@@ -145,8 +146,8 @@ export const translations = {
     // Navigation
     navDashboard: "Hub",
     navAnalytics: "Graphiques",
-    navRecords: "Records & Trophées",
-    navShoes: "Matériel",
+    navRecords: "Records",
+    navShoes: "Chaussures",
     navMap: "Carte",
 
     // Latest Run
@@ -202,8 +203,8 @@ export const translations = {
     ytdElev: "Dénivelé 2026",
 
     // Monthly Training Calendar (Strava style)
-    calendarTitle: "Calendrier d'entraînement",
-    calendarSubtitle: "Log des séances et répartition des distances",
+    calendarTitle: "Constance mensuelle",
+    calendarSubtitle: "",
     prevMonth: "Mois précédent",
     nextMonth: "Mois suivant",
     daysHeader: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
@@ -213,11 +214,12 @@ export const translations = {
     legendSemi: "Semi (SM)",
     legendLess30: "< 30 km",
     legendMarathon: "Marathon (M)",
+    legendBtn: "Légende",
     runsLogged: (runs: number, km: number) => `${km} km • ${runs} ${runs > 1 ? 'sorties' : 'sortie'}`,
 
     // Feed & Hover Drawer
-    recentActivitiesTitle: "Activités récentes",
-    recentActivitiesSubtitle: "Cliquez pour dérouler les détails et le tracé de la séance",
+    recentActivitiesTitle: "Activités",
+    recentActivitiesSubtitle: "",
     viewDetails: "Détails",
     searchPlaceholder: "Rechercher par titre, chaussure, date ou tag (#10k, #matin, #brooks)...",
     filterAll: "Toutes",

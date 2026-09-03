@@ -49,7 +49,7 @@
 
       <a href="#records" class="nav-link" data-page="records">
         <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-        <span class="nav-label" id="lbl-nav-records">Records & Badges</span>
+        <span class="nav-label" id="lbl-nav-records">Records</span>
       </a>
 
       <a href="#shoes" class="nav-link" data-page="shoes">
@@ -148,7 +148,6 @@
           <div>
             <div class="section-title-wrap">
               <h3 class="section-title" id="lbl-weekly-title">Weekly pulse</h3>
-              <span class="section-subtitle" id="lbl-weekly-subtitle">Consistency & streak</span>
             </div>
 
             <!-- Streak box -->
@@ -203,9 +202,12 @@
       <!-- Monthly Training Calendar (Strava Training Log Style) -->
       <section class="runner-card calendar-card" id="monthly-calendar-card">
         <div class="calendar-header-wrap">
-          <div>
-            <h3 class="chart-title" id="lbl-calendar-title">Monthly training calendar</h3>
-            <span class="section-subtitle" id="lbl-calendar-sub" style="margin-bottom: 0;">Training log & distance distribution</span>
+          <div class="calendar-title-group">
+            <h3 class="chart-title" id="lbl-calendar-title">Monthly consistency</h3>
+            <button class="btn-cal-legend-toggle" id="btn-cal-legend-toggle" type="button" aria-expanded="false" title="Légende des couleurs">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span id="lbl-cal-legend-btn">Légende</span>
+            </button>
           </div>
           
           <div class="calendar-controls">
@@ -218,8 +220,8 @@
           </div>
         </div>
 
-        <!-- Distance Tiers Legend -->
-        <div class="calendar-legend-bar">
+        <!-- Distance Tiers Legend (Dropdown) -->
+        <div class="calendar-legend-bar" id="calendar-legend-bar">
           <div class="cal-legend-item">
             <span class="cal-legend-dot" style="background: #4B7B9E;"></span>
             <span id="lbl-leg-10">&lt; 10 km</span>
@@ -258,9 +260,9 @@
       <!-- Recent activities & interactive telemetry feed -->
       <section class="runner-card activities-card" id="section-activities">
         <div class="activities-header-row">
-          <div>
-            <h3 class="chart-title" id="lbl-activities-title">Recent activities</h3>
-            <span class="section-subtitle" id="lbl-activities-sub">Click to expand session telemetry & route</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 class="chart-title" id="lbl-activities-title">Activities</h3>
+            <span class="activities-total-badge" id="lbl-activities-total-badge"></span>
           </div>
           
           <!-- Search bar -->
@@ -299,7 +301,6 @@
           <div class="chart-header">
             <div>
               <h3 class="chart-title" id="lbl-chart-title">Year-to-date progress (2026)</h3>
-              <span class="section-subtitle" style="margin-bottom: 0;">Cumulative mileage progression vs 2026 goal</span>
             </div>
             <span class="act-pill" id="lbl-chart-badge">2026 goal</span>
           </div>
@@ -340,7 +341,6 @@
         <div class="runner-card records-card">
           <div class="section-title-wrap">
             <h3 class="section-title" id="lbl-records-title">Personal records</h3>
-            <span class="section-subtitle" id="lbl-records-sub">All-time best efforts</span>
           </div>
 
           <div style="margin-top: 6px;">
@@ -364,7 +364,6 @@
           <div class="chart-header">
             <div>
               <h3 class="chart-title" id="lbl-achievements-title">Achievements & Milestones</h3>
-              <span class="section-subtitle" id="lbl-achievements-sub">Career badges & unlocked milestones</span>
             </div>
             <span class="act-pill" style="background: rgba(46, 107, 86, 0.12); color: var(--color-forest);" id="lbl-achievements-count">5 / 6 Débloqués</span>
           </div>
@@ -389,7 +388,6 @@
           <div class="shoe-rotator-header">
             <div>
               <h3 class="section-title" id="lbl-shoe-title">Shoe locker</h3>
-              <span class="section-subtitle" id="shoe-count-indicator">Pair 1 of 3</span>
             </div>
             <span id="shoe-primary-badge" class="act-pill">Primary pair</span>
           </div>
@@ -447,7 +445,6 @@
         <div class="chart-header">
           <div>
             <h3 class="chart-title">Atlas GPS • Superposition de tous les tracés</h3>
-            <span class="section-subtitle" style="margin-bottom: 0;">281 courses superposées en Île-de-France et ailleurs</span>
           </div>
           <span class="act-pill">281 tracés GPS</span>
         </div>
@@ -460,14 +457,6 @@
     </main>
 
   </div>
-
-  <!-- Footer -->
-  <footer class="dashboard-footer">
-    <div class="footer-content">
-      <span id="lbl-footer-1"><strong>Strava Personal Runner Dashboard</strong> • Deployed on GitHub Pages</span>
-      <span id="lbl-footer-2">Modern runner bento • 0ms serverless API</span>
-    </div>
-  </footer>
 
   <!-- Activity details modal -->
   <div class="modal-overlay" id="activity-modal">

@@ -208,37 +208,44 @@
   transform: translateY(0);
 }
 
-/* Mobile Bottom Navigation Bar */
+/* Mobile Bottom Navigation Bar - Sleek & Slender Dock */
 @media (max-width: 768px) {
   .floating-navbar-wrap {
     position: fixed;
     top: auto;
-    bottom: calc(12px + var(--safe-area-bottom));
+    bottom: calc(10px + var(--safe-area-bottom));
     left: 0;
     right: 0;
-    padding: 0 12px;
+    padding: 0 14px;
   }
 
   .floating-navbar {
     width: 100%;
-    max-width: 460px;
+    max-width: 400px;
     justify-content: space-between;
-    padding: 4px;
-    box-shadow: 0 10px 30px rgba(35, 25, 15, 0.16);
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    box-shadow: 0 6px 24px rgba(35, 25, 15, 0.12), 0 1px 4px rgba(35, 25, 15, 0.06);
+    border: 1px solid rgba(224, 218, 206, 0.9);
+    gap: 2px;
   }
 
   .nav-link {
     flex: 1;
     flex-direction: column;
     justify-content: center;
-    gap: 3px;
-    padding: 6px 3px;
-    font-size: 0.64rem;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 2px;
+    font-size: 0.60rem;
+    font-weight: 600;
+    border-radius: var(--radius-pill);
   }
 
   .nav-icon {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.1;
   }
 
   .nav-controls-right {
