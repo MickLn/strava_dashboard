@@ -114,18 +114,13 @@ export class Router {
     const activeLink = document.querySelector<HTMLAnchorElement>(`.nav-link[data-page="${pageId}"]`);
     if (!activeLink) return;
 
-    const nav = activeLink.parentElement;
-    if (!nav) return;
+    // Utilisation des propriétés offset pour un alignement au pixel près relatif au parent
+    const left = activeLink.offsetLeft;
+    const top = activeLink.offsetTop;
+    const width = activeLink.offsetWidth;
+    const height = activeLink.offsetHeight;
 
-    const navRect = nav.getBoundingClientRect();
-    const linkRect = activeLink.getBoundingClientRect();
-
-    const left = linkRect.left - navRect.left;
-    const top = linkRect.top - navRect.top;
-    const width = linkRect.width;
-    const height = linkRect.height;
-
-    this.slidingPill.style.transform = `translate(${left}px, ${top}px)`;
+    this.slidingPill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
     this.slidingPill.style.width = `${width}px`;
     this.slidingPill.style.height = `${height}px`;
   }

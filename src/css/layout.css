@@ -175,7 +175,7 @@
 
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: var(--space-sm) 12px calc(var(--space-xl) + var(--safe-area-bottom));
+    padding: var(--space-sm) 12px calc(80px + var(--safe-area-bottom));
     gap: var(--space-lg);
   }
 
@@ -219,7 +219,7 @@
 
 @media (max-width: 480px) {
   .dashboard-container {
-    padding: 8px 10px calc(var(--space-xl) + var(--safe-area-bottom));
+    padding: 8px 10px calc(80px + var(--safe-area-bottom));
     gap: 14px;
   }
 

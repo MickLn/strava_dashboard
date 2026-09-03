@@ -8,7 +8,7 @@ import {
   formatDate,
   getCurrentWeekDays,
   calculateWeekStreak,
-  calculateWeeklyAverages,
+  calculateCurrentWeekStats,
   calculateGearStats,
   calculateCalories,
   calculateElevationDetails,
@@ -51,10 +51,9 @@ export class UIRenderer {
     setTxt('lbl-metric-cal', t.energy);
 
     setTxt('lbl-pulse-title', t.weeklyPulseTitle);
-    setTxt('lbl-pulse-sub', t.weeklyPulseSubtitle);
-    setTxt('lbl-pulse-weeks-text', t.consecutiveWeeks);
-    setTxt('lbl-pulse-streak-legend', t.activeStreak);
-    setTxt('lbl-pulse-days-legend', t.activeDaysThisWeek);
+    setTxt('lbl-weekly-title', t.weeklyPulseTitle);
+    setTxt('lbl-streak-text', t.consecutiveWeeks);
+    setTxt('lbl-active-days', t.activeDaysThisWeek);
     setTxt('lbl-day-1', t.mon);
     setTxt('lbl-day-2', t.tue);
     setTxt('lbl-day-3', t.wed);
@@ -205,20 +204,20 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu du Weekly Pulse (Étage 1 Droite)
+   * Rendu de l'activité de la semaine en cours
    */
   public static renderWeeklyPulse(dataset: StravaDataset): void {
     const activities = dataset.activities;
 
-    // 1. Streak
+    // 0. Streak de semaines actives (mini-badge en haut)
     const streakEl = document.getElementById('hero-streak-count');
     if (streakEl) {
       streakEl.textContent = calculateWeekStreak(activities).toString();
     }
 
-    // 2. Jours actifs cette semaine
+    // 1. Jours actifs cette semaine (Lundi à Dimanche)
     const weekDays = getCurrentWeekDays(activities);
-    const dayElements: Record<string, HTMLElement | null> = {
+    const dayElements: Record<keyof typeof weekDays, HTMLElement | null> = {
       L: document.getElementById('day-l'),
       M: document.getElementById('day-m'),
       Me: document.getElementById('day-me'),
@@ -228,25 +227,22 @@ export class UIRenderer {
       D: document.getElementById('day-d')
     };
 
-    if (dayElements.L && weekDays.L) dayElements.L.classList.add('active');
-    if (dayElements.M && weekDays.M) dayElements.M.classList.add('active');
-    if (dayElements.Me && weekDays.Me) dayElements.Me.classList.add('active');
-    if (dayElements.J && weekDays.J) dayElements.J.classList.add('active');
-    if (dayElements.V && weekDays.V) dayElements.V.classList.add('active');
-    if (dayElements.S && weekDays.S) dayElements.S.classList.add('active');
-    if (dayElements.D && weekDays.D) dayElements.D.classList.add('active');
+    (Object.keys(dayElements) as Array<keyof typeof weekDays>).forEach(k => {
+      const el = dayElements[k];
+      if (el) el.classList.toggle('active', !!weekDays[k]);
+    });
 
-    // 3. Moyennes historiques
-    const avg = calculateWeeklyAverages(activities);
+    // 2. Statistiques réelles de la semaine en cours (non moyennes)
+    const currentWeekStats = calculateCurrentWeekStats(activities);
     const runsPerWeekEl = document.getElementById('avg-runs-per-week');
     const timePerWeekEl = document.getElementById('avg-time-per-week');
     const distPerWeekEl = document.getElementById('avg-dist-per-week');
     const calPerWeekEl = document.getElementById('avg-cal-per-week');
 
-    if (runsPerWeekEl) runsPerWeekEl.textContent = avg.runsPerWeek;
-    if (timePerWeekEl) timePerWeekEl.textContent = avg.timePerWeekFormatted;
-    if (distPerWeekEl) distPerWeekEl.textContent = `${avg.distancePerWeek} km`;
-    if (calPerWeekEl) calPerWeekEl.textContent = `${avg.caloriesPerWeek} kcal`;
+    if (runsPerWeekEl) runsPerWeekEl.textContent = currentWeekStats.runs.toString();
+    if (timePerWeekEl) timePerWeekEl.textContent = currentWeekStats.timeFormatted;
+    if (distPerWeekEl) distPerWeekEl.textContent = currentWeekStats.distanceKm;
+    if (calPerWeekEl) calPerWeekEl.textContent = currentWeekStats.calories.toString();
   }
 
   /**

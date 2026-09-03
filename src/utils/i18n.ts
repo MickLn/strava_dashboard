@@ -38,16 +38,16 @@ export const translations = {
     startPoint: "Start",
     finishPoint: "Finish",
 
-    // Weekly Pulse
-    weeklyPulseTitle: "Weekly pulse",
-    weeklyPulseSubtitle: "Consistency & streak",
-    consecutiveWeeks: "consecutive active weeks",
+    // Current Week Activity
+    weeklyPulseTitle: "Current week",
+    weeklyPulseSubtitle: "",
+    consecutiveWeeks: "active weeks",
     activeStreak: "Active streak • Consistency goal",
     activeDaysThisWeek: "Active days this week",
-    runsPerWeek: "Runs / week",
-    timePerWeek: "Time / week",
-    distPerWeek: "Distance / week",
-    calPerWeek: "Calories / week",
+    runsPerWeek: "Runs",
+    timePerWeek: "Time",
+    distPerWeek: "Distance",
+    calPerWeek: "Calories",
     mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
 
     // Records
@@ -166,16 +166,16 @@ export const translations = {
     startPoint: "Départ",
     finishPoint: "Arrivée",
 
-    // Weekly Pulse
-    weeklyPulseTitle: "Rythme hebdomadaire",
-    weeklyPulseSubtitle: "Régularité & série active",
-    consecutiveWeeks: "semaines consécutives actives",
+    // Current Week Activity
+    weeklyPulseTitle: "Semaine en cours",
+    weeklyPulseSubtitle: "",
+    consecutiveWeeks: "semaines actives",
     activeStreak: "Série active • Objectif régularité",
     activeDaysThisWeek: "Jours actifs cette semaine",
-    runsPerWeek: "Sorties / sem",
-    timePerWeek: "Temps / sem",
-    distPerWeek: "Distance / sem",
-    calPerWeek: "Calories / sem",
+    runsPerWeek: "Sorties",
+    timePerWeek: "Durée",
+    distPerWeek: "Distance",
+    calPerWeek: "Calories",
     mon: "Lun", tue: "Mar", wed: "Mer", thu: "Jeu", fri: "Ven", sat: "Sam", sun: "Dim",
 
     // Records

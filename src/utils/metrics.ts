@@ -153,6 +153,69 @@ export function calculateWeekStreak(activities: Activity[]): number {
 }
 
 /**
+ * Calcule les statistiques réelles de la semaine en cours (Lundi à Dimanche)
+ */
+export function calculateCurrentWeekStats(activities: Activity[]) {
+  if (!activities || activities.length === 0) {
+    return {
+      runs: '0',
+      timeFormatted: '0m',
+      distanceKm: '0.0 km',
+      calories: '0 kcal'
+    };
+  }
+
+  const sorted = [...activities].sort(
+    (a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime()
+  );
+
+  const latestDate = new Date(sorted[0].start_date_local);
+  const dayOfWeek = latestDate.getDay();
+  const diffToMonday = (dayOfWeek + 6) % 7;
+  const monday = new Date(latestDate);
+  monday.setDate(latestDate.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  let runs = 0;
+  let totalMovingSeconds = 0;
+  let totalDistanceMeters = 0;
+  let totalCalories = 0;
+
+  for (const act of sorted) {
+    const actDate = new Date(act.start_date_local);
+    if (actDate >= monday && actDate <= sunday) {
+      runs++;
+      totalMovingSeconds += act.moving_time;
+      totalDistanceMeters += act.distance;
+      totalCalories += calculateCalories(act);
+    }
+  }
+
+  const h = Math.floor(totalMovingSeconds / 3600);
+  const m = Math.floor((totalMovingSeconds % 3600) / 60);
+  const s = totalMovingSeconds % 60;
+  let timeFormatted = '';
+  if (h > 0) {
+    timeFormatted = `${h}h ${m}m ${s > 0 ? `${s}s` : ''}`.trim();
+  } else if (m > 0) {
+    timeFormatted = `${m}m ${s > 0 ? `${s}s` : ''}`.trim();
+  } else {
+    timeFormatted = `${s}s`;
+  }
+
+  return {
+    runs: runs.toString(),
+    timeFormatted: timeFormatted || '0m',
+    distanceKm: `${(totalDistanceMeters / 1000).toFixed(1)} km`,
+    calories: `${Math.round(totalCalories).toLocaleString('fr-FR')} kcal`
+  };
+}
+
+/**
  * Calcule les moyennes hebdomadaires historiques
  */
 export function calculateWeeklyAverages(activities: Activity[], totalWeeks: number = 123) {

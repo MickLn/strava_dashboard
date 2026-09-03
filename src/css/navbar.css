@@ -47,8 +47,11 @@
   z-index: 2;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
-  padding: 8px 16px;
+  padding: 8px 12px;
+  width: 112px;
+  max-width: 112px;
   border-radius: var(--radius-pill);
   font-size: 0.82rem;
   font-weight: 700;
@@ -58,6 +61,7 @@
   white-space: nowrap;
   user-select: none;
   text-decoration: none;
+  box-sizing: border-box;
 }
 
 .nav-link:hover {
@@ -104,6 +108,7 @@
 .fx-toggle-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   background-color: var(--bg-surface-subtle);
   border: 1px solid var(--border-light);
@@ -113,12 +118,18 @@
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  box-sizing: border-box;
 }
 
 .fx-toggle-btn:hover {
-  background-color: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background-color: var(--bg-surface-subtle);
+  color: var(--color-primary);
+  border-color: var(--border-light);
+}
+
+.fx-toggle-btn:hover #lbl-btn-preloader {
+  color: var(--color-primary);
 }
 
 .fx-switch-track {
@@ -151,6 +162,10 @@
 }
 
 .fx-toggle-btn.active {
+  color: var(--text-secondary);
+}
+
+.fx-toggle-btn.active:hover {
   color: var(--color-primary);
 }
 
@@ -167,12 +182,18 @@
   font-weight: 700;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+  box-sizing: border-box;
 }
 
 .nav-profile-btn:hover {
   background-color: var(--bg-surface-hover);
-  border-color: var(--color-primary);
+  border-color: var(--border-light);
+  color: var(--color-primary);
+}
+
+.nav-profile-btn:hover #navbar-athlete-name {
+  color: var(--color-primary);
 }
 
 .nav-profile-avatar {
@@ -213,33 +234,38 @@
   .floating-navbar-wrap {
     position: fixed;
     top: auto;
-    bottom: calc(10px + var(--safe-area-bottom));
+    bottom: calc(14px + var(--safe-area-bottom));
     left: 0;
     right: 0;
-    padding: 0 14px;
+    padding: 0 16px;
+    margin-bottom: 0;
   }
 
   .floating-navbar {
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
     justify-content: space-between;
-    padding: 3px;
+    padding: 5px 6px;
     border-radius: var(--radius-pill);
-    box-shadow: 0 6px 24px rgba(35, 25, 15, 0.12), 0 1px 4px rgba(35, 25, 15, 0.06);
-    border: 1px solid rgba(224, 218, 206, 0.9);
-    gap: 2px;
+    box-shadow: 0 8px 24px rgba(35, 25, 15, 0.12), 0 2px 6px rgba(35, 25, 15, 0.06);
+    border: 1px solid rgba(224, 218, 206, 0.95);
+    gap: 3px;
   }
 
   .nav-link {
     flex: 1;
+    width: auto;
+    max-width: none;
+    min-width: 0;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 2px;
     padding: 5px 2px;
-    font-size: 0.60rem;
-    font-weight: 600;
+    font-size: 0.58rem;
+    font-weight: 700;
     border-radius: var(--radius-pill);
+    box-sizing: border-box;
   }
 
   .nav-icon {

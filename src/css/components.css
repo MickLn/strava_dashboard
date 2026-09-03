@@ -518,6 +518,7 @@
   padding: 3px 6px;
   gap: 4px;
   width: 220px;
+  height: 38px;
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -559,7 +560,11 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  width: 175px;
+  width: 220px;
+  height: 38px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
   box-sizing: border-box;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -683,12 +688,12 @@
 
 .cal-day-cell.has-activity {
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);
+  box-shadow: none;
 }
 
 .cal-day-cell.has-activity:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(35, 25, 15, 0.12);
+  transform: none;
+  box-shadow: none;
   filter: brightness(0.96);
 }
 
@@ -1276,8 +1281,7 @@
   gap: 2px;
 }
 
-.tab-btn,
-.lang-btn {
+.tab-btn {
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   font-size: 0.74rem;
@@ -1290,11 +1294,56 @@
   line-height: 1;
 }
 
-.tab-btn.active,
-.lang-btn.active {
+.tab-btn.active {
   background-color: #FFFFFF;
   color: var(--color-primary);
   box-shadow: 0 1px 4px rgba(35, 25, 15, 0.08);
+}
+
+.lang-btn {
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.lang-btn:hover {
+  color: var(--color-primary);
+}
+
+.lang-btn.active {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(224, 90, 58, 0.25);
+}
+
+.lang-btn.active:hover {
+  color: #FFFFFF;
+}
+
+.streak-pill-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--color-forest-bg);
+  color: var(--color-forest);
+  border: 1px solid rgba(46, 107, 86, 0.20);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.streak-pill-mini strong {
+  font-weight: 800;
+  font-size: 0.82rem;
 }
 
 /* Pagination du flux d'activités */

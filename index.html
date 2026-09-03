@@ -143,25 +143,19 @@
           </div>
         </div>
 
-        <!-- Card B : Weekly pulse & streak -->
+        <!-- Card B : Current Week Activity -->
         <div class="runner-card weekly-pulse-card">
           <div>
-            <div class="section-title-wrap">
-              <h3 class="section-title" id="lbl-weekly-title">Weekly pulse</h3>
-            </div>
-
-            <!-- Streak box -->
-            <div class="pulse-streak-box" style="margin-top: 10px;">
-              <span class="streak-big-num" id="hero-streak-count">51</span>
-              <div>
-                <div class="streak-label" id="lbl-streak-text">consecutive active weeks</div>
-                <div style="font-size: 0.75rem; color: var(--color-forest); opacity: 0.85;" id="lbl-streak-sub">Active streak • Consistency goal</div>
-              </div>
+            <div class="section-title-wrap" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <h3 class="section-title" id="lbl-weekly-title">Current week</h3>
+              <span class="streak-pill-mini" id="lbl-streak-badge" title="Série active">
+                <strong id="hero-streak-count">53</strong> <span id="lbl-streak-text">active weeks</span>
+              </span>
             </div>
 
             <!-- Active days tracker -->
-            <div style="margin-top: 14px;">
-              <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px;" id="lbl-active-days">
+            <div style="margin-top: 10px;">
+              <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px;" id="lbl-active-days">
                 Active days this week
               </div>
               <div class="week-days-tracker">
@@ -176,23 +170,23 @@
             </div>
           </div>
 
-          <!-- Weekly historical averages -->
+          <!-- Weekly real totals -->
           <div class="pulse-averages-grid">
             <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-runs">Runs / week</span>
-              <span class="pulse-avg-val" id="avg-runs-per-week">2.3</span>
+              <span class="pulse-avg-label" id="lbl-avg-runs">Runs</span>
+              <span class="pulse-avg-val" id="avg-runs-per-week">--</span>
             </div>
             <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-time">Time / week</span>
-              <span class="pulse-avg-val" id="avg-time-per-week">1h 43m</span>
+              <span class="pulse-avg-label" id="lbl-avg-time">Time</span>
+              <span class="pulse-avg-val" id="avg-time-per-week">--</span>
             </div>
             <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-dist">Distance / week</span>
-              <span class="pulse-avg-val" id="avg-dist-per-week">18.3 km</span>
+              <span class="pulse-avg-label" id="lbl-avg-dist">Distance</span>
+              <span class="pulse-avg-val" id="avg-dist-per-week">--</span>
             </div>
             <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-cal">Calories / week</span>
-              <span class="pulse-avg-val" id="avg-cal-per-week">1 326 kcal</span>
+              <span class="pulse-avg-label" id="lbl-avg-cal">Calories</span>
+              <span class="pulse-avg-val" id="avg-cal-per-week">--</span>
             </div>
           </div>
         </div>

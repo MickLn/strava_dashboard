@@ -366,15 +366,17 @@ class App {
       });
     }
 
-    // Gestion du redimensionnement d'écran & rotation mobile
+    // Gestion du redimensionnement d'écran, zoom & rotation mobile
     let resizeTimer: number;
     window.addEventListener('resize', () => {
+      this.router.updateSlidingPill();
       clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
+        this.router.updateSlidingPill();
         if (this.dataset?.activities) {
           renderActivityTraces(this.dataset.activities);
         }
-      }, 150);
+      }, 100);
     });
   }
 }
