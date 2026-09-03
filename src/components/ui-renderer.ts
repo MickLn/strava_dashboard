@@ -882,18 +882,19 @@ export class UIRenderer {
 
       let hoverTimeout: any = null;
 
-      // Survol : déclenche l'affichage du tracé sur la carte principale
+      // Survol : déclenche l'affichage du tracé sur la carte principale ET précharge la mini-carte
       item.addEventListener('mouseenter', () => {
         hoverTimeout = setTimeout(() => {
           onHoverActivity(activity);
-        }, 80);
+          UIRenderer.initOrUpdateMiniMap(activity.id, activity.map?.summary_polyline || '');
+        }, 40);
       });
 
       item.addEventListener('mouseleave', () => {
         if (hoverTimeout) clearTimeout(hoverTimeout);
       });
 
-      // Clic pour étendre / masquer (reste étendu jusqu'au prochain clic)
+      // Clic pour étendre / masquer
       item.addEventListener('click', () => {
         const isCurrentlyExpanded = item.classList.toggle('expanded');
         if (isCurrentlyExpanded) {
