@@ -86,7 +86,7 @@ export class UIRenderer {
     setTxt('lbl-ytd-elev', t.ytdElev);
 
     setTxt('lbl-calendar-title', t.calendarTitle);
-    setTxt('lbl-calendar-sub', t.calendarSubtitle);
+    setTxt('lbl-cal-legend-btn', t.legendBtn);
     setTxt('lbl-leg-10', t.legendLess10);
     setTxt('lbl-leg-15', t.legendLess15);
     setTxt('lbl-leg-20', t.legendLess20);
@@ -522,21 +522,25 @@ export class UIRenderer {
 
       if (day.activities.length > 0 && day.tier) {
         cell.classList.add('has-activity');
-        
-        const pill = document.createElement('div');
-        pill.className = `cal-activity-pill ${day.tier.tierId}`;
-        pill.style.borderColor = day.tier.borderColor;
-        pill.style.backgroundColor = day.tier.bg;
-        pill.style.color = day.tier.color;
+        cell.style.backgroundColor = day.tier.bg;
+        cell.style.borderColor = day.tier.borderColor;
 
         const mainAct = day.activities[0];
         const distKmFormatted = day.totalDistanceKm.toFixed(1) + 'k';
         
-        let pillContent = `<span class="cal-pill-dist">${distKmFormatted}</span>`;
+        const distEl = document.createElement('span');
+        distEl.className = 'cal-day-dist';
+        distEl.style.color = day.tier.color;
+        distEl.textContent = distKmFormatted;
+
         if (day.tier.badge) {
-          pillContent += `<span class="cal-pill-badge">${day.tier.badge}</span>`;
+          const badgeEl = document.createElement('span');
+          badgeEl.className = 'cal-pill-badge';
+          badgeEl.textContent = day.tier.badge;
+          distEl.appendChild(badgeEl);
         }
-        pill.innerHTML = pillContent;
+
+        cell.appendChild(distEl);
 
         const actTitle = day.activities.map(a => a.name).join(' + ');
         const tooltip = `${day.dateStr} : ${actTitle} (${day.totalDistanceKm.toFixed(1)} km)`;
@@ -545,8 +549,6 @@ export class UIRenderer {
         if (onSelectActivity) {
           cell.addEventListener('click', () => onSelectActivity(mainAct));
         }
-
-        cell.appendChild(pill);
       }
 
       gridContainer.appendChild(cell);
@@ -741,6 +743,11 @@ export class UIRenderer {
     const t = i18n.t();
     const isFr = i18n.getLang() === 'fr';
 
+    const countBadge = document.getElementById('lbl-activities-total-badge');
+    if (countBadge) {
+      countBadge.textContent = `${activities.length} ${isFr ? 'sorties' : 'runs'}`;
+    }
+
     if (activities.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 32px 16px; color: var(--text-secondary); background: var(--bg-surface-subtle); border-radius: var(--radius-sm);">
@@ -906,21 +913,18 @@ export class UIRenderer {
       container.appendChild(item);
     });
 
-    // Contrôles de pagination : Charger plus (+10) et Masquer / Réduire
+    // Contrôles de pagination : Charger plus et Réduire
     if ((activities.length > visibleLimit && onLoadMore) || (visibleLimit > 10 && onCollapse)) {
       const loadMoreWrap = document.createElement('div');
       loadMoreWrap.className = 'feed-load-more-wrap';
-      const remaining = activities.length - visibleLimit;
-      const nextBatch = Math.min(10, remaining);
 
       let controlsHtml = '';
 
       if (activities.length > visibleLimit && onLoadMore) {
         controlsHtml += `
           <button id="btn-load-more-activities" class="btn-load-more">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>${isFr ? `Afficher plus de sorties (+${nextBatch})` : `Load more activities (+${nextBatch})`}</span>
-            <span style="opacity: 0.65; font-size: 0.75rem; margin-left: 4px;">(${visibleLimit}/${activities.length})</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>${isFr ? 'Afficher plus' : 'Load more'}</span>
           </button>
         `;
       }
@@ -928,8 +932,8 @@ export class UIRenderer {
       if (visibleLimit > 10 && onCollapse) {
         controlsHtml += `
           <button id="btn-collapse-activities" class="btn-collapse-activities">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-            <span>${isFr ? 'Masquer / Réduire' : 'Show less / Collapse'}</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            <span>${isFr ? 'Réduire' : 'Collapse'}</span>
           </button>
         `;
       }

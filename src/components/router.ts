@@ -108,7 +108,7 @@ export class Router {
     return this.currentPage;
   }
 
-  private updateSlidingPill(pageId: PageId): void {
+  public updateSlidingPill(pageId: PageId = this.currentPage): void {
     if (!this.slidingPill) return;
 
     const activeLink = document.querySelector<HTMLAnchorElement>(`.nav-link[data-page="${pageId}"]`);

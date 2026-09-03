@@ -142,6 +142,9 @@ class App {
     if (lblRecords) lblRecords.textContent = t.navRecords;
     if (lblShoes) lblShoes.textContent = t.navShoes;
     if (lblMap) lblMap.textContent = t.navMap;
+
+    requestAnimationFrame(() => this.router.updateSlidingPill());
+    setTimeout(() => this.router.updateSlidingPill(), 30);
   }
 
   private renderActivitiesForCurrentPeriod(): void {
@@ -317,6 +320,17 @@ class App {
           profileModal.classList.remove('active');
           document.body.style.overflow = '';
         }
+      });
+    }
+
+    // Bascule de la légende des distances du calendrier
+    const legendBtn = document.getElementById('btn-cal-legend-toggle');
+    const legendBar = document.getElementById('calendar-legend-bar');
+    if (legendBtn && legendBar) {
+      legendBtn.addEventListener('click', () => {
+        const isOpen = legendBar.classList.toggle('open');
+        legendBtn.classList.toggle('active', isOpen);
+        legendBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
     }
 
