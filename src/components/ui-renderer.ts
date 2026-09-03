@@ -179,7 +179,8 @@ export class UIRenderer {
    */
   public static renderFeaturedLatestRun(activities: Activity[], onOpenDetails: (act: Activity) => void): void {
     if (!activities || activities.length === 0) return;
-    const latest = activities[0];
+    const sorted = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+    const latest = sorted[0];
 
     const titleEl = document.getElementById('featured-run-title');
     const dateEl = document.getElementById('featured-run-date');
@@ -356,13 +357,44 @@ export class UIRenderer {
   }
 
   public static currentCalendarYear: number = 2026;
-  public static currentCalendarMonth: number = 7; // Août 2026 (0-indexed)
+  public static currentCalendarMonth: number = 8; // Septembre (0-indexed)
   private static isCalendarNavInit: boolean = false;
+  private static calendarInitialized: boolean = false;
+
+  private static getCalendarBounds(activities: Activity[]) {
+    if (!activities || activities.length === 0) {
+      const now = new Date();
+      return {
+        minYear: now.getFullYear(),
+        minMonth: now.getMonth(),
+        maxYear: now.getFullYear(),
+        maxMonth: now.getMonth()
+      };
+    }
+
+    const sorted = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+    const latestDate = new Date(sorted[0].start_date_local);
+    const oldestDate = new Date(sorted[sorted.length - 1].start_date_local);
+
+    return {
+      minYear: oldestDate.getFullYear(),
+      minMonth: oldestDate.getMonth(),
+      maxYear: latestDate.getFullYear(),
+      maxMonth: latestDate.getMonth()
+    };
+  }
 
   /**
    * Initialise les contrôles de navigation du calendrier
    */
   public static setupCalendarNavigation(activities: Activity[], onSelectActivity?: (act: Activity) => void): void {
+    if (!this.calendarInitialized && activities && activities.length > 0) {
+      const bounds = this.getCalendarBounds(activities);
+      this.currentCalendarYear = bounds.maxYear;
+      this.currentCalendarMonth = bounds.maxMonth;
+      this.calendarInitialized = true;
+    }
+
     if (this.isCalendarNavInit) return;
     this.isCalendarNavInit = true;
 
@@ -371,6 +403,11 @@ export class UIRenderer {
 
     if (prevBtn) {
       prevBtn.addEventListener('click', () => {
+        const bounds = this.getCalendarBounds(activities);
+        const canGoPrev = (this.currentCalendarYear > bounds.minYear) || 
+                          (this.currentCalendarYear === bounds.minYear && this.currentCalendarMonth > bounds.minMonth);
+        if (!canGoPrev) return;
+
         if (this.currentCalendarMonth === 0) {
           this.currentCalendarMonth = 11;
           this.currentCalendarYear--;
@@ -383,6 +420,11 @@ export class UIRenderer {
 
     if (nextBtn) {
       nextBtn.addEventListener('click', () => {
+        const bounds = this.getCalendarBounds(activities);
+        const canGoNext = (this.currentCalendarYear < bounds.maxYear) || 
+                          (this.currentCalendarYear === bounds.maxYear && this.currentCalendarMonth < bounds.maxMonth);
+        if (!canGoNext) return;
+
         if (this.currentCalendarMonth === 11) {
           this.currentCalendarMonth = 0;
           this.currentCalendarYear++;
@@ -406,6 +448,13 @@ export class UIRenderer {
     const totalPill = document.getElementById('lbl-calendar-month-total');
     if (!gridContainer || !activities) return;
 
+    if (!this.calendarInitialized && activities && activities.length > 0) {
+      const bounds = this.getCalendarBounds(activities);
+      this.currentCalendarYear = bounds.maxYear;
+      this.currentCalendarMonth = bounds.maxMonth;
+      this.calendarInitialized = true;
+    }
+
     gridContainer.innerHTML = '';
     const isFr = i18n.getLang() === 'fr';
 
@@ -421,6 +470,40 @@ export class UIRenderer {
 
     if (totalPill) {
       totalPill.textContent = `${calData.monthTotalKm} km • ${calData.monthRunCount} ${isFr ? (calData.monthRunCount > 1 ? 'sorties' : 'sortie') : (calData.monthRunCount > 1 ? 'runs' : 'run')}`;
+    }
+
+    // Gestion de l'affichage des flèches : masquage strict si aucune course plus ancienne ou future
+    const bounds = this.getCalendarBounds(activities);
+    const canGoNext = (this.currentCalendarYear < bounds.maxYear) || 
+                      (this.currentCalendarYear === bounds.maxYear && this.currentCalendarMonth < bounds.maxMonth);
+    const canGoPrev = (this.currentCalendarYear > bounds.minYear) || 
+                      (this.currentCalendarYear === bounds.minYear && this.currentCalendarMonth > bounds.minMonth);
+
+    const prevBtn = document.getElementById('btn-prev-month');
+    const nextBtn = document.getElementById('btn-next-month');
+
+    if (nextBtn) {
+      if (canGoNext) {
+        nextBtn.style.visibility = 'visible';
+        nextBtn.style.pointerEvents = 'auto';
+        nextBtn.removeAttribute('disabled');
+      } else {
+        nextBtn.style.visibility = 'hidden';
+        nextBtn.style.pointerEvents = 'none';
+        nextBtn.setAttribute('disabled', 'true');
+      }
+    }
+
+    if (prevBtn) {
+      if (canGoPrev) {
+        prevBtn.style.visibility = 'visible';
+        prevBtn.style.pointerEvents = 'auto';
+        prevBtn.removeAttribute('disabled');
+      } else {
+        prevBtn.style.visibility = 'hidden';
+        prevBtn.style.pointerEvents = 'none';
+        prevBtn.setAttribute('disabled', 'true');
+      }
     }
 
     calData.days.forEach(day => {
@@ -648,7 +731,8 @@ export class UIRenderer {
     dataset: StravaDataset | null,
     onHoverActivity: (act: Activity) => void,
     visibleLimit: number = 10,
-    onLoadMore?: () => void
+    onLoadMore?: () => void,
+    onCollapse?: () => void
   ): void {
     const container = document.getElementById('activities-feed-list');
     if (!container || !dataset) return;
@@ -821,25 +905,47 @@ export class UIRenderer {
       container.appendChild(item);
     });
 
-    // Bouton de pagination / charger plus de sorties
-    if (activities.length > visibleLimit && onLoadMore) {
+    // Contrôles de pagination : Charger plus (+10) et Masquer / Réduire
+    if ((activities.length > visibleLimit && onLoadMore) || (visibleLimit > 10 && onCollapse)) {
       const loadMoreWrap = document.createElement('div');
       loadMoreWrap.className = 'feed-load-more-wrap';
       const remaining = activities.length - visibleLimit;
       const nextBatch = Math.min(10, remaining);
 
-      loadMoreWrap.innerHTML = `
-        <button id="btn-load-more-activities" class="btn-load-more">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>${isFr ? `Afficher plus de sorties (+${nextBatch})` : `Load more activities (+${nextBatch})`}</span>
-          <span style="opacity: 0.65; font-size: 0.75rem; margin-left: 4px;">(${visibleLimit}/${activities.length})</span>
-        </button>
-      `;
+      let controlsHtml = '';
 
-      const btn = loadMoreWrap.querySelector<HTMLButtonElement>('#btn-load-more-activities');
-      if (btn) {
-        btn.addEventListener('click', () => {
+      if (activities.length > visibleLimit && onLoadMore) {
+        controlsHtml += `
+          <button id="btn-load-more-activities" class="btn-load-more">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>${isFr ? `Afficher plus de sorties (+${nextBatch})` : `Load more activities (+${nextBatch})`}</span>
+            <span style="opacity: 0.65; font-size: 0.75rem; margin-left: 4px;">(${visibleLimit}/${activities.length})</span>
+          </button>
+        `;
+      }
+
+      if (visibleLimit > 10 && onCollapse) {
+        controlsHtml += `
+          <button id="btn-collapse-activities" class="btn-collapse-activities">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            <span>${isFr ? 'Masquer / Réduire' : 'Show less / Collapse'}</span>
+          </button>
+        `;
+      }
+
+      loadMoreWrap.innerHTML = controlsHtml;
+
+      const loadMoreBtn = loadMoreWrap.querySelector<HTMLButtonElement>('#btn-load-more-activities');
+      if (loadMoreBtn && onLoadMore) {
+        loadMoreBtn.addEventListener('click', () => {
           onLoadMore();
+        });
+      }
+
+      const collapseBtn = loadMoreWrap.querySelector<HTMLButtonElement>('#btn-collapse-activities');
+      if (collapseBtn && onCollapse) {
+        collapseBtn.addEventListener('click', () => {
+          onCollapse();
         });
       }
 

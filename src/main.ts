@@ -197,6 +197,10 @@ class App {
       () => {
         this.feedLimit += 10;
         this.renderActivitiesForCurrentPeriod();
+      },
+      () => {
+        this.feedLimit = 10;
+        this.renderActivitiesForCurrentPeriod();
       }
     );
   }
@@ -281,8 +285,7 @@ class App {
         localStorage.setItem(INTRO_FX_KEY, isNowActive ? 'true' : 'false');
         const isFr = i18n.getLang() === 'fr';
         if (isNowActive) {
-          this.preloader.replay(this.dataset?.activities);
-          UIRenderer.showToast(isFr ? "Intro FX activée (jouée au chargement)" : "Intro FX enabled (plays on reload)");
+          UIRenderer.showToast(isFr ? "Intro FX activée (jouée au rechargement de la page)" : "Intro FX enabled (plays on next reload)");
         } else {
           UIRenderer.showToast(isFr ? "Intro FX désactivée (accès direct au rechargement)" : "Intro FX disabled (instant dashboard on reload)");
         }

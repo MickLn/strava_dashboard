@@ -50,9 +50,10 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
   currentLayerGroup.clearLayers();
 
+  const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
   const targetActivity = highlightActivityId
-    ? activities.find(a => a.id === highlightActivityId) || activities[0]
-    : activities[0];
+    ? activities.find(a => a.id === highlightActivityId) || sortedByDate[0]
+    : sortedByDate[0];
 
   let targetBounds: L.LatLngBounds | null = null;
 
