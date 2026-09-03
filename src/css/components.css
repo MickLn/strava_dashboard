@@ -73,6 +73,64 @@
   height: 100%;
 }
 
+/* Floating controls & pills on featured map */
+.map-floating-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  box-shadow: 0 2px 8px rgba(35, 25, 15, 0.08);
+  pointer-events: none;
+}
+
+.map-floating-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(35, 25, 15, 0.08);
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.map-icon-btn:hover {
+  background-color: #FFFFFF;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(224, 90, 54, 0.18);
+}
+
 /* Style de carte ultra-épuré, doux et minimaliste */
 .leaflet-tile-pane {
   filter: contrast(0.95) brightness(1.02);
@@ -102,16 +160,115 @@
   color: var(--text-muted);
 }
 
+/* Uniformiser la couleur des métriques de la dernière course avec la section activités */
 .featured-metric-value {
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 800;
-  color: var(--color-primary);
+  color: var(--text-primary);
 }
 
-.featured-metric-value.text-cobalt { color: var(--color-cobalt); }
-.featured-metric-value.text-forest { color: var(--color-forest); }
-.featured-metric-value.text-amber { color: var(--color-amber); }
+.featured-metrics-grid .featured-metric-value {
+  color: var(--text-primary) !important;
+}
+
+/* Page 5: Immersive Fullscreen Atlas Map */
+.page-atlas-view {
+  width: 100%;
+  height: calc(100vh - 130px);
+  min-height: 560px;
+  position: relative;
+}
+
+.atlas-full-map-wrap {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  animation: atlasEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes atlasEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.atlas-map-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.atlas-top-bar {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  gap: 10px;
+}
+
+.atlas-pill-badge {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(35, 25, 15, 0.09);
+}
+
+.atlas-controls-group {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.atlas-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(35, 25, 15, 0.09);
+  transition: all var(--transition-fast);
+}
+
+.atlas-action-btn:hover {
+  background-color: #FFFFFF;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(224, 90, 54, 0.16);
+}
 
 /* 2. Weekly Pulse Card */
 .weekly-pulse-card {

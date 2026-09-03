@@ -1,7 +1,7 @@
 import { DataService } from './services/data-service.ts';
 import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
-import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap } from './components/map.ts';
+import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap, recenterFeaturedMap, recenterAtlasMap, recenterAtlasToLatest, recenterFullscreenMap } from './components/map.ts';
 import { InteractivePreloader } from './components/preloader.ts';
 import { Router, PageId } from './components/router.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
@@ -18,6 +18,7 @@ class App {
   private searchQuery: string = '';
   private activeTagFilter: string = 'all';
   private feedLimit: number = 10;
+  private currentHighlightedActivityId?: number;
   private preloader = new InteractivePreloader();
 
   public async init(): Promise<void> {
@@ -99,12 +100,14 @@ class App {
     });
     UIRenderer.renderWeeklyPulse(this.dataset);
     UIRenderer.setupCalendarNavigation(this.dataset.activities, (act: Activity) => {
+      this.currentHighlightedActivityId = act.id;
       renderActivityTraces(this.dataset!.activities, act.id);
     });
     UIRenderer.renderMonthlyCalendar(this.dataset.activities, (act: Activity) => {
+      this.currentHighlightedActivityId = act.id;
       renderActivityTraces(this.dataset!.activities, act.id);
     });
-    renderActivityTraces(this.dataset.activities);
+    renderActivityTraces(this.dataset.activities, this.currentHighlightedActivityId);
     this.renderActivitiesForCurrentPeriod();
 
     // Page 2 : Analytics (Progression YTD & Objectif)
@@ -194,6 +197,7 @@ class App {
       filtered,
       this.dataset,
       (act) => {
+        this.currentHighlightedActivityId = act.id;
         renderActivityTraces(this.dataset!.activities, act.id);
       },
       this.feedLimit,
@@ -334,13 +338,32 @@ class App {
       });
     }
 
-    // Bouton Heatmap plein écran
-    const openHeatmapBtn = document.getElementById('btn-open-heatmap');
-    if (openHeatmapBtn) {
-      openHeatmapBtn.addEventListener('click', () => {
+    // Featured Map (Card A) Controls : Recentrer et Plein Écran
+    const btnRecenterFeatured = document.getElementById('btn-recenter-featured-map');
+    if (btnRecenterFeatured) {
+      btnRecenterFeatured.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (this.dataset?.activities) {
-          openFullscreenHeatmap(this.dataset.activities);
+          recenterFeaturedMap(this.dataset.activities, this.currentHighlightedActivityId);
         }
+      });
+    }
+
+    const btnFullscreenFeatured = document.getElementById('btn-fullscreen-featured-map');
+    if (btnFullscreenFeatured) {
+      btnFullscreenFeatured.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.dataset?.activities) {
+          openFullscreenHeatmap(this.dataset.activities, this.currentHighlightedActivityId);
+        }
+      });
+    }
+
+    // Modal Heatmap Plein Écran : Recentrer et Fermer (Croix)
+    const btnRecenterFullscreen = document.getElementById('btn-recenter-fullscreen-map');
+    if (btnRecenterFullscreen) {
+      btnRecenterFullscreen.addEventListener('click', () => {
+        recenterFullscreenMap();
       });
     }
 
@@ -348,6 +371,21 @@ class App {
     if (closeHeatmapBtn) {
       closeHeatmapBtn.addEventListener('click', () => {
         closeFullscreenHeatmap();
+      });
+    }
+
+    // Atlas Page 5 Map Controls : Recentrer Tout et Recentrer Dernière Course
+    const btnAtlasAll = document.getElementById('btn-recenter-atlas-all');
+    if (btnAtlasAll) {
+      btnAtlasAll.addEventListener('click', () => {
+        recenterAtlasMap();
+      });
+    }
+
+    const btnAtlasLatest = document.getElementById('btn-recenter-atlas-latest');
+    if (btnAtlasLatest) {
+      btnAtlasLatest.addEventListener('click', () => {
+        recenterAtlasToLatest();
       });
     }
 

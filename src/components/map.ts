@@ -45,6 +45,43 @@ export function invalidateMapSize(): void {
   }
 }
 
+// Référence de l'activité cible active
+let lastFeaturedTargetBounds: L.LatLngBounds | null = null;
+let lastFullscreenTargetBounds: L.LatLngBounds | null = null;
+let lastAtlasAllBounds: L.LatLngBounds | null = null;
+let lastAtlasLatestBounds: L.LatLngBounds | null = null;
+
+export function recenterFeaturedMap(activities: Activity[], highlightActivityId?: number): void {
+  if (!mapInstance || !activities || activities.length === 0) return;
+
+  if (lastFeaturedTargetBounds && lastFeaturedTargetBounds.isValid()) {
+    mapInstance.flyToBounds(lastFeaturedTargetBounds.pad(0.25), {
+      padding: [30, 30],
+      maxZoom: 14,
+      duration: 0.8
+    });
+    return;
+  }
+
+  const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+  const targetActivity = highlightActivityId
+    ? activities.find(a => a.id === highlightActivityId) || sortedByDate[0]
+    : sortedByDate[0];
+
+  if (targetActivity?.map?.summary_polyline) {
+    const coords = decodePolyline(targetActivity.map.summary_polyline);
+    if (coords.length > 0) {
+      const poly = L.polyline(coords);
+      lastFeaturedTargetBounds = poly.getBounds();
+      mapInstance.flyToBounds(lastFeaturedTargetBounds.pad(0.25), {
+        padding: [30, 30],
+        maxZoom: 14,
+        duration: 0.8
+      });
+    }
+  }
+}
+
 export function renderActivityTraces(activities: Activity[], highlightActivityId?: number) {
   if (!mapInstance || !currentLayerGroup || !activities || activities.length === 0) return;
 
@@ -57,7 +94,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
   let targetBounds: L.LatLngBounds | null = null;
 
-  // 1. Dessiner l'ensemble de tous les tracés de course depuis le début (Heatmap personnelle épurée)
+  // 1. Dessiner l'ensemble de tous les tracés en gris épuré translucide en arrière-plan
   activities.forEach(activity => {
     if (activity.id !== targetActivity?.id && activity.map?.summary_polyline) {
       const coords = decodePolyline(activity.map.summary_polyline);
@@ -65,7 +102,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         const polyline = L.polyline(coords, {
           color: '#717885',
           weight: 2.2,
-          opacity: 0.45,
+          opacity: 0.40,
           lineJoin: 'round'
         });
 
@@ -84,7 +121,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
     }
   });
 
-  // 2. Dessiner la séance sélectionnée (en Terracotta vibrant au premier plan)
+  // 2. Dessiner la séance sélectionnée au premier plan en Terracotta vibrant
   if (targetActivity && targetActivity.map?.summary_polyline) {
     const coords = decodePolyline(targetActivity.map.summary_polyline);
     if (coords.length > 0) {
@@ -110,6 +147,7 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
       mainPolyline.addTo(currentLayerGroup!);
       targetBounds = mainPolyline.getBounds();
+      lastFeaturedTargetBounds = targetBounds;
 
       // Marqueur de départ (vert forêt)
       const startPt = coords[0];
@@ -140,10 +178,16 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
       maxZoom: 14
     });
   }
+
+  // Mise à jour de la pilule du total de courses sur la carte
+  const cardMapCountEl = document.getElementById('lbl-card-map-count');
+  if (cardMapCountEl) {
+    cardMapCountEl.textContent = `${activities.length} courses superposées`;
+  }
 }
 
 /**
- * Initialise la carte Atlas GPS sur la Page 5
+ * Initialise la carte Atlas GPS sur la Page 5 (Mode Immersif Plein Écran)
  */
 export function initPageAtlasMap(elementId: string = 'page-heatmap-container', activities: Activity[] = []): void {
   const container = document.getElementById(elementId);
@@ -169,19 +213,23 @@ export function initPageAtlasMap(elementId: string = 'page-heatmap-container', a
     atlasLayerGroup.clearLayers();
     const polylines: L.Polyline[] = [];
 
+    const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+    const latest = sortedByDate[0];
+
     activities.forEach(act => {
       if (act.map?.summary_polyline) {
         const coords = decodePolyline(act.map.summary_polyline);
         if (coords.length > 0) {
+          const isLatest = act.id === latest?.id;
           const polyline = L.polyline(coords, {
-            color: '#E05A36',
-            weight: 3.2,
-            opacity: 0.65,
+            color: isLatest ? '#E05A36' : '#717885',
+            weight: isLatest ? 4.5 : 2.6,
+            opacity: isLatest ? 1 : 0.45,
             lineJoin: 'round'
           });
 
           polyline.bindPopup(`
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 170px; padding: 2px;">
+            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 175px; padding: 2px;">
               <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
               <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">${formatDate(act.start_date_local)}</div>
               <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
@@ -192,26 +240,64 @@ export function initPageAtlasMap(elementId: string = 'page-heatmap-container', a
 
           polyline.addTo(atlasLayerGroup!);
           polylines.push(polyline);
+
+          if (isLatest) {
+            lastAtlasLatestBounds = polyline.getBounds();
+          }
         }
       }
     });
 
     if (polylines.length > 0) {
       const group = L.featureGroup(polylines);
-      atlasMapInstance.fitBounds(group.getBounds().pad(0.08));
+      lastAtlasAllBounds = group.getBounds();
+      atlasMapInstance.fitBounds(lastAtlasAllBounds.pad(0.08));
     }
+
+    const atlasCountPill = document.getElementById('lbl-atlas-count-pill');
+    if (atlasCountPill) {
+      atlasCountPill.textContent = `${activities.length} tracés GPS superposés`;
+    }
+  }
+}
+
+export function recenterAtlasMap(): void {
+  if (atlasMapInstance && lastAtlasAllBounds && lastAtlasAllBounds.isValid()) {
+    atlasMapInstance.flyToBounds(lastAtlasAllBounds.pad(0.08), { duration: 0.8 });
+  }
+}
+
+export function recenterAtlasToLatest(): void {
+  if (atlasMapInstance && lastAtlasLatestBounds && lastAtlasLatestBounds.isValid()) {
+    atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.25), { maxZoom: 14, duration: 0.8 });
   }
 }
 
 let fullscreenMapInstance: L.Map | null = null;
 let fullscreenLayerGroup: L.LayerGroup | null = null;
+let isEscapeListenerWired = false;
 
-export function openFullscreenHeatmap(activities: Activity[]) {
+export function openFullscreenHeatmap(activities: Activity[], highlightActivityId?: number) {
   const modal = document.getElementById('heatmap-modal');
-  if (!modal) return;
+  if (!modal || !activities || activities.length === 0) return;
 
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  const modalPill = document.getElementById('lbl-modal-heatmap-pill');
+  if (modalPill) {
+    modalPill.textContent = `${activities.length} courses superposées`;
+  }
+
+  // Écoute de la touche Échap pour quitter le plein écran
+  if (!isEscapeListenerWired) {
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        closeFullscreenHeatmap();
+      }
+    });
+    isEscapeListenerWired = true;
+  }
 
   setTimeout(() => {
     if (!fullscreenMapInstance) {
@@ -232,16 +318,21 @@ export function openFullscreenHeatmap(activities: Activity[]) {
 
     if (fullscreenLayerGroup) {
       fullscreenLayerGroup.clearLayers();
-      const polylines: L.Polyline[] = [];
 
+      const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+      const targetActivity = highlightActivityId
+        ? activities.find(a => a.id === highlightActivityId) || sortedByDate[0]
+        : sortedByDate[0];
+
+      // 1. Tracés de toutes les autres courses en gris translucide
       activities.forEach(act => {
-        if (act.map?.summary_polyline) {
+        if (act.id !== targetActivity?.id && act.map?.summary_polyline) {
           const coords = decodePolyline(act.map.summary_polyline);
           if (coords.length > 0) {
             const polyline = L.polyline(coords, {
-              color: '#E05A36',
-              weight: 3.2,
-              opacity: 0.65,
+              color: '#717885',
+              weight: 2.4,
+              opacity: 0.35,
               lineJoin: 'round'
             });
 
@@ -256,17 +347,72 @@ export function openFullscreenHeatmap(activities: Activity[]) {
             `);
 
             polyline.addTo(fullscreenLayerGroup!);
-            polylines.push(polyline);
           }
         }
       });
 
-      if (polylines.length > 0) {
-        const group = L.featureGroup(polylines);
-        fullscreenMapInstance.fitBounds(group.getBounds().pad(0.08));
+      // 2. Course actuelle en Orange Terracotta vibrant au premier plan
+      if (targetActivity && targetActivity.map?.summary_polyline) {
+        const coords = decodePolyline(targetActivity.map.summary_polyline);
+        if (coords.length > 0) {
+          const mainPolyline = L.polyline(coords, {
+            color: '#E05A36',
+            weight: 5.5,
+            opacity: 1,
+            lineJoin: 'round'
+          });
+
+          mainPolyline.bindPopup(`
+            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 190px; padding: 4px;">
+              <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #E05A36; margin-bottom: 2px;">Selected run</div>
+              <strong style="font-size: 0.95rem; color: #1C1E21; display: block; margin-bottom: 4px;">${targetActivity.name}</strong>
+              <div style="font-size: 0.78rem; color: #5C626C; margin-bottom: 6px;">${formatDate(targetActivity.start_date_local)}</div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.84rem; border-top: 1px solid #ECE6DC; padding-top: 6px;">
+                <span><strong>${formatDistance(targetActivity.distance)}</strong></span>
+                <span><strong>${formatTimeShort(targetActivity.moving_time)}</strong></span>
+                <span><strong>${formatPace(targetActivity.average_speed)}</strong></span>
+              </div>
+            </div>
+          `);
+
+          mainPolyline.addTo(fullscreenLayerGroup!);
+          lastFullscreenTargetBounds = mainPolyline.getBounds();
+
+          // Pins Départ et Arrivée
+          L.circleMarker(coords[0], {
+            radius: 8,
+            color: '#FFFFFF',
+            weight: 2.5,
+            fillColor: '#2E6B56',
+            fillOpacity: 1
+          }).addTo(fullscreenLayerGroup!);
+
+          L.circleMarker(coords[coords.length - 1], {
+            radius: 8,
+            color: '#FFFFFF',
+            weight: 2.5,
+            fillColor: '#E05A36',
+            fillOpacity: 1
+          }).addTo(fullscreenLayerGroup!);
+
+          fullscreenMapInstance.fitBounds(lastFullscreenTargetBounds.pad(0.20), {
+            padding: [40, 40],
+            maxZoom: 14
+          });
+        }
       }
     }
   }, 100);
+}
+
+export function recenterFullscreenMap(): void {
+  if (fullscreenMapInstance && lastFullscreenTargetBounds && lastFullscreenTargetBounds.isValid()) {
+    fullscreenMapInstance.flyToBounds(lastFullscreenTargetBounds.pad(0.20), {
+      padding: [40, 40],
+      maxZoom: 14,
+      duration: 0.8
+    });
+  }
 }
 
 export function closeFullscreenHeatmap() {
