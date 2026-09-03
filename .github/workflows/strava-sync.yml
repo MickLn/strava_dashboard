@@ -2,8 +2,8 @@ name: Synchronisation Strava Automatique
 
 on:
   schedule:
-    # S'exécute automatiquement toutes les 6 heures
-    - cron: '0 */6 * * *'
+    # S'exécute automatiquement toutes les 10 minutes
+    - cron: '*/10 * * * *'
   workflow_dispatch: # Permet de déclencher la synchronisation manuellement en 1 clic
 
 jobs:
