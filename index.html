@@ -75,7 +75,8 @@
         </button>
 
         <!-- Sélecteur de langue EN / FR directement dans la barre -->
-        <div class="lang-switcher" id="lang-switcher">
+        <div class="lang-switcher" id="lang-switcher" data-active="en">
+          <div class="lang-sliding-pill"></div>
           <button class="lang-btn active" data-lang="en">EN</button>
           <button class="lang-btn" data-lang="fr">FR</button>
         </div>
@@ -448,17 +449,17 @@
       <div class="atlas-full-map-wrap">
         <div id="page-heatmap-container" class="atlas-map-canvas"></div>
         
-        <!-- Floating top bar & controls over the full map on the right -->
+        <!-- Floating top bar & controls over the full map centered below the navbar -->
         <div class="atlas-top-bar">
           <button id="btn-recenter-atlas-all" class="atlas-action-btn" title="Vue d'ensemble de tous les tracés">
             <span id="lbl-atlas-btn-all">Tous les tracés</span>
           </button>
-          <button id="btn-recenter-atlas-latest" class="atlas-action-btn" title="Recentrer sur la dernière course">
-            <span id="lbl-atlas-btn-latest">Dernière course</span>
-          </button>
           <div class="atlas-pill-badge" id="lbl-atlas-count-pill">
             283 courses
           </div>
+          <button id="btn-recenter-atlas-latest" class="atlas-action-btn" title="Recentrer sur la dernière course">
+            <span id="lbl-atlas-btn-latest">Dernière course</span>
+          </button>
         </div>
       </div>
 
@@ -550,7 +551,8 @@
 
       <!-- Settings Row: Language & Actions -->
       <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px;">
-        <div class="lang-switcher" id="lang-switcher">
+        <div class="lang-switcher" id="modal-lang-switcher" data-active="en">
+          <div class="lang-sliding-pill"></div>
           <button class="lang-btn active" data-lang="en">EN</button>
           <button class="lang-btn" data-lang="fr">FR</button>
         </div>
