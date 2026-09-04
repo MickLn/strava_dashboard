@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import { Activity } from '../types/strava.ts';
 import { decodePolyline } from '../utils/polyline.ts';
 import { formatDistance, formatPace, formatTimeShort, formatDate } from '../utils/metrics.ts';
+import { i18n } from '../utils/i18n.ts';
 
 let mapInstance: L.Map | null = null;
 let currentLayerGroup: L.LayerGroup | null = null;
@@ -227,12 +228,14 @@ export function renderAtlasAllTracks(activities: Activity[]): void {
   if (polylines.length > 0) {
     const group = L.featureGroup(polylines);
     lastAtlasAllBounds = group.getBounds();
-    atlasMapInstance.flyToBounds(lastAtlasAllBounds.pad(0.08), { duration: 0.8 });
+    if (lastAtlasAllBounds.isValid()) {
+      atlasMapInstance.flyToBounds(lastAtlasAllBounds.pad(0.08), { duration: 0.8 });
+    }
   }
 
   const atlasCountPill = document.getElementById('lbl-atlas-count-pill');
   if (atlasCountPill) {
-    atlasCountPill.textContent = `${activities.length} courses`;
+    atlasCountPill.textContent = i18n.t().runsCountBadge(activities.length);
   }
 }
 
@@ -252,7 +255,7 @@ export function renderAtlasLatestTrack(activities: Activity[]): void {
         const polyline = L.polyline(coords, {
           color: '#717885',
           weight: 2.2,
-          opacity: 0.40,
+          opacity: 0.35,
           lineJoin: 'round'
         });
 
@@ -298,35 +301,57 @@ export function renderAtlasLatestTrack(activities: Activity[]): void {
       mainPolyline.addTo(atlasLayerGroup!);
       mainPolyline.bringToFront();
 
-      // Pins Départ et Arrivée
-      L.circleMarker(coords[0], {
-        radius: 7.5,
-        color: '#FFFFFF',
-        weight: 2.5,
-        fillColor: '#2E6B56',
-        fillOpacity: 1
-      }).addTo(atlasLayerGroup!);
+      // Marqueurs Départ et Arrivée en SVG circleMarker (garantit un verrouillage absolu aux coordonnées GPS sans dérive)
+      const startPt = coords[0];
+      const endPt = coords[coords.length - 1];
 
-      L.circleMarker(coords[coords.length - 1], {
-        radius: 7.5,
-        color: '#FFFFFF',
-        weight: 2.5,
-        fillColor: '#E05A36',
-        fillOpacity: 1
-      }).addTo(atlasLayerGroup!);
+      let pinsAdded = false;
+      const addPins = () => {
+        if (pinsAdded || !atlasLayerGroup) return;
+        pinsAdded = true;
+
+        L.circleMarker(startPt, {
+          radius: 7,
+          color: '#FFFFFF',
+          weight: 2.5,
+          fillColor: '#2E6B56',
+          fillOpacity: 1
+        }).bindTooltip("Start", { permanent: false }).addTo(atlasLayerGroup);
+
+        L.circleMarker(endPt, {
+          radius: 7,
+          color: '#FFFFFF',
+          weight: 2.5,
+          fillColor: '#E05A36',
+          fillOpacity: 1
+        }).bindTooltip("Finish", { permanent: false }).addTo(atlasLayerGroup);
+      };
 
       lastAtlasLatestBounds = mainPolyline.getBounds();
-      atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.25), {
-        padding: [40, 40],
-        maxZoom: 14,
-        duration: 0.8
-      });
+      if (lastAtlasLatestBounds.isValid()) {
+        atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.20), {
+          padding: [50, 50],
+          maxZoom: 15,
+          duration: 0.8
+        });
+
+        // Ajouter les marqueurs à la fin du zoom de recentrage pour éviter le grossissement d'échelle temporaire
+        const onMoveEnd = () => {
+          atlasMapInstance?.off('moveend', onMoveEnd);
+          addPins();
+        };
+
+        atlasMapInstance.once('moveend', onMoveEnd);
+        setTimeout(addPins, 850);
+      } else {
+        addPins();
+      }
     }
   }
 
   const atlasCountPill = document.getElementById('lbl-atlas-count-pill');
   if (atlasCountPill) {
-    atlasCountPill.textContent = `${activities.length} courses`;
+    atlasCountPill.textContent = i18n.t().runsCountBadge(activities.length);
   }
 }
 
@@ -336,9 +361,11 @@ export function initPageAtlasMap(elementId: string = 'page-heatmap-container', a
 
   if (!atlasMapInstance) {
     atlasMapInstance = L.map(elementId, {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: false
     }).setView([48.8566, 2.3522], 12);
+
+    L.control.zoom({ position: 'bottomleft' }).addTo(atlasMapInstance);
 
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 17,
@@ -346,9 +373,9 @@ export function initPageAtlasMap(elementId: string = 'page-heatmap-container', a
     }).addTo(atlasMapInstance);
 
     atlasLayerGroup = L.layerGroup().addTo(atlasMapInstance);
-  } else {
-    atlasMapInstance.invalidateSize();
   }
+
+  atlasMapInstance.invalidateSize();
 
   // Par défaut à l'ouverture : TOUTES les courses sont en orange
   if (activities.length > 0) {
@@ -357,18 +384,22 @@ export function initPageAtlasMap(elementId: string = 'page-heatmap-container', a
 }
 
 export function recenterAtlasMap(activities?: Activity[]): void {
+  if (!atlasMapInstance) return;
+  atlasMapInstance.invalidateSize();
   if (activities && activities.length > 0) {
     renderAtlasAllTracks(activities);
-  } else if (atlasMapInstance && lastAtlasAllBounds && lastAtlasAllBounds.isValid()) {
+  } else if (lastAtlasAllBounds && lastAtlasAllBounds.isValid()) {
     atlasMapInstance.flyToBounds(lastAtlasAllBounds.pad(0.08), { duration: 0.8 });
   }
 }
 
 export function recenterAtlasToLatest(activities?: Activity[]): void {
+  if (!atlasMapInstance) return;
+  atlasMapInstance.invalidateSize();
   if (activities && activities.length > 0) {
     renderAtlasLatestTrack(activities);
-  } else if (atlasMapInstance && lastAtlasLatestBounds && lastAtlasLatestBounds.isValid()) {
-    atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.25), { maxZoom: 14, duration: 0.8 });
+  } else if (lastAtlasLatestBounds && lastAtlasLatestBounds.isValid()) {
+    atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.20), { maxZoom: 15, duration: 0.8 });
   }
 }
 

@@ -110,6 +110,9 @@ export const translations = {
     // Heatmap & Maps
     fullscreenHeatmapBtn: "Fullscreen Heatmap",
     closeHeatmapBtn: "Close",
+    atlasAllTracks: "All tracks",
+    atlasLatestTrack: "Latest run",
+    runsCountBadge: (count: number) => `${count} ${count > 1 ? 'runs' : 'run'}`,
 
     // Effort Zones
     effortZonesTitle: "Effort & Pace Zones",
@@ -238,6 +241,9 @@ export const translations = {
     // Heatmap & Maps
     fullscreenHeatmapBtn: "Heatmap Plein Écran",
     closeHeatmapBtn: "Fermer",
+    atlasAllTracks: "Tous les tracés",
+    atlasLatestTrack: "Dernière course",
+    runsCountBadge: (count: number) => `${count} ${count > 1 ? 'courses' : 'course'}`,
 
     // Effort Zones
     effortZonesTitle: "Zones d'Effort & Allure",

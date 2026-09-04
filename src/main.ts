@@ -220,7 +220,10 @@ class App {
         const selectedLang = btn.getAttribute('data-lang') as Language;
         if (selectedLang && selectedLang !== i18n.getLang()) {
           i18n.setLang(selectedLang);
-          langBtns.forEach(b => b.classList.toggle('active', b === btn));
+          langBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === selectedLang));
+          document.querySelectorAll<HTMLElement>('.lang-switcher').forEach(switcher => {
+            switcher.setAttribute('data-active', selectedLang);
+          });
           this.renderAll();
         }
       });

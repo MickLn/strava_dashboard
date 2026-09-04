@@ -109,6 +109,9 @@ export class UIRenderer {
       closeHeatmapBtnEl.setAttribute('title', `${t.closeHeatmapBtn} (Échap)`);
     }
 
+    setTxt('lbl-atlas-btn-all', t.atlasAllTracks);
+    setTxt('lbl-atlas-btn-latest', t.atlasLatestTrack);
+
     setTxt('lbl-activities-title', t.recentActivitiesTitle);
     setTxt('lbl-activities-sub', t.recentActivitiesSubtitle);
 
@@ -131,7 +134,7 @@ export class UIRenderer {
     setTxt('lbl-footer-1', `🏃 ${t.footerTitle}`);
     setTxt('lbl-footer-2', t.footerSubtitle);
 
-    // Mettre à jour l'état actif des boutons de langue
+    // Mettre à jour l'état actif des boutons et conteneurs de langue
     const lang = i18n.getLang();
     document.querySelectorAll('.lang-btn').forEach(btn => {
       if (btn.getAttribute('data-lang') === lang) {
@@ -139,6 +142,9 @@ export class UIRenderer {
       } else {
         btn.classList.remove('active');
       }
+    });
+    document.querySelectorAll<HTMLElement>('.lang-switcher').forEach(switcher => {
+      switcher.setAttribute('data-active', lang);
     });
   }
 
