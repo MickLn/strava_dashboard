@@ -33,11 +33,11 @@ STRAVA_REFRESH_TOKEN = os.environ.get("STRAVA_REFRESH_TOKEN")
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "..", "public", "data", "strava_data.json")
 
 SHOE_IMAGE_MAP = {
-    "adizero": "/images/shoes/adizero_evo_sl.png",
-    "ultraboost": "/images/shoes/ultraboost_gtx.png",
-    "pegasus": "/images/shoes/pegasus_41.png",
-    "brooks": "/images/shoes/brooks_hyperion_max.png",
-    "default": "/images/shoes/adizero_evo_sl.png"
+    "adizero": "images/shoes/adizero_evo_sl.png",
+    "ultraboost": "images/shoes/ultraboost_gtx.png",
+    "pegasus": "images/shoes/pegasus_41.png",
+    "brooks": "images/shoes/brooks_hyperion_max.png",
+    "default": "images/shoes/adizero_evo_sl.png"
 }
 
 def get_shoe_image(shoe_name):

@@ -351,28 +351,41 @@ export function calculateConsistencyGrid(activities: Activity[]) {
 }
 
 export const SHOE_IMAGE_MAP: Record<string, string> = {
-  adizero: '/images/shoes/adizero_evo_sl.png',
-  ultraboost: '/images/shoes/ultraboost_gtx.png',
-  pegasus: '/images/shoes/pegasus_41.png',
-  brooks: '/images/shoes/brooks_hyperion_max.png',
-  default: '/images/shoes/adizero_evo_sl.png'
+  adizero: 'images/shoes/adizero_evo_sl.png',
+  ultraboost: 'images/shoes/ultraboost_gtx.png',
+  pegasus: 'images/shoes/pegasus_41.png',
+  brooks: 'images/shoes/brooks_hyperion_max.png',
+  default: 'images/shoes/adizero_evo_sl.png'
 };
+
+export function getAssetUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  const cleanPath = path.replace(/^\.?\//, '');
+  const base = import.meta.env.BASE_URL || './';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  return `${cleanBase}${cleanPath}`;
+}
 
 export function resolveShoeImage(shoeName: string, existingUrl?: string): string {
   const nameLower = (shoeName || '').toLowerCase();
+  let relPath = SHOE_IMAGE_MAP.default;
+
   if (nameLower.includes('adizero') || nameLower.includes('evo')) {
-    return SHOE_IMAGE_MAP.adizero;
+    relPath = SHOE_IMAGE_MAP.adizero;
   } else if (nameLower.includes('ultraboost') || nameLower.includes('gtx')) {
-    return SHOE_IMAGE_MAP.ultraboost;
+    relPath = SHOE_IMAGE_MAP.ultraboost;
   } else if (nameLower.includes('pegasus')) {
-    return SHOE_IMAGE_MAP.pegasus;
+    relPath = SHOE_IMAGE_MAP.pegasus;
   } else if (nameLower.includes('brooks') || nameLower.includes('hyperion')) {
-    return SHOE_IMAGE_MAP.brooks;
+    relPath = SHOE_IMAGE_MAP.brooks;
+  } else if (existingUrl && (existingUrl.includes('/images/shoes/') || existingUrl.includes('images/shoes/'))) {
+    relPath = existingUrl;
   }
-  if (existingUrl && existingUrl.startsWith('/images/shoes/')) {
-    return existingUrl;
-  }
-  return SHOE_IMAGE_MAP.default;
+
+  return getAssetUrl(relPath);
 }
 
 export interface ShoeHealth {

@@ -88,7 +88,7 @@
       "brand_name": "Nike",
       "model_name": "Nike Pegasus 41 Blueprint",
       "max_distance_km": 800,
-      "image_url": "/images/shoes/pegasus_41.png"
+      "image_url": "images/shoes/pegasus_41.png"
     },
     {
       "id": "g23095627",
@@ -98,7 +98,7 @@
       "brand_name": "Adidas",
       "model_name": "Adidas Adizero EVO SL",
       "max_distance_km": 1500,
-      "image_url": "/images/shoes/adizero_evo_sl.png"
+      "image_url": "images/shoes/adizero_evo_sl.png"
     },
     {
       "id": "g30896433",
@@ -108,7 +108,7 @@
       "brand_name": "Nike",
       "model_name": "Brooks Hyperion Max 3",
       "max_distance_km": 800,
-      "image_url": "/images/shoes/brooks_hyperion_max.png"
+      "image_url": "images/shoes/brooks_hyperion_max.png"
     },
     {
       "id": "g22947247",
@@ -118,7 +118,7 @@
       "brand_name": "Adidas",
       "model_name": "Adidas Ultraboost 21 GTX",
       "max_distance_km": 800,
-      "image_url": "/images/shoes/ultraboost_gtx.png"
+      "image_url": "images/shoes/ultraboost_gtx.png"
     }
   ],
   "records": {
