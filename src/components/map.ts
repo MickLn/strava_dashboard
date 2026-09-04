@@ -301,31 +301,25 @@ export function renderAtlasLatestTrack(activities: Activity[]): void {
       mainPolyline.addTo(atlasLayerGroup!);
       mainPolyline.bringToFront();
 
-      // Marqueurs Départ et Arrivée en SVG circleMarker (garantit un verrouillage absolu aux coordonnées GPS sans dérive)
+      // Marqueurs Départ et Arrivée en SVG circleMarker natifs synchrones
       const startPt = coords[0];
       const endPt = coords[coords.length - 1];
 
-      let pinsAdded = false;
-      const addPins = () => {
-        if (pinsAdded || !atlasLayerGroup) return;
-        pinsAdded = true;
+      L.circleMarker(startPt, {
+        radius: 7,
+        color: '#FFFFFF',
+        weight: 2.5,
+        fillColor: '#2E6B56',
+        fillOpacity: 1
+      }).bindTooltip("Start", { permanent: false }).addTo(atlasLayerGroup!);
 
-        L.circleMarker(startPt, {
-          radius: 7,
-          color: '#FFFFFF',
-          weight: 2.5,
-          fillColor: '#2E6B56',
-          fillOpacity: 1
-        }).bindTooltip("Start", { permanent: false }).addTo(atlasLayerGroup);
-
-        L.circleMarker(endPt, {
-          radius: 7,
-          color: '#FFFFFF',
-          weight: 2.5,
-          fillColor: '#E05A36',
-          fillOpacity: 1
-        }).bindTooltip("Finish", { permanent: false }).addTo(atlasLayerGroup);
-      };
+      L.circleMarker(endPt, {
+        radius: 7,
+        color: '#FFFFFF',
+        weight: 2.5,
+        fillColor: '#E05A36',
+        fillOpacity: 1
+      }).bindTooltip("Finish", { permanent: false }).addTo(atlasLayerGroup!);
 
       lastAtlasLatestBounds = mainPolyline.getBounds();
       if (lastAtlasLatestBounds.isValid()) {
@@ -334,17 +328,6 @@ export function renderAtlasLatestTrack(activities: Activity[]): void {
           maxZoom: 15,
           duration: 0.8
         });
-
-        // Ajouter les marqueurs à la fin du zoom de recentrage pour éviter le grossissement d'échelle temporaire
-        const onMoveEnd = () => {
-          atlasMapInstance?.off('moveend', onMoveEnd);
-          addPins();
-        };
-
-        atlasMapInstance.once('moveend', onMoveEnd);
-        setTimeout(addPins, 850);
-      } else {
-        addPins();
       }
     }
   }
