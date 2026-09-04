@@ -37,6 +37,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Aucune nouvelle activité détectée."
           else
-            git commit -m "chore(data): synchronisation automatique des activités Strava [skip ci]"
+            git commit -m "chore(data): synchronisation automatique des activités Strava"
             git push
           fi

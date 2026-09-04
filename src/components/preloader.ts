@@ -44,21 +44,25 @@ export class InteractivePreloader {
   private isRunning: boolean = false;
 
   constructor() {
-    this.overlay = document.getElementById('preloader-overlay');
-    this.canvas = document.getElementById('preloader-canvas') as HTMLCanvasElement;
-    this.counterEl = document.getElementById('preloader-counter');
-    this.progressBarEl = document.getElementById('preloader-progress-bar');
-    this.statusTextEl = document.getElementById('preloader-status-text');
+    this.ensureElements();
+  }
 
-    if (this.canvas) {
-      this.ctx = this.canvas.getContext('2d');
+  private ensureElements(): void {
+    if (!this.overlay) this.overlay = document.getElementById('preloader-overlay');
+    if (!this.canvas) {
+      this.canvas = document.getElementById('preloader-canvas') as HTMLCanvasElement;
+      if (this.canvas) this.ctx = this.canvas.getContext('2d');
     }
+    if (!this.counterEl) this.counterEl = document.getElementById('preloader-counter');
+    if (!this.progressBarEl) this.progressBarEl = document.getElementById('preloader-progress-bar');
+    if (!this.statusTextEl) this.statusTextEl = document.getElementById('preloader-status-text');
   }
 
   /**
    * Démarre l'animation d'entrée interactive
    */
   public start(activities?: Activity[]): void {
+    this.ensureElements();
     if (!this.canvas || !this.ctx || !this.overlay) return;
 
     this.isRunning = true;
@@ -106,6 +110,7 @@ export class InteractivePreloader {
    * Masque immédiatement le préchargeur (si désactivé)
    */
   public dismiss(): void {
+    this.ensureElements();
     this.isRunning = false;
     this.isCompleted = true;
     if (this.animationFrameId) {

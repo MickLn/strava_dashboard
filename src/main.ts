@@ -446,8 +446,12 @@ class App {
   }
 }
 
-// Démarrage de l'application
+// Démarrage sécurisé et immédiat de l'application
 const app = new App();
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    app.init();
+  });
+} else {
   app.init();
-});
+}
