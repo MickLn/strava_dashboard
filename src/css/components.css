@@ -201,7 +201,10 @@
 .featured-metric-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
 }
 
 .featured-metric-label {
@@ -209,6 +212,7 @@
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-muted);
+  text-align: center;
 }
 
 /* Uniformiser la couleur des métriques de la dernière course avec la section activités */
@@ -217,6 +221,7 @@
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-primary);
+  text-align: center;
 }
 
 .featured-metrics-grid .featured-metric-value {
