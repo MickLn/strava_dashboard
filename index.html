@@ -119,16 +119,15 @@
             <div id="leaflet-map"></div>
 
             <div class="map-floating-pill">
-              <span class="status-dot-mini"></span>
-              <span id="lbl-card-map-count">283 courses superposées</span>
+              <span id="lbl-card-map-count">282 courses</span>
             </div>
 
             <div class="map-floating-controls">
               <button id="btn-recenter-featured-map" class="map-icon-btn" title="Recentrer sur la course" aria-label="Recentrer sur la course">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
               </button>
               <button id="btn-fullscreen-featured-map" class="map-icon-btn" title="Plein écran (Échap pour quitter)" aria-label="Plein écran">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
               </button>
             </div>
           </div>
@@ -449,22 +448,16 @@
       <div class="atlas-full-map-wrap">
         <div id="page-heatmap-container" class="atlas-map-canvas"></div>
         
-        <!-- Floating top bar & controls over the full map -->
+        <!-- Floating top bar & controls over the full map on the right -->
         <div class="atlas-top-bar">
+          <button id="btn-recenter-atlas-all" class="atlas-action-btn" title="Vue d'ensemble de tous les tracés">
+            <span id="lbl-atlas-btn-all">Tous les tracés</span>
+          </button>
+          <button id="btn-recenter-atlas-latest" class="atlas-action-btn" title="Recentrer sur la dernière course">
+            <span id="lbl-atlas-btn-latest">Dernière course</span>
+          </button>
           <div class="atlas-pill-badge" id="lbl-atlas-count-pill">
-            <span class="status-dot-mini"></span>
-            <span>283 tracés GPS superposés</span>
-          </div>
-
-          <div class="atlas-controls-group">
-            <button id="btn-recenter-atlas-all" class="atlas-action-btn" title="Vue d'ensemble de tous les tracés">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-              <span id="lbl-atlas-btn-all">Tous les tracés</span>
-            </button>
-            <button id="btn-recenter-atlas-latest" class="atlas-action-btn" title="Recentrer sur la dernière course">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-              <span id="lbl-atlas-btn-latest">Dernière course</span>
-            </button>
+            283 courses
           </div>
         </div>
       </div>
@@ -513,19 +506,22 @@
 
   <!-- Fullscreen Heatmap Modal -->
   <div class="heatmap-modal-overlay" id="heatmap-modal">
-    <div class="heatmap-modal-header">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--text-primary);" id="lbl-modal-heatmap-title">Personal Heatmap • Tracé de course</h3>
-        <span class="act-pill" id="lbl-modal-heatmap-pill" style="background: rgba(224, 90, 54, 0.12); color: var(--color-primary);">283 courses</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="btn-recenter-fullscreen-map" class="map-icon-btn" style="width: 36px; height: 36px; background: var(--bg-surface-subtle); border: 1px solid var(--border-light);" title="Recentrer sur la course" aria-label="Recentrer sur la course">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-        </button>
-        <button id="btn-close-heatmap" class="modal-close-btn" aria-label="Fermer le plein écran" title="Fermer (Échap)">&times;</button>
-      </div>
-    </div>
     <div id="fullscreen-heatmap-container" class="heatmap-modal-map"></div>
+
+    <!-- Floating count pill in top right -->
+    <div class="fullscreen-floating-pill">
+      <span id="lbl-modal-heatmap-pill">282 courses</span>
+    </div>
+
+    <!-- Floating controls at bottom right in vertical orientation -->
+    <div class="fullscreen-floating-controls">
+      <button id="btn-recenter-fullscreen-map" class="map-icon-btn" title="Recentrer sur la course" aria-label="Recentrer sur la course">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+      </button>
+      <button id="btn-close-heatmap" class="map-icon-btn" aria-label="Fermer le plein écran" title="Fermer (Échap)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
   </div>
 
   <!-- Athlete Profile & Settings Modal -->

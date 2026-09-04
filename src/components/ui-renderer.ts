@@ -102,7 +102,12 @@ export class UIRenderer {
     setTxt('lbl-effort-zones-sub', t.effortZonesSubtitle);
     setTxt('lbl-achievements-title', t.achievementsTitle);
     setTxt('lbl-achievements-sub', t.achievementsSubtitle);
-    setTxt('btn-close-heatmap', t.closeHeatmapBtn);
+    
+    const closeHeatmapBtnEl = document.getElementById('btn-close-heatmap');
+    if (closeHeatmapBtnEl) {
+      closeHeatmapBtnEl.setAttribute('aria-label', t.closeHeatmapBtn);
+      closeHeatmapBtnEl.setAttribute('title', `${t.closeHeatmapBtn} (Échap)`);
+    }
 
     setTxt('lbl-activities-title', t.recentActivitiesTitle);
     setTxt('lbl-activities-sub', t.recentActivitiesSubtitle);

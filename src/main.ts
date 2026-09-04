@@ -378,14 +378,14 @@ class App {
     const btnAtlasAll = document.getElementById('btn-recenter-atlas-all');
     if (btnAtlasAll) {
       btnAtlasAll.addEventListener('click', () => {
-        recenterAtlasMap();
+        recenterAtlasMap(this.dataset?.activities);
       });
     }
 
     const btnAtlasLatest = document.getElementById('btn-recenter-atlas-latest');
     if (btnAtlasLatest) {
       btnAtlasLatest.addEventListener('click', () => {
-        recenterAtlasToLatest();
+        recenterAtlasToLatest(this.dataset?.activities);
       });
     }
 
@@ -403,6 +403,30 @@ class App {
         }
       });
     }
+
+    // Gestion globale et prioritaire de la touche Échap (capture phase) pour fermer n'importe quelle modale
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        const heatmapModal = document.getElementById('heatmap-modal');
+        if (heatmapModal && heatmapModal.classList.contains('active')) {
+          closeFullscreenHeatmap();
+          return;
+        }
+
+        const activityModal = document.getElementById('activity-modal');
+        if (activityModal && activityModal.classList.contains('active')) {
+          UIRenderer.closeActivityModal();
+          return;
+        }
+
+        const profileModal = document.getElementById('profile-modal');
+        if (profileModal && profileModal.classList.contains('active')) {
+          profileModal.classList.remove('active');
+          document.body.style.overflow = '';
+          return;
+        }
+      }
+    }, true);
 
     // Gestion du redimensionnement d'écran, zoom & rotation mobile
     let resizeTimer: number;

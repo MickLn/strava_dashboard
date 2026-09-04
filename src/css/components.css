@@ -77,58 +77,109 @@
 .map-floating-pill {
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 10px;
+  left: auto;
   z-index: 500;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-pill);
-  padding: 4px 10px;
-  font-size: 0.72rem;
+  padding: 5px 12px;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: var(--text-secondary);
-  box-shadow: 0 2px 8px rgba(35, 25, 15, 0.08);
+  color: var(--text-primary);
+  box-shadow: 0 3px 10px rgba(35, 25, 15, 0.08);
   pointer-events: none;
 }
 
 .map-floating-controls {
   position: absolute;
-  top: 10px;
+  bottom: 10px;
   right: 10px;
+  top: auto;
   z-index: 500;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Fullscreen Heatmap Floating Controls & Pill */
+.fullscreen-floating-pill {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 3100;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(35, 25, 15, 0.12);
+  pointer-events: none;
+}
+
+.fullscreen-floating-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 3100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .map-icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(35, 25, 15, 0.08);
+  box-shadow: 0 4px 14px rgba(35, 25, 15, 0.10), 0 1px 3px rgba(35, 25, 15, 0.06);
   transition: all var(--transition-fast);
   padding: 0;
+}
+
+.fullscreen-floating-controls .map-icon-btn {
+  width: 44px;
+  height: 44px;
+  box-shadow: 0 6px 18px rgba(35, 25, 15, 0.14), 0 2px 6px rgba(35, 25, 15, 0.08);
 }
 
 .map-icon-btn:hover {
   background-color: #FFFFFF;
   color: var(--color-primary);
   border-color: var(--color-primary);
-  transform: scale(1.06);
-  box-shadow: 0 4px 12px rgba(224, 90, 54, 0.18);
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(224, 90, 54, 0.24);
+}
+
+.map-icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* Hide native Leaflet / ArcGIS attribution badges */
+.leaflet-control-attribution {
+  display: none !important;
 }
 
 /* Style de carte ultra-épuré, doux et minimaliste */
@@ -173,21 +224,27 @@
 }
 
 /* Page 5: Immersive Fullscreen Atlas Map */
-.page-atlas-view {
-  width: 100%;
-  height: calc(100vh - 130px);
-  min-height: 560px;
-  position: relative;
+#page-map.page-active {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 900;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  overflow: hidden;
+  display: block;
 }
 
 .atlas-full-map-wrap {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
+  border-radius: 0;
+  border: none;
   overflow: hidden;
   position: relative;
-  box-shadow: var(--shadow-sm);
   animation: atlasEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -209,22 +266,21 @@
 
 .atlas-top-bar {
   position: absolute;
-  top: 14px;
-  left: 16px;
-  right: 16px;
-  z-index: 500;
-  display: flex;
+  top: 98px;
+  right: 28px;
+  z-index: 950;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  pointer-events: none;
   gap: 10px;
+  pointer-events: none;
 }
 
 .atlas-pill-badge {
-  pointer-events: auto;
+  pointer-events: none;
+  cursor: default;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
   background-color: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -235,39 +291,48 @@
   font-weight: 700;
   color: var(--text-primary);
   box-shadow: 0 4px 16px rgba(35, 25, 15, 0.09);
-}
-
-.atlas-controls-group {
-  pointer-events: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  user-select: none;
 }
 
 .atlas-action-btn {
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   background-color: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-pill);
-  padding: 6px 12px;
-  font-size: 0.76rem;
+  padding: 6px 14px;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-primary);
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(35, 25, 15, 0.09);
-  transition: all var(--transition-fast);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .atlas-action-btn:hover {
   background-color: #FFFFFF;
   color: var(--color-primary);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(224, 90, 54, 0.16);
+  border-color: var(--border-light);
+  transform: none;
+  box-shadow: 0 4px 16px rgba(35, 25, 15, 0.12);
+}
+
+@media (max-width: 768px) {
+  .atlas-top-bar {
+    top: 16px;
+    right: 16px;
+    gap: 6px;
+  }
+
+  .atlas-action-btn,
+  .atlas-pill-badge {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
 }
 
 /* 2. Weekly Pulse Card */
@@ -1931,17 +1996,6 @@
 .heatmap-modal-overlay.active {
   opacity: 1;
   pointer-events: auto;
-}
-
-.heatmap-modal-header {
-  padding: 16px 24px;
-  background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
 }
 
 .heatmap-modal-map {

@@ -179,16 +179,157 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
     });
   }
 
-  // Mise à jour de la pilule du total de courses sur la carte
+  // Mise à jour de la pilule du total de courses sur la carte (ex: 282 courses)
   const cardMapCountEl = document.getElementById('lbl-card-map-count');
   if (cardMapCountEl) {
-    cardMapCountEl.textContent = `${activities.length} courses superposées`;
+    const bgCount = activities.length > 1 ? activities.length - 1 : activities.length;
+    cardMapCountEl.textContent = `${bgCount} courses`;
   }
 }
 
 /**
  * Initialise la carte Atlas GPS sur la Page 5 (Mode Immersif Plein Écran)
  */
+export function renderAtlasAllTracks(activities: Activity[]): void {
+  if (!atlasMapInstance || !atlasLayerGroup || !activities || activities.length === 0) return;
+
+  atlasLayerGroup.clearLayers();
+  const polylines: L.Polyline[] = [];
+
+  // Par défaut et au clic sur "Tous les tracés" : TOUTES les courses sont en Terracotta Orange
+  activities.forEach(act => {
+    if (act.map?.summary_polyline) {
+      const coords = decodePolyline(act.map.summary_polyline);
+      if (coords.length > 0) {
+        const polyline = L.polyline(coords, {
+          color: '#E05A36',
+          weight: 2.6,
+          opacity: 0.65,
+          lineJoin: 'round'
+        });
+
+        polyline.bindPopup(`
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 175px; padding: 2px;">
+            <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
+            <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">${formatDate(act.start_date_local)}</div>
+            <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
+              ${formatDistance(act.distance)} • ${formatTimeShort(act.moving_time)} • ${formatPace(act.average_speed)}
+            </div>
+          </div>
+        `);
+
+        polyline.addTo(atlasLayerGroup!);
+        polylines.push(polyline);
+      }
+    }
+  });
+
+  if (polylines.length > 0) {
+    const group = L.featureGroup(polylines);
+    lastAtlasAllBounds = group.getBounds();
+    atlasMapInstance.flyToBounds(lastAtlasAllBounds.pad(0.08), { duration: 0.8 });
+  }
+
+  const atlasCountPill = document.getElementById('lbl-atlas-count-pill');
+  if (atlasCountPill) {
+    atlasCountPill.textContent = `${activities.length} courses`;
+  }
+}
+
+export function renderAtlasLatestTrack(activities: Activity[]): void {
+  if (!atlasMapInstance || !atlasLayerGroup || !activities || activities.length === 0) return;
+
+  atlasLayerGroup.clearLayers();
+
+  const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+  const latest = sortedByDate[0];
+
+  // 1. Dessiner d'abord tous les autres tracés en gris
+  activities.forEach(act => {
+    if (act.id !== latest?.id && act.map?.summary_polyline) {
+      const coords = decodePolyline(act.map.summary_polyline);
+      if (coords.length > 0) {
+        const polyline = L.polyline(coords, {
+          color: '#717885',
+          weight: 2.2,
+          opacity: 0.40,
+          lineJoin: 'round'
+        });
+
+        polyline.bindPopup(`
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 175px; padding: 2px;">
+            <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
+            <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">${formatDate(act.start_date_local)}</div>
+            <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
+              ${formatDistance(act.distance)} • ${formatTimeShort(act.moving_time)} • ${formatPace(act.average_speed)}
+            </div>
+          </div>
+        `);
+
+        polyline.addTo(atlasLayerGroup!);
+      }
+    }
+  });
+
+  // 2. Dessiner la dernière course en DERNIER au premier plan (z-index maximal) en Terracotta vibrant
+  if (latest && latest.map?.summary_polyline) {
+    const coords = decodePolyline(latest.map.summary_polyline);
+    if (coords.length > 0) {
+      const mainPolyline = L.polyline(coords, {
+        color: '#E05A36',
+        weight: 5.5,
+        opacity: 1,
+        lineJoin: 'round'
+      });
+
+      mainPolyline.bindPopup(`
+        <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 190px; padding: 4px;">
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #E05A36; margin-bottom: 2px;">Dernière course</div>
+          <strong style="font-size: 0.95rem; color: #1C1E21; display: block; margin-bottom: 4px;">${latest.name}</strong>
+          <div style="font-size: 0.78rem; color: #5C626C; margin-bottom: 6px;">${formatDate(latest.start_date_local)}</div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.84rem; border-top: 1px solid #ECE6DC; padding-top: 6px;">
+            <span><strong>${formatDistance(latest.distance)}</strong></span>
+            <span><strong>${formatTimeShort(latest.moving_time)}</strong></span>
+            <span><strong>${formatPace(latest.average_speed)}</strong></span>
+          </div>
+        </div>
+      `);
+
+      mainPolyline.addTo(atlasLayerGroup!);
+      mainPolyline.bringToFront();
+
+      // Pins Départ et Arrivée
+      L.circleMarker(coords[0], {
+        radius: 7.5,
+        color: '#FFFFFF',
+        weight: 2.5,
+        fillColor: '#2E6B56',
+        fillOpacity: 1
+      }).addTo(atlasLayerGroup!);
+
+      L.circleMarker(coords[coords.length - 1], {
+        radius: 7.5,
+        color: '#FFFFFF',
+        weight: 2.5,
+        fillColor: '#E05A36',
+        fillOpacity: 1
+      }).addTo(atlasLayerGroup!);
+
+      lastAtlasLatestBounds = mainPolyline.getBounds();
+      atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.25), {
+        padding: [40, 40],
+        maxZoom: 14,
+        duration: 0.8
+      });
+    }
+  }
+
+  const atlasCountPill = document.getElementById('lbl-atlas-count-pill');
+  if (atlasCountPill) {
+    atlasCountPill.textContent = `${activities.length} courses`;
+  }
+}
+
 export function initPageAtlasMap(elementId: string = 'page-heatmap-container', activities: Activity[] = []): void {
   const container = document.getElementById(elementId);
   if (!container) return;
@@ -209,73 +350,30 @@ export function initPageAtlasMap(elementId: string = 'page-heatmap-container', a
     atlasMapInstance.invalidateSize();
   }
 
-  if (atlasLayerGroup && activities.length > 0) {
-    atlasLayerGroup.clearLayers();
-    const polylines: L.Polyline[] = [];
-
-    const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
-    const latest = sortedByDate[0];
-
-    activities.forEach(act => {
-      if (act.map?.summary_polyline) {
-        const coords = decodePolyline(act.map.summary_polyline);
-        if (coords.length > 0) {
-          const isLatest = act.id === latest?.id;
-          const polyline = L.polyline(coords, {
-            color: isLatest ? '#E05A36' : '#717885',
-            weight: isLatest ? 4.5 : 2.6,
-            opacity: isLatest ? 1 : 0.45,
-            lineJoin: 'round'
-          });
-
-          polyline.bindPopup(`
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 175px; padding: 2px;">
-              <strong style="font-size: 0.9rem; color: #1C1E21; display: block; margin-bottom: 2px;">${act.name}</strong>
-              <div style="font-size: 0.76rem; color: #5C626C; margin-bottom: 4px;">${formatDate(act.start_date_local)}</div>
-              <div style="font-size: 0.82rem; font-weight: 700; color: #E05A36;">
-                ${formatDistance(act.distance)} • ${formatTimeShort(act.moving_time)} • ${formatPace(act.average_speed)}
-              </div>
-            </div>
-          `);
-
-          polyline.addTo(atlasLayerGroup!);
-          polylines.push(polyline);
-
-          if (isLatest) {
-            lastAtlasLatestBounds = polyline.getBounds();
-          }
-        }
-      }
-    });
-
-    if (polylines.length > 0) {
-      const group = L.featureGroup(polylines);
-      lastAtlasAllBounds = group.getBounds();
-      atlasMapInstance.fitBounds(lastAtlasAllBounds.pad(0.08));
-    }
-
-    const atlasCountPill = document.getElementById('lbl-atlas-count-pill');
-    if (atlasCountPill) {
-      atlasCountPill.textContent = `${activities.length} tracés GPS superposés`;
-    }
+  // Par défaut à l'ouverture : TOUTES les courses sont en orange
+  if (activities.length > 0) {
+    renderAtlasAllTracks(activities);
   }
 }
 
-export function recenterAtlasMap(): void {
-  if (atlasMapInstance && lastAtlasAllBounds && lastAtlasAllBounds.isValid()) {
+export function recenterAtlasMap(activities?: Activity[]): void {
+  if (activities && activities.length > 0) {
+    renderAtlasAllTracks(activities);
+  } else if (atlasMapInstance && lastAtlasAllBounds && lastAtlasAllBounds.isValid()) {
     atlasMapInstance.flyToBounds(lastAtlasAllBounds.pad(0.08), { duration: 0.8 });
   }
 }
 
-export function recenterAtlasToLatest(): void {
-  if (atlasMapInstance && lastAtlasLatestBounds && lastAtlasLatestBounds.isValid()) {
+export function recenterAtlasToLatest(activities?: Activity[]): void {
+  if (activities && activities.length > 0) {
+    renderAtlasLatestTrack(activities);
+  } else if (atlasMapInstance && lastAtlasLatestBounds && lastAtlasLatestBounds.isValid()) {
     atlasMapInstance.flyToBounds(lastAtlasLatestBounds.pad(0.25), { maxZoom: 14, duration: 0.8 });
   }
 }
 
 let fullscreenMapInstance: L.Map | null = null;
 let fullscreenLayerGroup: L.LayerGroup | null = null;
-let isEscapeListenerWired = false;
 
 export function openFullscreenHeatmap(activities: Activity[], highlightActivityId?: number) {
   const modal = document.getElementById('heatmap-modal');
@@ -286,17 +384,8 @@ export function openFullscreenHeatmap(activities: Activity[], highlightActivityI
 
   const modalPill = document.getElementById('lbl-modal-heatmap-pill');
   if (modalPill) {
-    modalPill.textContent = `${activities.length} courses superposées`;
-  }
-
-  // Écoute de la touche Échap pour quitter le plein écran
-  if (!isEscapeListenerWired) {
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        closeFullscreenHeatmap();
-      }
-    });
-    isEscapeListenerWired = true;
+    const bgCount = activities.length > 1 ? activities.length - 1 : activities.length;
+    modalPill.textContent = `${bgCount} courses`;
   }
 
   setTimeout(() => {
@@ -420,4 +509,7 @@ export function closeFullscreenHeatmap() {
   if (!modal) return;
   modal.classList.remove('active');
   document.body.style.overflow = '';
+  if (fullscreenMapInstance) {
+    fullscreenMapInstance.closePopup();
+  }
 }
