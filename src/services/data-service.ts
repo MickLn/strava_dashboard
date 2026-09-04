@@ -25,10 +25,12 @@ export class DataService {
       return this.currentDataset;
     }
 
-    // Charger directement depuis le fichier statique JSON (avec support multi-chemin GitHub Pages / local)
+    // Charger dynamiquement le flux de données live (avec fallbacks multi-chemins)
+    const rawDataUrl = `https://raw.githubusercontent.com/MickLn/strava_dashboard/data/strava_data.json?t=${Date.now()}`;
     const basePath = import.meta.env.BASE_URL || './';
     const cleanBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
     const candidateUrls = [
+      rawDataUrl,
       `${cleanBase}data/strava_data.json?t=${Date.now()}`,
       `./data/strava_data.json?t=${Date.now()}`,
       `/strava_dashboard/data/strava_data.json?t=${Date.now()}`,

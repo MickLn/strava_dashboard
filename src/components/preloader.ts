@@ -39,7 +39,8 @@ export class InteractivePreloader {
   private animationFrameId: number | null = null;
 
   private progress: number = 0;
-  private isDatasetReady: boolean = false;
+  private startTime: number = 0;
+  private readonly DURATION_MS: number = 2000;
   private isCompleted: boolean = false;
   private isRunning: boolean = false;
 
@@ -68,6 +69,7 @@ export class InteractivePreloader {
     this.isRunning = true;
     this.isCompleted = false;
     this.progress = 0;
+    this.startTime = performance.now();
     this.spawnedStamps = [];
     this.lastSpawnX = -9999;
     this.lastSpawnY = -9999;
@@ -91,12 +93,12 @@ export class InteractivePreloader {
     }
     this.animate(performance.now());
 
-    // Timer de sécurité absolue : sortie automatique garantie après 2.2s
+    // Timer de sécurité absolue calé sur la durée de l'animation
     setTimeout(() => {
       if (this.isRunning && !this.isCompleted) {
         this.finish();
       }
-    }, 2200);
+    }, this.DURATION_MS + 250);
   }
 
   /**
@@ -126,7 +128,6 @@ export class InteractivePreloader {
    * Notifie le préchargeur que les données Strava sont prêtes
    */
   public setDatasetReady(activities?: Activity[]): void {
-    this.isDatasetReady = true;
     if (activities && activities.length > 0) {
       this.initRoutes(activities);
     }
@@ -372,20 +373,19 @@ export class InteractivePreloader {
   private animate = (now: number): void => {
     if (!this.isRunning || this.isCompleted) return;
 
-    this.updateCounter();
+    this.updateCounter(now);
     this.render(now);
 
     this.animationFrameId = requestAnimationFrame(this.animate);
   };
 
   /**
-   * Progression du compteur 00 -> 100% calée sur ~2.0 secondes
+   * Progression exacte du compteur 00 -> 100% calculée dans le temps sur 2.0s
    */
-  private updateCounter(): void {
+  private updateCounter(now: number): void {
     if (this.progress < 100) {
-      // 0.88% par frame à 60 FPS = 100% en exactement 1.9 secondes
-      const step = this.isDatasetReady ? 0.88 : 0.72;
-      this.progress = Math.min(100, this.progress + step);
+      const elapsed = Math.max(0, now - this.startTime);
+      this.progress = Math.min(100, (elapsed / this.DURATION_MS) * 100);
 
       const rounded = Math.floor(this.progress);
       const formatted = rounded < 10 ? `0${rounded}` : `${rounded}`;
@@ -399,7 +399,7 @@ export class InteractivePreloader {
       if (this.statusTextEl) {
         if (this.progress < 30) this.statusTextEl.textContent = 'Connexion à Strava...';
         else if (this.progress < 70) this.statusTextEl.textContent = 'Génération des tracés GPS...';
-        else if (this.progress < 95) this.statusTextEl.textContent = 'Synchronisation télémétrie...';
+        else if (this.progress < 98) this.statusTextEl.textContent = 'Synchronisation télémétrie...';
         else this.statusTextEl.textContent = 'Prêt !';
       }
 
@@ -452,11 +452,16 @@ export class InteractivePreloader {
   }
 
   /**
-   * Sortie fluide du préchargeur
+   * Sortie fluide du préchargeur après affichage propre de 100%
    */
   private finish(): void {
     if (this.isCompleted) return;
     this.isCompleted = true;
+
+    // S'assurer que le compteur affiche 100%
+    if (this.counterEl) this.counterEl.textContent = '100';
+    if (this.progressBarEl) this.progressBarEl.style.width = '100%';
+    if (this.statusTextEl) this.statusTextEl.textContent = 'Prêt !';
 
     setTimeout(() => {
       if (this.overlay) {
@@ -472,7 +477,7 @@ export class InteractivePreloader {
         if (this.overlay) {
           this.overlay.style.display = 'none';
         }
-      }, 750);
-    }, 250);
+      }, 700);
+    }, 180);
   }
 }

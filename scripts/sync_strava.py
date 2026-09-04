@@ -354,6 +354,29 @@ def main():
     # Records calculés
     records = extract_records(all_runs)
 
+    # Vérification des changements réels pour éviter les faux commits Git
+    has_changes = True
+    if os.path.exists(OUTPUT_PATH):
+        try:
+            with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
+                existing_file_data = json.load(f)
+                old_acts = existing_file_data.get("activities", [])
+                old_stats = existing_file_data.get("stats", {})
+                old_gear = existing_file_data.get("gear", [])
+
+                same_count = len(old_acts) == len(all_runs)
+                same_latest = (len(old_acts) == 0 and len(all_runs) == 0) or (len(old_acts) > 0 and len(all_runs) > 0 and old_acts[0].get("id") == all_runs[0].get("id"))
+                same_totals = old_stats.get("all_run_totals", {}).get("count") == stats.get("all_run_totals", {}).get("count")
+
+                if same_count and same_latest and same_totals and old_gear == gear_items:
+                    has_changes = False
+        except Exception:
+            has_changes = True
+
+    if not has_changes:
+        print("ℹ️ Aucune nouvelle activité ni modification détectée. Fichier conservé sans écriture (0 commit inutile).")
+        return
+
     dataset = {
         "last_updated": datetime.now(timezone.utc).isoformat(),
         "athlete": {
