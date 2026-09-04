@@ -32,7 +32,6 @@ export class InteractivePreloader {
   private routes: RouteItem[] = [];
   private routePool: number[] = [];
   private spawnedStamps: SpawnedRoute[] = [];
-  private lastRouteIndex: number = -1;
 
   private lastSpawnX: number = -9999;
   private lastSpawnY: number = -9999;
@@ -66,7 +65,6 @@ export class InteractivePreloader {
     this.isCompleted = false;
     this.progress = 0;
     this.spawnedStamps = [];
-    this.lastRouteIndex = -1;
     this.lastSpawnX = -9999;
     this.lastSpawnY = -9999;
 
@@ -88,6 +86,13 @@ export class InteractivePreloader {
       cancelAnimationFrame(this.animationFrameId);
     }
     this.animate(performance.now());
+
+    // Timer de sécurité absolue : sortie automatique garantie après 2.2s
+    setTimeout(() => {
+      if (this.isRunning && !this.isCompleted) {
+        this.finish();
+      }
+    }, 2200);
   }
 
   /**
@@ -95,6 +100,21 @@ export class InteractivePreloader {
    */
   public replay(activities?: Activity[]): void {
     this.start(activities);
+  }
+
+  /**
+   * Masque immédiatement le préchargeur (si désactivé)
+   */
+  public dismiss(): void {
+    this.isRunning = false;
+    this.isCompleted = true;
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+    if (this.overlay) {
+      this.overlay.classList.add('preloader-hidden');
+      this.overlay.style.display = 'none';
+    }
   }
 
   /**
@@ -155,20 +175,13 @@ export class InteractivePreloader {
    * Recharge et mélange le pool de tracés pour garantir 0 doublon consécutif
    */
   private refillRoutePool(): void {
-    const indices = Array.from({ length: this.routes.length }, (_, i) => i);
-    // Fisher-Yates shuffle
-    for (let i = indices.length - 1; i > 0; i--) {
+    const count = this.routes.length;
+    this.routePool = Array.from({ length: count }, (_, i) => i);
+    // Mélange de Fisher-Yates
+    for (let i = this.routePool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
+      [this.routePool[i], this.routePool[j]] = [this.routePool[j], this.routePool[i]];
     }
-
-    // Vérifie que le premier élément n'est pas le dernier affiché
-    if (indices.length > 1 && indices[indices.length - 1] === this.lastRouteIndex) {
-      const swapIdx = Math.floor(Math.random() * (indices.length - 1));
-      [indices[indices.length - 1], indices[swapIdx]] = [indices[swapIdx], indices[indices.length - 1]];
-    }
-
-    this.routePool = indices;
   }
 
   /**
@@ -276,7 +289,6 @@ export class InteractivePreloader {
     }
 
     const nextIndex = this.routePool.pop()!;
-    this.lastRouteIndex = nextIndex;
 
     // Légère rotation aléatoire pour un rendu naturel (-18° à +18°)
     const randomAngle = (Math.random() - 0.5) * 0.45;
@@ -290,7 +302,7 @@ export class InteractivePreloader {
       targetScale: 1.0 + (Math.random() - 0.5) * 0.15,
       opacity: 1.0,
       createdAt: now,
-      lifespan: 2400
+      lifespan: 1600
     });
 
     this.lastSpawnX = x;
@@ -330,8 +342,8 @@ export class InteractivePreloader {
       const dy = y - this.lastSpawnY;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Fait apparaître un nouveau tracé dès que le curseur s'est déplacé de 50px ou après 120ms
-      if (dist > 50 || (dist > 20 && now - this.lastSpawnTime > 120)) {
+      // Fait apparaître un nouveau tracé dès que le curseur s'est déplacé de 45px ou après 100ms
+      if (dist > 45 || (dist > 15 && now - this.lastSpawnTime > 100)) {
         this.spawnRouteStamp(x, y, now);
       }
     };
@@ -362,11 +374,12 @@ export class InteractivePreloader {
   };
 
   /**
-   * Progression du compteur 00 -> 100% (~4.2 secondes)
+   * Progression du compteur 00 -> 100% calée sur ~2.0 secondes
    */
   private updateCounter(): void {
     if (this.progress < 100) {
-      const step = this.isDatasetReady ? 0.42 : 0.30;
+      // 0.88% par frame à 60 FPS = 100% en exactement 1.9 secondes
+      const step = this.isDatasetReady ? 0.88 : 0.72;
       this.progress = Math.min(100, this.progress + step);
 
       const rounded = Math.floor(this.progress);
@@ -385,7 +398,7 @@ export class InteractivePreloader {
         else this.statusTextEl.textContent = 'Prêt !';
       }
 
-      if (this.progress >= 100 && this.isDatasetReady) {
+      if (this.progress >= 100) {
         this.finish();
       }
     }

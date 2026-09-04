@@ -23,13 +23,12 @@ class App {
 
   public async init(): Promise<void> {
     try {
-      // 0. Lancement conditionnel de l'animation d'entrée selon le toggle persistant
+      // 0. Lancement conditionnel de l'animation d'entrée selon le toggle persistant (activée par défaut)
       const introFxEnabled = localStorage.getItem(INTRO_FX_KEY) !== 'false';
       if (introFxEnabled) {
         this.preloader.start();
       } else {
-        const overlay = document.getElementById('preloader-overlay');
-        if (overlay) overlay.style.display = 'none';
+        this.preloader.dismiss();
       }
 
       // 1. Initialisation de la navigation multi-pages
@@ -58,6 +57,7 @@ class App {
 
     } catch (error) {
       console.error("Erreur d'initialisation du dashboard:", error);
+      this.preloader.dismiss();
       UIRenderer.showToast('Unable to load Strava data.');
     }
   }

@@ -25,20 +25,28 @@ export class DataService {
       return this.currentDataset;
     }
 
-    // Charger directement depuis le fichier statique JSON (avec cache buster)
+    // Charger directement depuis le fichier statique JSON (avec support multi-chemin GitHub Pages / local)
     const basePath = import.meta.env.BASE_URL || './';
-    const jsonUrl = `${basePath.replace(/\/$/, '')}/data/strava_data.json?t=${Date.now()}`;
+    const cleanBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
+    const candidateUrls = [
+      `${cleanBase}data/strava_data.json?t=${Date.now()}`,
+      `./data/strava_data.json?t=${Date.now()}`,
+      `/strava_dashboard/data/strava_data.json?t=${Date.now()}`,
+      `/data/strava_data.json?t=${Date.now()}`
+    ];
 
-    try {
-      const response = await fetch(jsonUrl, { cache: 'no-store' });
-      if (response.ok) {
-        const data: StravaDataset = await response.json();
-        this.currentDataset = data;
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        return data;
+    for (const url of candidateUrls) {
+      try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (response.ok) {
+          const data: StravaDataset = await response.json();
+          this.currentDataset = data;
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          return data;
+        }
+      } catch {
+        // Essayer l'URL candidate suivante
       }
-    } catch (error) {
-      console.warn('Erreur réseau, tentative de lecture du cache local...', error);
     }
 
     // Fallback cache local si réseau inaccessible
