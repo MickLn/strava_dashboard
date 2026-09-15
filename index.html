@@ -524,44 +524,53 @@
   <!-- Activity details modal -->
   <div class="modal-overlay" id="activity-modal">
     <div class="modal-box modal-activity-details-box">
-      <!-- Header -->
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <h3 class="modal-title" id="modal-activity-title">Activity details</h3>
-          <div class="modal-subtitle-row">
-            <span class="modal-subtitle" id="modal-activity-date">--</span>
-            <span class="modal-subtitle-sep">•</span>
-            <span class="modal-subtitle" id="modal-activity-gear">--</span>
+      <!-- Fixed Header & Metrics Area (never scrolls) -->
+      <div class="modal-fixed-top">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-title-row">
+              <h3 class="modal-title" id="modal-activity-title">Activity details</h3>
+              <button class="modal-close-btn" id="modal-close-btn" aria-label="Fermer la vue détaillée">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-subtitle-row">
+              <span class="modal-subtitle" id="modal-activity-date">--</span>
+              <span class="modal-subtitle-sep">•</span>
+              <span class="modal-subtitle" id="modal-activity-gear">--</span>
+            </div>
+            <div class="modal-tags-row" id="modal-activity-tags"></div>
           </div>
-          <div class="modal-tags-row" id="modal-activity-tags"></div>
         </div>
-        <button class="modal-close-btn" id="modal-close-btn" aria-label="Fermer la vue détaillée">&times;</button>
+
+        <!-- 4-metric strip -->
+        <div class="modal-metrics-strip">
+          <div class="modal-stat-item">
+            <span class="modal-stat-val" id="modal-activity-dist">--</span>
+            <span class="modal-stat-label" id="lbl-modal-dist">DISTANCE</span>
+          </div>
+          <div class="modal-stat-item">
+            <span class="modal-stat-val" id="modal-activity-time">--</span>
+            <span class="modal-stat-label" id="lbl-modal-time">TIME</span>
+          </div>
+          <div class="modal-stat-item">
+            <span class="modal-stat-val" id="modal-activity-pace">--</span>
+            <span class="modal-stat-label" id="lbl-modal-pace">PACE</span>
+          </div>
+          <div class="modal-stat-item">
+            <span class="modal-stat-val" id="modal-activity-cal">--</span>
+            <span class="modal-stat-label" id="lbl-modal-cal">ENERGY</span>
+          </div>
+        </div>
+
+        <!-- Dotted Divider -->
+        <div class="modal-dotted-divider"></div>
       </div>
 
-      <!-- 4-metric strip -->
-      <div class="modal-metrics-strip">
-        <div class="modal-stat-item">
-          <span class="modal-stat-val" id="modal-activity-dist">--</span>
-          <span class="modal-stat-label" id="lbl-modal-dist">DISTANCE</span>
-        </div>
-        <div class="modal-stat-item">
-          <span class="modal-stat-val" id="modal-activity-time">--</span>
-          <span class="modal-stat-label" id="lbl-modal-time">TIME</span>
-        </div>
-        <div class="modal-stat-item">
-          <span class="modal-stat-val" id="modal-activity-pace">--</span>
-          <span class="modal-stat-label" id="lbl-modal-pace">PACE</span>
-        </div>
-        <div class="modal-stat-item">
-          <span class="modal-stat-val" id="modal-activity-cal">--</span>
-          <span class="modal-stat-label" id="lbl-modal-cal">ENERGY</span>
-        </div>
-      </div>
-
-      <!-- Dotted Divider -->
-      <div class="modal-dotted-divider"></div>
-
-      <!-- Scrollable content body -->
+      <!-- Scrollable content body (Map, Bento telemetry, Splits) -->
       <div class="modal-activity-body">
         <!-- GPS Map Preview -->
         <div class="modal-map-wrap" id="modal-map-wrapper">

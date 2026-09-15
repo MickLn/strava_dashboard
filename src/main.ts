@@ -65,7 +65,7 @@ class App {
   private handlePageSwitch(page: PageId): void {
     const mobilePillWrap = document.getElementById('mobile-week-pill-wrap');
     if (mobilePillWrap) {
-      mobilePillWrap.style.display = page === 'dashboard' ? '' : 'none';
+      mobilePillWrap.style.display = page === 'map' ? 'none' : '';
     }
 
     if (!this.dataset) return;
@@ -458,6 +458,11 @@ class App {
           UIRenderer.closeActivityModal();
         }
       });
+      modalOverlay.addEventListener('touchmove', (e) => {
+        if (e.target === modalOverlay) {
+          e.preventDefault();
+        }
+      }, { passive: false });
     }
 
     // Gestion globale et prioritaire de la touche Échap (capture phase) pour fermer n'importe quelle modale
