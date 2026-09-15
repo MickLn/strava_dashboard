@@ -10,6 +10,7 @@ import {
   calculateWeekStreak,
   calculateCurrentWeekStats,
   calculateGearStats,
+  calculateShoeDetails,
   calculateCalories,
   calculateElevationDetails,
   calculateDifficulty,
@@ -79,6 +80,15 @@ export class UIRenderer {
     setTxt('lbl-shoe-time', t.cushioningTime);
     setTxt('lbl-shoe-wear', t.wear);
     setTxt('lbl-btn-next-shoe', t.nextShoeBtn);
+    setTxt('lbl-shoe-records-title', t.shoeRecordsTitle);
+    setTxt('lbl-shoe-records-sub', t.shoeRecordsSubtitle);
+    setTxt('lbl-shoe-stat-runs', t.shoeTotalRuns);
+    setTxt('lbl-shoe-stat-pace', t.shoeAvgPace);
+    setTxt('lbl-shoe-stat-elev', t.shoeTotalElevation);
+    setTxt('lbl-shoe-history-title', t.shoeHistoryTitle);
+
+    const shoeSearchInput = document.getElementById('shoe-activity-search') as HTMLInputElement;
+    if (shoeSearchInput) shoeSearchInput.placeholder = t.shoeHistorySearch;
 
     setTxt('lbl-chart-title', t.ytdTitle);
     setTxt('lbl-chart-badge', t.ytdBadge);
@@ -362,10 +372,13 @@ export class UIRenderer {
     if (lblSheetCal) lblSheetCal.textContent = t.calPerWeek;
   }
 
+  private static shoeSearchQuery: string = '';
+  private static isShoeSearchInit: boolean = false;
+
   /**
-   * Rendu du Parc de Chaussures Rotatif avec Images (Shoe Card Rotator)
+   * Rendu du Parc de Chaussures Rotatif avec Records & Historique complet
    */
-  public static renderShoeRotator(dataset: StravaDataset, onRotate?: () => void): void {
+  public static renderShoeRotator(dataset: StravaDataset, onSelectActivity?: (id: number) => void, onRotate?: () => void): void {
     const gearList = calculateGearStats(dataset.gear, dataset.activities);
     if (!gearList || gearList.length === 0) return;
 
@@ -415,7 +428,7 @@ export class UIRenderer {
         dot.className = `shoe-dot ${idx === (this.activeShoeIndex % gearList.length) ? 'active' : ''}`;
         dot.addEventListener('click', () => {
           this.activeShoeIndex = idx;
-          this.renderShoeRotator(dataset);
+          this.renderShoeRotator(dataset, onSelectActivity, onRotate);
         });
         dotsContainer.appendChild(dot);
       });
@@ -426,9 +439,196 @@ export class UIRenderer {
     if (nextBtn) {
       nextBtn.onclick = () => {
         this.activeShoeIndex = (this.activeShoeIndex + 1) % gearList.length;
-        this.renderShoeRotator(dataset);
+        this.renderShoeRotator(dataset, onSelectActivity, onRotate);
         if (onRotate) onRotate();
       };
+    }
+
+    // Rendu des records & historique de la paire active
+    this.renderShoeHub(currentShoe.id, dataset, onSelectActivity);
+  }
+
+  /**
+   * Rendu des records spécifiques et du flux d'activités de la paire
+   */
+  private static renderShoeHub(shoeId: string, dataset: StravaDataset, onSelectActivity?: (id: number) => void): void {
+    const t = i18n.t();
+    const isFr = i18n.getLang() === 'fr';
+    const shoeDetails = calculateShoeDetails(shoeId, dataset.activities);
+
+    // Summary Stat Chips
+    const runsValEl = document.getElementById('shoe-stat-runs-val');
+    const paceValEl = document.getElementById('shoe-stat-pace-val');
+    const elevValEl = document.getElementById('shoe-stat-elev-val');
+
+    if (runsValEl) runsValEl.textContent = `${shoeDetails.totalRuns}`;
+    if (paceValEl) paceValEl.textContent = shoeDetails.avgPaceFormatted;
+    if (elevValEl) elevValEl.textContent = `+${shoeDetails.totalElevationGain} m`;
+
+    // Benchmarks Grid
+    const benchmarksContainer = document.getElementById('shoe-benchmarks-grid');
+    if (benchmarksContainer) {
+      benchmarksContainer.innerHTML = '';
+
+      const benchmarksList: Array<{
+        label: string;
+        time?: string;
+        pace?: string;
+        date?: string;
+        activityName?: string;
+        activityId?: number;
+      }> = [
+        {
+          label: t.shoeBest1k,
+          time: shoeDetails.best1k?.timeFormatted,
+          pace: shoeDetails.best1k?.paceFormatted,
+          date: shoeDetails.best1k?.date,
+          activityName: shoeDetails.best1k?.activityName,
+          activityId: shoeDetails.best1k?.activityId
+        },
+        {
+          label: t.shoeBest5k,
+          time: shoeDetails.best5k?.timeFormatted,
+          pace: shoeDetails.best5k?.paceFormatted,
+          date: shoeDetails.best5k?.date,
+          activityName: shoeDetails.best5k?.activityName,
+          activityId: shoeDetails.best5k?.activityId
+        },
+        {
+          label: t.shoeBest10k,
+          time: shoeDetails.best10k?.timeFormatted,
+          pace: shoeDetails.best10k?.paceFormatted,
+          date: shoeDetails.best10k?.date,
+          activityName: shoeDetails.best10k?.activityName,
+          activityId: shoeDetails.best10k?.activityId
+        },
+        {
+          label: shoeDetails.bestSemi ? t.shoeBestSemi : (shoeDetails.best15k ? t.shoeBest15k : t.shoeBest15k),
+          time: shoeDetails.bestSemi?.timeFormatted || shoeDetails.best15k?.timeFormatted,
+          pace: shoeDetails.bestSemi?.paceFormatted || shoeDetails.best15k?.paceFormatted,
+          date: shoeDetails.bestSemi?.date || shoeDetails.best15k?.date,
+          activityName: shoeDetails.bestSemi?.activityName || shoeDetails.best15k?.activityName,
+          activityId: shoeDetails.bestSemi?.activityId || shoeDetails.best15k?.activityId
+        },
+        {
+          label: t.shoeLongestRun,
+          time: shoeDetails.longestRun ? `${shoeDetails.longestRun.distanceKm} km` : undefined,
+          pace: shoeDetails.longestRun?.timeFormatted,
+          date: shoeDetails.longestRun?.date,
+          activityName: shoeDetails.longestRun?.activityName,
+          activityId: shoeDetails.longestRun?.activityId
+        },
+        {
+          label: t.shoeFastestRun,
+          time: shoeDetails.fastestRun?.paceFormatted,
+          pace: shoeDetails.fastestRun ? `${shoeDetails.fastestRun.distanceKm} km` : undefined,
+          date: shoeDetails.fastestRun?.date,
+          activityName: shoeDetails.fastestRun?.activityName,
+          activityId: shoeDetails.fastestRun?.activityId
+        }
+      ];
+
+      benchmarksList.forEach(bm => {
+        const card = document.createElement('div');
+        const hasData = Boolean(bm.time);
+        card.className = `shoe-benchmark-card ${hasData ? '' : 'empty-record'}`;
+        
+        card.innerHTML = `
+          <div class="shoe-benchmark-top">
+            <span class="shoe-benchmark-dist">${bm.label}</span>
+            ${bm.pace ? `<span class="shoe-benchmark-pace">${bm.pace}</span>` : ''}
+          </div>
+          <div class="shoe-benchmark-time">${bm.time || '—'}</div>
+          <div class="shoe-benchmark-bottom">
+            <span class="shoe-benchmark-act-name" title="${bm.activityName || ''}">${bm.activityName || (hasData ? '' : (isFr ? 'Aucun record' : 'No record'))}</span>
+            <span>${bm.date ? formatDate(bm.date) : ''}</span>
+          </div>
+        `;
+
+        if (hasData && bm.activityId && onSelectActivity) {
+          card.addEventListener('click', () => onSelectActivity(bm.activityId!));
+        }
+
+        benchmarksContainer.appendChild(card);
+      });
+    }
+
+    // Shoe History List
+    const countBadge = document.getElementById('shoe-history-count-badge');
+    const activitiesListEl = document.getElementById('shoe-activities-list');
+
+    const renderActivitiesList = (query: string = '') => {
+      if (!activitiesListEl) return;
+      activitiesListEl.innerHTML = '';
+
+      const filteredActs = shoeDetails.activities.filter(act => {
+        if (!query.trim()) return true;
+        const q = query.toLowerCase();
+        return (act.name || '').toLowerCase().includes(q) ||
+               (act.start_date_local || '').includes(q);
+      });
+
+      if (countBadge) {
+        countBadge.textContent = isFr
+          ? `${filteredActs.length} ${filteredActs.length > 1 ? 'courses' : 'course'}`
+          : `${filteredActs.length} ${filteredActs.length > 1 ? 'runs' : 'run'}`;
+      }
+
+      if (filteredActs.length === 0) {
+        activitiesListEl.innerHTML = `
+          <div class="shoe-empty-state">
+            ${t.shoeNoActivities}
+          </div>
+        `;
+        return;
+      }
+
+      filteredActs.forEach(act => {
+        const row = document.createElement('div');
+        row.className = 'shoe-activity-item';
+        
+        const distKm = ((act.distance || 0) / 1000).toFixed(2);
+        const timeStr = formatTimeShort(act.moving_time || 0);
+        const paceStr = act.average_speed > 0 ? formatPace(act.average_speed) : '—';
+        const elev = Math.round(act.total_elevation_gain || 0);
+        const zone = getActivityEffortZone(act);
+        const zoneName = isFr ? zone.zoneNameFr : zone.zoneName;
+
+        row.innerHTML = `
+          <div class="shoe-act-main-info">
+            <span class="shoe-act-title" title="${act.name}">${act.name}</span>
+            <span class="shoe-act-date">${formatDate(act.start_date_local)} • <span style="color: ${zone.badgeColor}; font-weight: 700;">${zoneName}</span></span>
+          </div>
+          <div class="shoe-act-metrics-group">
+            <div class="shoe-act-metric-cell">
+              <span class="shoe-act-metric-val">${distKm} km</span>
+              <span class="shoe-act-metric-sub">${paceStr}</span>
+            </div>
+            <div class="shoe-act-metric-cell">
+              <span class="shoe-act-metric-val">${timeStr}</span>
+              <span class="shoe-act-metric-sub">+${elev} m</span>
+            </div>
+          </div>
+        `;
+
+        if (onSelectActivity) {
+          row.addEventListener('click', () => onSelectActivity(act.id));
+        }
+
+        activitiesListEl.appendChild(row);
+      });
+    };
+
+    renderActivitiesList(this.shoeSearchQuery);
+
+    // Attach search input listener once
+    const searchInput = document.getElementById('shoe-activity-search') as HTMLInputElement;
+    if (searchInput && !this.isShoeSearchInit) {
+      this.isShoeSearchInit = true;
+      searchInput.addEventListener('input', (e) => {
+        this.shoeSearchQuery = (e.target as HTMLInputElement).value;
+        renderActivitiesList(this.shoeSearchQuery);
+      });
     }
   }
 

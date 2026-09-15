@@ -493,12 +493,14 @@
     </main>
 
     <!-- =========================================================================
-         PAGE 4 : SHOE LOCKER (Matériel & Usure)
+         PAGE 4 : SHOE LOCKER & HUB (Matériel, Usure, Records & Historique)
          ========================================================================= -->
     <main id="page-shoes" class="page-view">
       
-      <section class="grid-bento-middle" style="grid-template-columns: 1fr; max-width: 680px; margin: 0 auto; width: 100%;">
-        <!-- Shoe locker rotator -->
+      <!-- Top Row : Shoe Rotator Showcase + Shoe Records & Best Efforts Bento -->
+      <section class="shoe-top-grid">
+        
+        <!-- Left: Shoe locker rotator card -->
         <div class="runner-card shoe-rotator-card" style="min-height: auto;">
           <div class="shoe-rotator-header">
             <div>
@@ -508,7 +510,7 @@
           </div>
 
           <!-- Shoe image -->
-          <div class="shoe-image-wrap" style="height: 240px;">
+          <div class="shoe-image-wrap" style="height: 220px;">
             <img id="shoe-active-image" class="shoe-image" src="" alt="Running shoe">
           </div>
 
@@ -534,7 +536,7 @@
             </div>
           </div>
 
-          <!-- Shoe rotator footer : Pagination & Next Pair button -->
+          <!-- Quick switcher selector & Rotator footer -->
           <div class="shoe-rotator-footer">
             <div class="shoe-pagination-dots" id="shoe-pagination-dots">
               <div class="shoe-dot active" data-index="0"></div>
@@ -545,6 +547,60 @@
             <button id="btn-next-shoe" class="btn btn-secondary">
               <span id="lbl-btn-next-shoe">Next pair</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Right: Shoe Records & Best Efforts Panel -->
+        <div class="runner-card shoe-records-card">
+          <div class="shoe-records-header">
+            <div>
+              <h3 class="section-title" id="lbl-shoe-records-title">Pair Records & Best Efforts</h3>
+              <p class="section-subtitle" id="lbl-shoe-records-sub">Fastest splits and benchmark efforts logged with this pair</p>
+            </div>
+          </div>
+
+          <!-- Shoe Summary Stat Chips -->
+          <div class="shoe-summary-stats-grid">
+            <div class="shoe-stat-chip">
+              <span class="shoe-stat-label" id="lbl-shoe-stat-runs">Total Runs</span>
+              <strong class="shoe-stat-val" id="shoe-stat-runs-val">—</strong>
+            </div>
+            <div class="shoe-stat-chip">
+              <span class="shoe-stat-label" id="lbl-shoe-stat-pace">Average Pace</span>
+              <strong class="shoe-stat-val" id="shoe-stat-pace-val">—</strong>
+            </div>
+            <div class="shoe-stat-chip">
+              <span class="shoe-stat-label" id="lbl-shoe-stat-elev">Elevation Gain</span>
+              <strong class="shoe-stat-val" id="shoe-stat-elev-val">—</strong>
+            </div>
+          </div>
+
+          <!-- Benchmarks Grid (1k, 5k, 10k, 15k, Semi, Longest, Fastest) -->
+          <div class="shoe-benchmarks-grid" id="shoe-benchmarks-grid">
+            <!-- Dynamic benchmark items rendered via TS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Bottom Section : Activity History with this pair -->
+      <section class="shoe-history-section">
+        <div class="runner-card shoe-history-card">
+          <div class="shoe-history-header">
+            <div class="shoe-history-title-wrap">
+              <h3 class="section-title" id="lbl-shoe-history-title">Activity History</h3>
+              <span class="act-pill" id="shoe-history-count-badge">0 runs</span>
+            </div>
+            <div class="shoe-history-search-wrap">
+              <input type="text" id="shoe-activity-search" class="shoe-history-search-input" placeholder="Search runs by title..." />
+            </div>
+          </div>
+
+          <!-- Scrollable Activities List with gradient fade -->
+          <div class="shoe-activities-scroll-wrap">
+            <div class="shoe-activities-list" id="shoe-activities-list">
+              <!-- Activities rendered via TS -->
+            </div>
           </div>
         </div>
       </section>

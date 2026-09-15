@@ -494,6 +494,258 @@ export function calculateGearStats(gearList: GearItem[], activities: Activity[])
   });
 }
 
+export interface ShoeBestEffort {
+  distanceKey: string;
+  distanceLabel: string;
+  distanceLabelFr: string;
+  timeFormatted: string;
+  timeSeconds: number;
+  paceFormatted: string;
+  activityId?: number;
+  activityName?: string;
+  date?: string;
+}
+
+export interface ShoeStatsDetails {
+  shoeId: string;
+  totalRuns: number;
+  totalKm: number;
+  totalTimeFormatted: string;
+  avgPaceFormatted: string;
+  totalElevationGain: number;
+  best1k?: ShoeBestEffort;
+  best5k?: ShoeBestEffort;
+  best10k?: ShoeBestEffort;
+  best15k?: ShoeBestEffort;
+  bestSemi?: ShoeBestEffort;
+  longestRun?: {
+    distanceKm: number;
+    timeFormatted: string;
+    date: string;
+    activityId: number;
+    activityName: string;
+  };
+  fastestRun?: {
+    paceFormatted: string;
+    distanceKm: number;
+    timeFormatted: string;
+    date: string;
+    activityId: number;
+    activityName: string;
+  };
+  activities: Activity[];
+}
+
+/**
+ * Calcule l'historique complet et les records personnels (meilleurs efforts) associés à une paire de chaussures
+ */
+export function calculateShoeDetails(shoeId: string, activities: Activity[]): ShoeStatsDetails {
+  const shoeActs = (activities || [])
+    .filter(a => a.gear_id === shoeId)
+    .sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+
+  const totalRuns = shoeActs.length;
+  const totalMeters = shoeActs.reduce((acc, a) => acc + (a.distance || 0), 0);
+  const totalTimeSeconds = shoeActs.reduce((acc, a) => acc + (a.moving_time || 0), 0);
+  const totalElevationGain = Math.round(shoeActs.reduce((acc, a) => acc + (a.total_elevation_gain || 0), 0));
+  const totalKm = Math.round((totalMeters / 1000) * 10) / 10;
+  const avgSpeed = totalTimeSeconds > 0 ? (totalMeters / totalTimeSeconds) : 0;
+  const avgPaceFormatted = avgSpeed > 0 ? formatPace(avgSpeed) : '—';
+  const totalTimeFormatted = formatTimeShort(totalTimeSeconds);
+
+  let best1k: ShoeBestEffort | undefined = undefined;
+  let best5k: ShoeBestEffort | undefined = undefined;
+  let best10k: ShoeBestEffort | undefined = undefined;
+  let best15k: ShoeBestEffort | undefined = undefined;
+  let bestSemi: ShoeBestEffort | undefined = undefined;
+
+  let longestRun: ShoeStatsDetails['longestRun'] = undefined;
+  let fastestRun: ShoeStatsDetails['fastestRun'] = undefined;
+  let fastestSpeed = 0;
+
+  for (const act of shoeActs) {
+    const distM = act.distance || 0;
+    const distKm = distM / 1000;
+    const movTime = act.moving_time || 0;
+    const speed = act.average_speed || (movTime > 0 ? distM / movTime : 0);
+    const actDate = act.start_date_local ? act.start_date_local.slice(0, 10) : '';
+
+    // Plus longue sortie
+    if (!longestRun || distKm > longestRun.distanceKm) {
+      longestRun = {
+        distanceKm: Math.round(distKm * 10) / 10,
+        timeFormatted: formatTimeShort(movTime),
+        date: actDate,
+        activityId: act.id,
+        activityName: act.name
+      };
+    }
+
+    // Sortie la plus rapide (distance >= 3km pour éviter les faux records GPS)
+    if (distKm >= 3.0 && speed > fastestSpeed) {
+      fastestSpeed = speed;
+      fastestRun = {
+        paceFormatted: formatPace(speed),
+        distanceKm: Math.round(distKm * 10) / 10,
+        timeFormatted: formatTimeShort(movTime),
+        date: actDate,
+        activityId: act.id,
+        activityName: act.name
+      };
+    }
+
+    // Calcul 1k le plus rapide (splits_metric ou allure)
+    if (act.splits_metric && act.splits_metric.length > 0) {
+      for (const sp of act.splits_metric) {
+        if (sp.distance >= 900 && sp.distance <= 1100 && sp.moving_time > 140) {
+          const spTime = Math.round((1000 / sp.distance) * sp.moving_time);
+          if (!best1k || spTime < best1k.timeSeconds) {
+            best1k = {
+              distanceKey: '1k',
+              distanceLabel: '1 km',
+              distanceLabelFr: '1 km',
+              timeFormatted: formatTimeShort(spTime),
+              timeSeconds: spTime,
+              paceFormatted: formatPace(1000 / spTime),
+              activityId: act.id,
+              activityName: act.name,
+              date: actDate
+            };
+          }
+        }
+      }
+    } else if (distKm >= 1.0 && speed > 0) {
+      const est1kTime = Math.round(1000 / speed);
+      if (!best1k || est1kTime < best1k.timeSeconds) {
+        best1k = {
+          distanceKey: '1k',
+          distanceLabel: '1 km',
+          distanceLabelFr: '1 km',
+          timeFormatted: formatTimeShort(est1kTime),
+          timeSeconds: est1kTime,
+          paceFormatted: formatPace(speed),
+          activityId: act.id,
+          activityName: act.name,
+          date: actDate
+        };
+      }
+    }
+
+    // Calcul 5k
+    if (distM >= 4900) {
+      let candidate5kTime = Math.round((5000 / distM) * movTime);
+      if (act.splits_metric && act.splits_metric.length >= 5) {
+        const splits = act.splits_metric;
+        for (let i = 0; i <= splits.length - 5; i++) {
+          const window5 = splits.slice(i, i + 5);
+          const winDist = window5.reduce((s, x) => s + x.distance, 0);
+          const winTime = window5.reduce((s, x) => s + x.moving_time, 0);
+          if (winDist >= 4800) {
+            const adjTime = Math.round((5000 / winDist) * winTime);
+            if (adjTime < candidate5kTime) candidate5kTime = adjTime;
+          }
+        }
+      }
+      if (!best5k || candidate5kTime < best5k.timeSeconds) {
+        best5k = {
+          distanceKey: '5k',
+          distanceLabel: '5 km',
+          distanceLabelFr: '5 km',
+          timeFormatted: formatTimeShort(candidate5kTime),
+          timeSeconds: candidate5kTime,
+          paceFormatted: formatPace(5000 / candidate5kTime),
+          activityId: act.id,
+          activityName: act.name,
+          date: actDate
+        };
+      }
+    }
+
+    // Calcul 10k
+    if (distM >= 9800) {
+      let candidate10kTime = Math.round((10000 / distM) * movTime);
+      if (act.splits_metric && act.splits_metric.length >= 10) {
+        const splits = act.splits_metric;
+        for (let i = 0; i <= splits.length - 10; i++) {
+          const window10 = splits.slice(i, i + 10);
+          const winDist = window10.reduce((s, x) => s + x.distance, 0);
+          const winTime = window10.reduce((s, x) => s + x.moving_time, 0);
+          if (winDist >= 9600) {
+            const adjTime = Math.round((10000 / winDist) * winTime);
+            if (adjTime < candidate10kTime) candidate10kTime = adjTime;
+          }
+        }
+      }
+      if (!best10k || candidate10kTime < best10k.timeSeconds) {
+        best10k = {
+          distanceKey: '10k',
+          distanceLabel: '10 km',
+          distanceLabelFr: '10 km',
+          timeFormatted: formatTimeShort(candidate10kTime),
+          timeSeconds: candidate10kTime,
+          paceFormatted: formatPace(10000 / candidate10kTime),
+          activityId: act.id,
+          activityName: act.name,
+          date: actDate
+        };
+      }
+    }
+
+    // Calcul 15k
+    if (distM >= 14800) {
+      const candidate15kTime = Math.round((15000 / distM) * movTime);
+      if (!best15k || candidate15kTime < best15k.timeSeconds) {
+        best15k = {
+          distanceKey: '15k',
+          distanceLabel: '15 km',
+          distanceLabelFr: '15 km',
+          timeFormatted: formatTimeShort(candidate15kTime),
+          timeSeconds: candidate15kTime,
+          paceFormatted: formatPace(15000 / candidate15kTime),
+          activityId: act.id,
+          activityName: act.name,
+          date: actDate
+        };
+      }
+    }
+
+    // Calcul Semi-Marathon (21.1k)
+    if (distM >= 21000) {
+      const candidateSemiTime = Math.round((21097 / distM) * movTime);
+      if (!bestSemi || candidateSemiTime < bestSemi.timeSeconds) {
+        bestSemi = {
+          distanceKey: 'semi',
+          distanceLabel: 'Semi-Marathon (21.1k)',
+          distanceLabelFr: 'Semi-Marathon (21.1k)',
+          timeFormatted: formatTimeShort(candidateSemiTime),
+          timeSeconds: candidateSemiTime,
+          paceFormatted: formatPace(21097 / candidateSemiTime),
+          activityId: act.id,
+          activityName: act.name,
+          date: actDate
+        };
+      }
+    }
+  }
+
+  return {
+    shoeId,
+    totalRuns,
+    totalKm,
+    totalTimeFormatted,
+    avgPaceFormatted,
+    totalElevationGain,
+    best1k,
+    best5k,
+    best10k,
+    best15k,
+    bestSemi,
+    longestRun,
+    fastestRun,
+    activities: shoeActs
+  };
+}
+
 export interface ZoneData {
   name: string;
   nameFr: string;

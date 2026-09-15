@@ -129,8 +129,13 @@ class App {
     });
     UIRenderer.renderAchievements(this.dataset);
 
-    // Page 4 : Shoe Locker
-    UIRenderer.renderShoeRotator(this.dataset);
+    // Page 4 : Shoe Locker & Hub
+    UIRenderer.renderShoeRotator(this.dataset, (activityId) => {
+      const act = this.dataset?.activities.find(a => a.id === activityId);
+      if (act) {
+        UIRenderer.openActivityModal(act, this.dataset!);
+      }
+    });
 
     // Page 5 : Atlas GPS Heatmap
     if (this.router.getCurrentPage() === 'map') {

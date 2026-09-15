@@ -659,6 +659,326 @@
   background-color: var(--color-primary);
 }
 
+/* =========================================================================
+   Shoe Hub (Records, Meilleurs Efforts & Historique par Paire)
+   ========================================================================= */
+.shoe-top-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.35fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  width: 100%;
+}
+
+.shoe-records-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: 380px;
+}
+
+.shoe-records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.shoe-summary-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.shoe-stat-chip {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.shoe-stat-chip:hover {
+  border-color: var(--border-medium);
+  background: var(--bg-surface-hover);
+}
+
+.shoe-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.shoe-stat-val {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.shoe-benchmarks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.shoe-benchmark-card {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.shoe-benchmark-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--color-cobalt);
+  opacity: 0.6;
+  transition: opacity var(--transition-fast), width var(--transition-fast);
+}
+
+.shoe-benchmark-card:hover {
+  transform: translateY(-2px);
+  background: var(--bg-surface-hover);
+  border-color: rgba(90, 107, 124, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.shoe-benchmark-card:hover::before {
+  opacity: 1;
+  width: 4px;
+}
+
+.shoe-benchmark-card.empty-record {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.shoe-benchmark-card.empty-record:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border-light);
+}
+
+.shoe-benchmark-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shoe-benchmark-dist {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.shoe-benchmark-pace {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(224, 90, 54, 0.08);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.shoe-benchmark-time {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.shoe-benchmark-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shoe-benchmark-act-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* History Section */
+.shoe-history-section {
+  width: 100%;
+}
+
+.shoe-history-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.shoe-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.shoe-history-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.shoe-history-search-wrap {
+  min-width: 260px;
+}
+
+.shoe-history-search-input {
+  width: 100%;
+  padding: 8px 14px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.shoe-history-search-input:focus {
+  border-color: var(--color-primary);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(224, 90, 54, 0.12);
+}
+
+.shoe-activities-scroll-wrap {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.shoe-activities-scroll-wrap::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shoe-activities-scroll-wrap::-webkit-scrollbar-thumb {
+  background-color: var(--border-medium);
+  border-radius: var(--radius-pill);
+}
+
+.shoe-activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shoe-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.shoe-activity-item:hover {
+  background: var(--bg-surface-hover);
+  border-color: rgba(90, 107, 124, 0.25);
+  transform: translateX(3px);
+}
+
+.shoe-act-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.shoe-act-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shoe-act-date {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.shoe-act-metrics-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.shoe-act-metric-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 65px;
+}
+
+.shoe-act-metric-val {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.shoe-act-metric-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.shoe-empty-state {
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 900px) {
+  .shoe-top-grid {
+    grid-template-columns: 1fr;
+  }
+  .shoe-benchmarks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 4. Records & Hall of Fame */
 .records-card {
   display: flex;
