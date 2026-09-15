@@ -90,6 +90,60 @@
     </nav>
   </div>
 
+  <!-- Mobile Floating Sticky Week Pill (Visible on mobile <768px, fixed to viewport) -->
+  <div id="mobile-week-pill-wrap" class="mobile-week-pill-wrap">
+    <div id="mobile-sticky-week-header" class="mobile-week-pill" role="region" aria-label="Current week summary" aria-expanded="false">
+      <!-- Compact Pill Bar with uniform spacing -->
+      <div class="mobile-week-pill-bar" id="mobile-week-pill-bar">
+        <div class="mobile-sticky-days-tracker" id="mobile-sticky-days-tracker">
+          <span class="sticky-day-box" id="sticky-day-l">M</span>
+          <span class="sticky-day-box" id="sticky-day-m">T</span>
+          <span class="sticky-day-box" id="sticky-day-me">W</span>
+          <span class="sticky-day-box" id="sticky-day-j">T</span>
+          <span class="sticky-day-box" id="sticky-day-v">F</span>
+          <span class="sticky-day-box" id="sticky-day-s">S</span>
+          <span class="sticky-day-box" id="sticky-day-d">S</span>
+        </div>
+        <span class="streak-pill-mini" id="sticky-streak-badge" title="Série active">
+          <strong id="sticky-streak-count">55</strong> <span id="sticky-streak-text">active weeks</span>
+        </span>
+        <button id="btn-open-weekly-sheet" class="btn-weekly-details-plus" title="Détails de la semaine" aria-label="Détails de la semaine">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Expanded Content Panel -->
+      <div class="mobile-week-pill-expanded" id="mobile-week-pill-expanded">
+        <div class="mobile-week-expanded-header">
+          <h3 class="mobile-week-expanded-title" id="lbl-weekly-sheet-title">Semaine actuelle</h3>
+        </div>
+
+        <!-- 2x2 Grid of Weekly Metrics -->
+        <div class="weekly-sheet-grid">
+          <div class="weekly-sheet-metric-card">
+            <span class="weekly-sheet-metric-label" id="lbl-sheet-dist">Distance</span>
+            <span class="weekly-sheet-metric-val" id="sheet-dist-val">--</span>
+          </div>
+          <div class="weekly-sheet-metric-card">
+            <span class="weekly-sheet-metric-label" id="lbl-sheet-time">Time</span>
+            <span class="weekly-sheet-metric-val" id="sheet-time-val">--</span>
+          </div>
+          <div class="weekly-sheet-metric-card">
+            <span class="weekly-sheet-metric-label" id="lbl-sheet-runs">Runs</span>
+            <span class="weekly-sheet-metric-val" id="sheet-runs-val">--</span>
+          </div>
+          <div class="weekly-sheet-metric-card">
+            <span class="weekly-sheet-metric-label" id="lbl-sheet-cal">Calories</span>
+            <span class="weekly-sheet-metric-val" id="sheet-cal-val">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="dashboard-container">
     
     <!-- =========================================================================
@@ -469,38 +523,88 @@
 
   <!-- Activity details modal -->
   <div class="modal-overlay" id="activity-modal">
-    <div class="modal-box">
+    <div class="modal-box modal-activity-details-box">
+      <!-- Header -->
       <div class="modal-header">
-        <div>
+        <div class="modal-title-group">
           <h3 class="modal-title" id="modal-activity-title">Activity details</h3>
-          <span style="font-size: 0.82rem; color: var(--text-secondary);" id="modal-activity-date"></span>
+          <div class="modal-subtitle-row">
+            <span class="modal-subtitle" id="modal-activity-date">--</span>
+            <span class="modal-subtitle-sep">•</span>
+            <span class="modal-subtitle" id="modal-activity-gear">--</span>
+          </div>
+          <div class="modal-tags-row" id="modal-activity-tags"></div>
         </div>
-        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Fermer la vue détaillée">&times;</button>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0;">
-        <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label" id="lbl-modal-dist">Distance</span>
-          <span class="featured-metric-value" id="modal-activity-dist">--</span>
+      <!-- 4-metric strip -->
+      <div class="modal-metrics-strip">
+        <div class="modal-stat-item">
+          <span class="modal-stat-val" id="modal-activity-dist">--</span>
+          <span class="modal-stat-label" id="lbl-modal-dist">DISTANCE</span>
         </div>
-        <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label" id="lbl-modal-time">Time</span>
-          <span class="featured-metric-value text-cobalt" id="modal-activity-time">--</span>
+        <div class="modal-stat-item">
+          <span class="modal-stat-val" id="modal-activity-time">--</span>
+          <span class="modal-stat-label" id="lbl-modal-time">TIME</span>
         </div>
-        <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label" id="lbl-modal-pace">Average pace</span>
-          <span class="featured-metric-value text-forest" id="modal-activity-pace">--</span>
+        <div class="modal-stat-item">
+          <span class="modal-stat-val" id="modal-activity-pace">--</span>
+          <span class="modal-stat-label" id="lbl-modal-pace">PACE</span>
         </div>
-        <div class="featured-metric-item" style="background: var(--bg-surface-subtle); padding: 10px; border-radius: 8px;">
-          <span class="featured-metric-label" id="lbl-modal-cal">Energy</span>
-          <span class="featured-metric-value text-amber" id="modal-activity-cal">--</span>
+        <div class="modal-stat-item">
+          <span class="modal-stat-val" id="modal-activity-cal">--</span>
+          <span class="modal-stat-label" id="lbl-modal-cal">ENERGY</span>
         </div>
       </div>
 
-      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; padding: 12px; background: var(--bg-surface-subtle); border-radius: var(--radius-sm);">
-        <div><strong id="lbl-modal-elev">Elevation :</strong> <span id="modal-activity-elev">--</span></div>
-        <div><strong id="lbl-modal-hr">Heart rate :</strong> <span id="modal-activity-hr">--</span></div>
-        <div><strong id="lbl-modal-gear">Shoes used :</strong> <span id="modal-activity-gear">--</span></div>
+      <!-- Dotted Divider -->
+      <div class="modal-dotted-divider"></div>
+
+      <!-- Scrollable content body -->
+      <div class="modal-activity-body">
+        <!-- GPS Map Preview -->
+        <div class="modal-map-wrap" id="modal-map-wrapper">
+          <div id="modal-activity-map" class="modal-minimap-canvas"></div>
+        </div>
+
+        <!-- 2x2 Bento Telemetry Grid -->
+        <div class="modal-telemetry-grid">
+          <div class="telemetry-tile">
+            <span class="telemetry-tile-lbl" id="lbl-modal-elev-title">ELEVATION (D+ / D-)</span>
+            <span class="telemetry-tile-val text-primary" id="modal-activity-elev">--</span>
+            <span class="telemetry-tile-sub" id="modal-activity-alt">--</span>
+          </div>
+
+          <div class="telemetry-tile">
+            <span class="telemetry-tile-lbl" id="lbl-modal-hr-title">HEART RATE</span>
+            <span class="telemetry-tile-val" id="modal-activity-hr">--</span>
+            <span class="telemetry-tile-sub" id="modal-activity-hr-max"></span>
+          </div>
+
+          <div class="telemetry-tile">
+            <span class="telemetry-tile-lbl" id="lbl-modal-device-title">WATCH / DEVICE</span>
+            <span class="telemetry-tile-val" id="modal-activity-device">--</span>
+          </div>
+
+          <div class="telemetry-tile">
+            <span class="telemetry-tile-lbl" id="lbl-modal-effort-title">EFFORT SCORE</span>
+            <span class="effort-badge" id="modal-activity-effort">--</span>
+          </div>
+
+          <div class="telemetry-tile telemetry-tile-full">
+            <span class="telemetry-tile-lbl" id="lbl-modal-zone-title">EFFORT ZONE</span>
+            <span class="effort-badge" id="modal-activity-zone">--</span>
+          </div>
+        </div>
+
+        <!-- Kilometer splits section -->
+        <div class="modal-splits-section">
+          <span class="splits-title" id="lbl-modal-splits-title">Kilometer splits</span>
+          <div class="splits-list-custom" id="modal-splits-list">
+            <!-- Dynamically populated splits -->
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -563,6 +667,8 @@
       </div>
     </div>
   </div>
+
+
 
   <!-- Toast container -->
   <div class="toast-container" id="toast-container"></div>

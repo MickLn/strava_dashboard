@@ -65,6 +65,7 @@
   border: 1px solid var(--border-light);
   overflow: hidden;
   position: relative;
+  z-index: 1;
   background-color: var(--bg-surface-subtle);
 }
 
@@ -452,6 +453,16 @@
   border-color: var(--color-primary);
   color: #FFFFFF;
   box-shadow: 0 2px 6px rgba(224, 90, 54, 0.3);
+  cursor: pointer;
+}
+
+.day-box.active:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: brightness(1.08);
+}
+
+.day-box.active:active {
+  transform: scale(0.95);
 }
 
 .pulse-averages-grid {
@@ -954,12 +965,17 @@
 .cal-day-cell.has-activity {
   cursor: pointer;
   box-shadow: none;
+  transition: transform var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .cal-day-cell.has-activity:hover {
-  transform: none;
-  box-shadow: none;
-  filter: brightness(0.96);
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cal-day-cell.has-activity:active {
+  transform: scale(0.96);
 }
 
 .cal-day-num {
@@ -1753,6 +1769,149 @@
   transition: transform var(--transition-smooth);
 }
 
+.modal-activity-details-box {
+  max-width: 480px;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 20px 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-light) transparent;
+}
+
+.modal-activity-details-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-activity-details-box::-webkit-scrollbar-thumb {
+  background-color: var(--border-light);
+  border-radius: 4px;
+}
+
+.modal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.modal-activity-details-box .modal-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.modal-subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.80rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.modal-subtitle-sep {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.modal-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.modal-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.modal-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.modal-stat-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.modal-stat-label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.modal-dotted-divider {
+  border-top: 1px dashed var(--border-light);
+  margin: 4px 0 10px;
+}
+
+.modal-activity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-map-wrap {
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface-subtle);
+}
+
+.modal-minimap-canvas {
+  width: 100%;
+  height: 175px;
+}
+
+.modal-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.modal-telemetry-grid .telemetry-tile {
+  background: var(--bg-surface-subtle);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border-light);
+}
+
+.modal-telemetry-grid .telemetry-tile-full {
+  grid-column: 1 / -1;
+}
+
+.modal-splits-section {
+  background: var(--bg-surface-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-splits-section .splits-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
 .modal-overlay.open .modal-box {
   transform: translateY(0);
 }
@@ -2352,5 +2511,231 @@
   .calendar-current-month {
     min-width: 95px;
     font-size: 0.80rem;
+  }
+}
+
+/* =========================================================================
+   Mobile Sticky Week Tracker Header & Weekly Bottom Sheet
+   ========================================================================= */
+
+/* =========================================================================
+   Mobile Sticky Week Tracker Header & Expanding Week Pill
+   ========================================================================= */
+
+/* Par défaut masqué sur Desktop */
+.mobile-week-pill-wrap {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Masquer la carte complète dans le flux pour désengorger le scroll */
+  .weekly-pulse-card {
+    display: none !important;
+  }
+
+  /* Wrap flottant en haut de page - Fixé en permanence comme la navbar mobile */
+  .mobile-week-pill-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: calc(12px + var(--safe-area-top));
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 0 16px;
+    margin: 0;
+    z-index: 1200;
+    pointer-events: none;
+  }
+
+  /* Pilule flottante compacte & extensible - Exactement 370px de large */
+  .mobile-week-pill {
+    pointer-events: auto;
+    position: relative;
+    z-index: 1200;
+    width: 100%;
+    max-width: 370px;
+    background-color: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(224, 218, 206, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(35, 25, 15, 0.08), 0 1px 4px rgba(35, 25, 15, 0.04);
+    padding: 5px 6px;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .mobile-week-pill.expanded {
+    box-shadow: 0 6px 20px rgba(35, 25, 15, 0.08), 0 2px 6px rgba(35, 25, 15, 0.04);
+    padding: 6px 12px 14px;
+  }
+
+  /* Barre compacte avec écarts strictement uniformes en px */
+  .mobile-week-pill-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    cursor: pointer;
+    min-height: 28px;
+  }
+
+  /* Carrés des 7 jours (uniquement la lettre, sans sous-titre) */
+  .mobile-sticky-days-tracker {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .sticky-day-box {
+    width: 23px;
+    height: 23px;
+    min-width: 23px;
+    border-radius: 6px;
+    background-color: var(--bg-surface-subtle);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+  }
+
+  .sticky-day-box.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(224, 90, 54, 0.32);
+    cursor: pointer;
+  }
+
+  .sticky-day-box.active:hover {
+    transform: scale(1.1);
+    filter: brightness(1.08);
+  }
+
+  .sticky-day-box.active:active {
+    transform: scale(0.95);
+  }
+
+  .streak-pill-mini {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Bouton d'action + / × */
+  .btn-weekly-details-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border: 1px solid rgba(224, 90, 54, 0.22);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .btn-weekly-details-plus svg {
+    transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .btn-weekly-details-plus:hover {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+    transform: scale(1.05);
+  }
+
+  .btn-weekly-details-plus:active {
+    transform: scale(0.95);
+  }
+
+  .mobile-week-pill.expanded .btn-weekly-details-plus {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+  }
+
+  .mobile-week-pill.expanded .btn-weekly-details-plus svg {
+    transform: rotate(45deg);
+  }
+
+  /* Section Accordéon extensible ultra-fluide */
+  .mobile-week-pill-expanded {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-4px);
+    transition: max-height 0.30s cubic-bezier(0.2, 0.8, 0.2, 1),
+                opacity 0.20s ease,
+                transform 0.30s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+    cursor: default;
+  }
+
+  .mobile-week-pill.expanded .mobile-week-pill-expanded {
+    max-height: 280px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .mobile-week-expanded-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px 2px 6px;
+  }
+
+  .mobile-week-expanded-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .weekly-sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  .weekly-sheet-metric-card {
+    background-color: var(--bg-surface-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .weekly-sheet-metric-label {
+    font-size: 0.70rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .weekly-sheet-metric-val {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
   }
 }

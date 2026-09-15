@@ -170,7 +170,7 @@ export const translations = {
     finishPoint: "Arrivée",
 
     // Current Week Activity
-    weeklyPulseTitle: "Semaine en cours",
+    weeklyPulseTitle: "Semaine actuelle",
     weeklyPulseSubtitle: "",
     consecutiveWeeks: "semaines actives",
     activeStreak: "Série active • Objectif régularité",

@@ -63,6 +63,11 @@ class App {
   }
 
   private handlePageSwitch(page: PageId): void {
+    const mobilePillWrap = document.getElementById('mobile-week-pill-wrap');
+    if (mobilePillWrap) {
+      mobilePillWrap.style.display = page === 'dashboard' ? '' : 'none';
+    }
+
     if (!this.dataset) return;
 
     if (page === 'dashboard') {
@@ -99,14 +104,15 @@ class App {
       UIRenderer.openActivityModal(act, this.dataset!);
     });
     UIRenderer.renderWeeklyPulse(this.dataset);
-    UIRenderer.setupCalendarNavigation(this.dataset.activities, (act: Activity) => {
+
+    const onSelectCalActivity = (act: Activity) => {
       this.currentHighlightedActivityId = act.id;
       renderActivityTraces(this.dataset!.activities, act.id);
-    });
-    UIRenderer.renderMonthlyCalendar(this.dataset.activities, (act: Activity) => {
-      this.currentHighlightedActivityId = act.id;
-      renderActivityTraces(this.dataset!.activities, act.id);
-    });
+      UIRenderer.openActivityModal(act, this.dataset!);
+    };
+
+    UIRenderer.setupCalendarNavigation(this.dataset.activities, onSelectCalActivity);
+    UIRenderer.renderMonthlyCalendar(this.dataset.activities, onSelectCalActivity);
     renderActivityTraces(this.dataset.activities, this.currentHighlightedActivityId);
     this.renderActivitiesForCurrentPeriod();
 
@@ -330,6 +336,53 @@ class App {
       });
     }
 
+    // Gestion de la pilule flottante extensible de la semaine (Mobile)
+    const weeklyPill = document.getElementById('mobile-sticky-week-header');
+    const weeklyPillBar = document.getElementById('mobile-week-pill-bar');
+    const weeklyPillBtn = document.getElementById('btn-open-weekly-sheet');
+    const weeklyPillExpanded = document.getElementById('mobile-week-pill-expanded');
+
+    const toggleWeeklyPill = () => {
+      if (!weeklyPill) return;
+      const isExpanded = weeklyPill.classList.toggle('expanded');
+      weeklyPill.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+      if (weeklyPillBtn) {
+        weeklyPillBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+      }
+    };
+
+    const closeWeeklyPill = () => {
+      if (!weeklyPill || !weeklyPill.classList.contains('expanded')) return;
+      weeklyPill.classList.remove('expanded');
+      weeklyPill.setAttribute('aria-expanded', 'false');
+      if (weeklyPillBtn) {
+        weeklyPillBtn.setAttribute('aria-expanded', 'false');
+      }
+    };
+
+    if (weeklyPillBar) {
+      weeklyPillBar.addEventListener('click', () => {
+        toggleWeeklyPill();
+      });
+    }
+
+    // Fermeture automatique au clic en dehors de la pilule
+    document.addEventListener('click', (e) => {
+      if (weeklyPill && weeklyPill.classList.contains('expanded')) {
+        const target = e.target as Node;
+        if (!weeklyPill.contains(target)) {
+          closeWeeklyPill();
+        }
+      }
+    });
+
+    // Empêcher la fermeture intempestive lors du clic sur les cartes métriques
+    if (weeklyPillExpanded) {
+      weeklyPillExpanded.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+
     // Bascule de la légende des distances du calendrier
     const legendBtn = document.getElementById('btn-cal-legend-toggle');
     const legendBar = document.getElementById('calendar-legend-bar');
@@ -417,7 +470,7 @@ class App {
         }
 
         const activityModal = document.getElementById('activity-modal');
-        if (activityModal && activityModal.classList.contains('active')) {
+        if (activityModal && (activityModal.classList.contains('open') || activityModal.classList.contains('active'))) {
           UIRenderer.closeActivityModal();
           return;
         }
@@ -426,6 +479,11 @@ class App {
         if (profileModal && profileModal.classList.contains('active')) {
           profileModal.classList.remove('active');
           document.body.style.overflow = '';
+          return;
+        }
+
+        if (weeklyPill && weeklyPill.classList.contains('expanded')) {
+          closeWeeklyPill();
           return;
         }
       }

@@ -75,6 +75,8 @@ export interface WeekDaysActive {
   D: boolean;
 }
 
+export type WeekDaysActivities = Record<'L' | 'M' | 'Me' | 'J' | 'V' | 'S' | 'D', Activity | null>;
+
 /**
  * Détermine les jours courus dans la semaine actuelle ou récente
  */
@@ -108,6 +110,43 @@ export function getCurrentWeekDays(activities: Activity[]): WeekDaysActive {
       if (d === 5) res.V = true;
       if (d === 6) res.S = true;
       if (d === 0) res.D = true;
+    }
+  }
+
+  return res;
+}
+
+/**
+ * Associe l'activité courue pour chaque jour de la semaine actuelle ou récente
+ */
+export function getCurrentWeekActivities(activities: Activity[]): WeekDaysActivities {
+  const res: WeekDaysActivities = { L: null, M: null, Me: null, J: null, V: null, S: null, D: null };
+  if (!activities || activities.length === 0) return res;
+
+  const sorted = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+  const latestDate = new Date(sorted[0].start_date_local);
+  
+  const dayOfWeek = latestDate.getDay();
+  const diffToMonday = (dayOfWeek + 6) % 7;
+  const monday = new Date(latestDate);
+  monday.setDate(latestDate.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  for (const act of sorted) {
+    const actDate = new Date(act.start_date_local);
+    if (actDate >= monday && actDate <= sunday) {
+      const d = actDate.getDay();
+      if (d === 1 && !res.L) res.L = act;
+      if (d === 2 && !res.M) res.M = act;
+      if (d === 3 && !res.Me) res.Me = act;
+      if (d === 4 && !res.J) res.J = act;
+      if (d === 5 && !res.V) res.V = act;
+      if (d === 6 && !res.S) res.S = act;
+      if (d === 0 && !res.D) res.D = act;
     }
   }
 

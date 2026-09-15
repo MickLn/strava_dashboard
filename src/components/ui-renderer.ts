@@ -6,7 +6,7 @@ import {
   formatPace,
   formatTimeShort,
   formatDate,
-  getCurrentWeekDays,
+  getCurrentWeekActivities,
   calculateWeekStreak,
   calculateCurrentWeekStats,
   calculateGearStats,
@@ -25,6 +25,7 @@ import { i18n } from '../utils/i18n.ts';
 export class UIRenderer {
   private static activeShoeIndex: number = 0;
   private static miniMapInstances: Map<number, L.Map> = new Map();
+  private static modalMapInstance: L.Map | null = null;
 
   /**
    * Met à jour tous les libellés statiques selon la langue choisie (EN / FR)
@@ -219,16 +220,27 @@ export class UIRenderer {
    */
   public static renderWeeklyPulse(dataset: StravaDataset): void {
     const activities = dataset.activities;
+    const t = i18n.t();
+    const streakCount = calculateWeekStreak(activities).toString();
 
-    // 0. Streak de semaines actives (mini-badge en haut)
+    // 0. Streak de semaines actives (Desktop card, Mobile sticky header, et Bottom sheet)
     const streakEl = document.getElementById('hero-streak-count');
-    if (streakEl) {
-      streakEl.textContent = calculateWeekStreak(activities).toString();
-    }
+    const stickyStreakEl = document.getElementById('sticky-streak-count');
+    const sheetStreakEl = document.getElementById('sheet-streak-count');
+    const lblStreakText = document.getElementById('lbl-streak-text');
+    const stickyStreakText = document.getElementById('sticky-streak-text');
+    const sheetStreakText = document.getElementById('sheet-streak-text');
+
+    if (streakEl) streakEl.textContent = streakCount;
+    if (stickyStreakEl) stickyStreakEl.textContent = streakCount;
+    if (sheetStreakEl) sheetStreakEl.textContent = streakCount;
+    if (lblStreakText) lblStreakText.textContent = t.consecutiveWeeks;
+    if (stickyStreakText) stickyStreakText.textContent = t.consecutiveWeeks;
+    if (sheetStreakText) sheetStreakText.textContent = t.consecutiveWeeks;
 
     // 1. Jours actifs cette semaine (Lundi à Dimanche)
-    const weekDays = getCurrentWeekDays(activities);
-    const dayElements: Record<keyof typeof weekDays, HTMLElement | null> = {
+    const weekActs = getCurrentWeekActivities(activities);
+    const dayElements: Record<keyof typeof weekActs, HTMLElement | null> = {
       L: document.getElementById('day-l'),
       M: document.getElementById('day-m'),
       Me: document.getElementById('day-me'),
@@ -238,13 +250,68 @@ export class UIRenderer {
       D: document.getElementById('day-d')
     };
 
-    (Object.keys(dayElements) as Array<keyof typeof weekDays>).forEach(k => {
+    const stickyDayElements: Record<keyof typeof weekActs, HTMLElement | null> = {
+      L: document.getElementById('sticky-day-l'),
+      M: document.getElementById('sticky-day-m'),
+      Me: document.getElementById('sticky-day-me'),
+      J: document.getElementById('sticky-day-j'),
+      V: document.getElementById('sticky-day-v'),
+      S: document.getElementById('sticky-day-s'),
+      D: document.getElementById('sticky-day-d')
+    };
+
+    (Object.keys(dayElements) as Array<keyof typeof weekActs>).forEach(k => {
       const el = dayElements[k];
-      if (el) el.classList.toggle('active', !!weekDays[k]);
+      const stickyEl = stickyDayElements[k];
+      const act = weekActs[k];
+      const isActive = !!act;
+
+      if (el) {
+        el.classList.toggle('active', isActive);
+        if (isActive && act) {
+          el.style.cursor = 'pointer';
+          el.title = `${act.name} (${(act.distance / 1000).toFixed(1)} km)`;
+          el.onclick = (e) => {
+            e.stopPropagation();
+            UIRenderer.openActivityModal(act, dataset);
+          };
+        } else {
+          el.style.cursor = 'default';
+          el.title = '';
+          el.onclick = null;
+        }
+      }
+
+      if (stickyEl) {
+        stickyEl.classList.toggle('active', isActive);
+        if (isActive && act) {
+          stickyEl.style.cursor = 'pointer';
+          stickyEl.title = `${act.name} (${(act.distance / 1000).toFixed(1)} km)`;
+          stickyEl.onclick = (e) => {
+            e.stopPropagation();
+            UIRenderer.openActivityModal(act, dataset);
+          };
+        } else {
+          stickyEl.style.cursor = 'default';
+          stickyEl.title = '';
+          stickyEl.onclick = null;
+        }
+      }
     });
 
-    // 2. Statistiques réelles de la semaine en cours (non moyennes)
+    // Libellés des jours (Desktop & Mobile)
+    const dayLabels = [t.mon, t.tue, t.wed, t.thu, t.fri, t.sat, t.sun];
+    dayLabels.forEach((label, idx) => {
+      const dayLbl = document.getElementById(`lbl-day-${idx + 1}`);
+      const stickyDayLbl = document.getElementById(`sticky-lbl-day-${idx + 1}`);
+      if (dayLbl) dayLbl.textContent = label;
+      if (stickyDayLbl) stickyDayLbl.textContent = label;
+    });
+
+    // 2. Statistiques réelles de la semaine en cours
     const currentWeekStats = calculateCurrentWeekStats(activities);
+
+    // Desktop card elements
     const runsPerWeekEl = document.getElementById('avg-runs-per-week');
     const timePerWeekEl = document.getElementById('avg-time-per-week');
     const distPerWeekEl = document.getElementById('avg-dist-per-week');
@@ -254,6 +321,29 @@ export class UIRenderer {
     if (timePerWeekEl) timePerWeekEl.textContent = currentWeekStats.timeFormatted;
     if (distPerWeekEl) distPerWeekEl.textContent = currentWeekStats.distanceKm;
     if (calPerWeekEl) calPerWeekEl.textContent = currentWeekStats.calories.toString();
+
+    // Mobile Bottom Sheet elements
+    const sheetTitleEl = document.getElementById('lbl-weekly-sheet-title');
+    const sheetDistEl = document.getElementById('sheet-dist-val');
+    const sheetTimeEl = document.getElementById('sheet-time-val');
+    const sheetRunsEl = document.getElementById('sheet-runs-val');
+    const sheetCalEl = document.getElementById('sheet-cal-val');
+
+    const lblSheetDist = document.getElementById('lbl-sheet-dist');
+    const lblSheetTime = document.getElementById('lbl-sheet-time');
+    const lblSheetRuns = document.getElementById('lbl-sheet-runs');
+    const lblSheetCal = document.getElementById('lbl-sheet-cal');
+
+    if (sheetTitleEl) sheetTitleEl.textContent = t.weeklyPulseTitle;
+    if (sheetDistEl) sheetDistEl.textContent = currentWeekStats.distanceKm;
+    if (sheetTimeEl) sheetTimeEl.textContent = currentWeekStats.timeFormatted;
+    if (sheetRunsEl) sheetRunsEl.textContent = currentWeekStats.runs.toString();
+    if (sheetCalEl) sheetCalEl.textContent = currentWeekStats.calories;
+
+    if (lblSheetDist) lblSheetDist.textContent = t.distPerWeek;
+    if (lblSheetTime) lblSheetTime.textContent = t.timePerWeek;
+    if (lblSheetRuns) lblSheetRuns.textContent = t.runsPerWeek;
+    if (lblSheetCal) lblSheetCal.textContent = t.calPerWeek;
   }
 
   /**
@@ -966,41 +1056,188 @@ export class UIRenderer {
   }
 
   /**
-   * Modal détails
+   * Modal détails complets de la course (Style Activity Details Pop-up)
    */
   public static openActivityModal(activity: Activity, dataset: StravaDataset): void {
     const modal = document.getElementById('activity-modal');
     if (!modal) return;
 
+    const isFr = i18n.getLang() === 'fr';
+    const t = i18n.t();
+
+    // 1. En-tête & Chaussures & Tags
     const titleEl = document.getElementById('modal-activity-title');
     const dateEl = document.getElementById('modal-activity-date');
+    const gearEl = document.getElementById('modal-activity-gear');
+    const tagsContainer = document.getElementById('modal-activity-tags');
+
+    const gearItem = dataset.gear.find(g => g.id === activity.gear_id);
+    const gearName = gearItem ? gearItem.name : (isFr ? 'Chaussures de running' : 'Running shoes');
+    const caloriesVal = calculateCalories(activity);
+    const elev = calculateElevationDetails(activity);
+    const diff = calculateDifficulty(activity);
+    const zoneRes = getActivityEffortZone(activity);
+    const tags = generateActivityTags(activity, gearName);
+    const splits = generateKilometerSplits(activity);
+
+    if (titleEl) titleEl.textContent = activity.name;
+    if (dateEl) dateEl.textContent = formatDate(activity.start_date_local);
+    if (gearEl) gearEl.textContent = gearName;
+
+    if (tagsContainer) {
+      tagsContainer.innerHTML = tags.map(tag => `<span class="act-tag-badge">${tag}</span>`).join('');
+    }
+
+    // 2. Bandeau 4 métriques
     const distEl = document.getElementById('modal-activity-dist');
     const timeEl = document.getElementById('modal-activity-time');
     const paceEl = document.getElementById('modal-activity-pace');
     const calEl = document.getElementById('modal-activity-cal');
-    const elevEl = document.getElementById('modal-activity-elev');
-    const hrEl = document.getElementById('modal-activity-hr');
-    const gearEl = document.getElementById('modal-activity-gear');
 
-    const gearItem = dataset.gear.find(g => g.id === activity.gear_id);
-    const caloriesVal = calculateCalories(activity);
+    const lblDist = document.getElementById('lbl-modal-dist');
+    const lblTime = document.getElementById('lbl-modal-time');
+    const lblPace = document.getElementById('lbl-modal-pace');
+    const lblCal = document.getElementById('lbl-modal-cal');
 
-    if (titleEl) titleEl.textContent = activity.name;
-    if (dateEl) dateEl.textContent = `${i18n.t().recordedOn} ${formatDate(activity.start_date_local)}`;
-    if (distEl) distEl.textContent = formatDistance(activity.distance);
+    if (distEl) distEl.textContent = `${(activity.distance / 1000).toFixed(2)} km`;
     if (timeEl) timeEl.textContent = formatTimeShort(activity.moving_time);
-    if (paceEl) paceEl.textContent = formatPace(activity.average_speed);
+    if (paceEl) paceEl.textContent = `${formatPace(activity.average_speed)} /km`;
     if (calEl) calEl.textContent = `${caloriesVal} kcal`;
-    if (elevEl) elevEl.textContent = `${activity.total_elevation_gain} m D+`;
-    if (hrEl) hrEl.textContent = activity.average_heartrate ? `${activity.average_heartrate} bpm (max ${activity.max_heartrate || '--'})` : (i18n.getLang() === 'fr' ? 'Non mesuré' : 'Not recorded');
-    if (gearEl) gearEl.textContent = gearItem ? gearItem.name : (i18n.getLang() === 'fr' ? 'Chaussures par défaut' : 'Default shoes');
 
+    if (lblDist) lblDist.textContent = t.distance.toUpperCase();
+    if (lblTime) lblTime.textContent = t.time.toUpperCase();
+    if (lblPace) lblPace.textContent = t.pace.toUpperCase();
+    if (lblCal) lblCal.textContent = t.energy.toUpperCase();
+
+    // 3. Mini-carte Leaflet du tracé GPS
+    const mapWrap = document.getElementById('modal-map-wrapper');
+    const mapCanvas = document.getElementById('modal-activity-map');
+
+    if (this.modalMapInstance) {
+      try {
+        this.modalMapInstance.remove();
+      } catch (e) {
+        console.warn('Modal map cleanup note:', e);
+      }
+      this.modalMapInstance = null;
+    }
+
+    if (activity.map?.summary_polyline && mapCanvas && mapWrap) {
+      mapWrap.style.display = 'block';
+      const points = decodePolyline(activity.map.summary_polyline);
+
+      if (points.length > 0) {
+        try {
+          const latlngs = points.map(p => [p[0], p[1]] as [number, number]);
+          const map = L.map(mapCanvas, {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: true,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: true,
+            boxZoom: false,
+            keyboard: false
+          });
+
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 16
+          }).addTo(map);
+
+          const polyline = L.polyline(latlngs, {
+            color: '#E05A36',
+            weight: 3.5,
+            opacity: 0.95,
+            lineJoin: 'round',
+            lineCap: 'round'
+          }).addTo(map);
+
+          map.fitBounds(polyline.getBounds(), { padding: [16, 16] });
+          this.modalMapInstance = map;
+          setTimeout(() => map.invalidateSize(), 80);
+        } catch (e) {
+          console.warn('Modal map init note:', e);
+        }
+      } else {
+        mapWrap.style.display = 'none';
+      }
+    } else if (mapWrap) {
+      mapWrap.style.display = 'none';
+    }
+
+    // 4. Grille Bento Télémétrie 2x2 & Zone d'effort
+    const elevEl = document.getElementById('modal-activity-elev');
+    const altEl = document.getElementById('modal-activity-alt');
+    const hrEl = document.getElementById('modal-activity-hr');
+    const hrMaxEl = document.getElementById('modal-activity-hr-max');
+    const deviceEl = document.getElementById('modal-activity-device');
+    const effortEl = document.getElementById('modal-activity-effort');
+    const zoneEl = document.getElementById('modal-activity-zone');
+
+    const lblElevTitle = document.getElementById('lbl-modal-elev-title');
+    const lblHrTitle = document.getElementById('lbl-modal-hr-title');
+    const lblDeviceTitle = document.getElementById('lbl-modal-device-title');
+    const lblEffortTitle = document.getElementById('lbl-modal-effort-title');
+    const lblZoneTitle = document.getElementById('lbl-modal-zone-title');
+
+    if (lblElevTitle) lblElevTitle.textContent = `${t.elevation} (D+ / D-)`;
+    if (lblHrTitle) lblHrTitle.textContent = t.heartRate;
+    if (lblDeviceTitle) lblDeviceTitle.textContent = t.device;
+    if (lblEffortTitle) lblEffortTitle.textContent = t.difficulty;
+    if (lblZoneTitle) lblZoneTitle.textContent = isFr ? "Zone d'effort" : 'Effort zone';
+
+    if (elevEl) elevEl.innerHTML = `+${elev.gain}m <span class="text-forest" style="margin-left: 3px;">-${elev.loss}m</span>`;
+    if (altEl) altEl.textContent = (elev.minAlt !== null && elev.maxAlt !== null) ? `${elev.minAlt}m - ${elev.maxAlt}m alt` : '';
+
+    if (hrEl) hrEl.textContent = activity.average_heartrate ? `${activity.average_heartrate} bpm` : t.notRecorded;
+    if (hrMaxEl) hrMaxEl.textContent = activity.max_heartrate ? `max ${activity.max_heartrate} bpm` : '';
+
+    if (deviceEl) deviceEl.textContent = activity.device_name || 'Strava App';
+
+    if (effortEl) {
+      effortEl.textContent = `${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}`;
+      effortEl.style.color = diff.color;
+      effortEl.style.borderColor = `${diff.color}50`;
+      effortEl.style.backgroundColor = `${diff.color}15`;
+    }
+
+    if (zoneEl) {
+      zoneEl.textContent = `${isFr ? zoneRes.zoneNameFr : zoneRes.zoneName} (${isFr ? zoneRes.methodLabelFr : zoneRes.methodLabel})`;
+      zoneEl.style.color = zoneRes.badgeColor;
+      zoneEl.style.borderColor = `${zoneRes.badgeColor}50`;
+      zoneEl.style.backgroundColor = `${zoneRes.badgeColor}18`;
+    }
+
+    // 5. Sections Splits Kilométriques
+    const lblSplitsTitle = document.getElementById('lbl-modal-splits-title');
+    const splitsContainer = document.getElementById('modal-splits-list');
+    if (lblSplitsTitle) lblSplitsTitle.textContent = t.splits;
+
+    if (splitsContainer) {
+      splitsContainer.innerHTML = splits.map(s => {
+        const zoneClass = s.zoneBadge.toLowerCase();
+        return `
+          <div class="split-row">
+            <span class="split-km">${s.kmLabel}</span>
+            <div class="split-bar-track">
+              <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
+            </div>
+            <span class="split-pace">${s.paceFormatted}</span>
+            <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 6. Ouverture de la modale & verrouillage du scroll d'arrière-plan
     modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   public static closeActivityModal(): void {
     const modal = document.getElementById('activity-modal');
     if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
   }
 
   /**
