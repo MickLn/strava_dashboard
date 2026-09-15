@@ -420,15 +420,71 @@
 
         <!-- Achievements & Milestones Gallery Card -->
         <div class="runner-card achievements-card">
-          <div class="chart-header">
-            <div>
-              <h3 class="chart-title" id="lbl-achievements-title">Achievements & Milestones</h3>
+          <!-- Hub Header & Level Banner -->
+          <div class="achievements-hub-header">
+            <div class="achievements-title-block">
+              <h3 class="chart-title" id="lbl-achievements-title">Universal Runner Achievements</h3>
+              <p class="chart-subtitle" id="lbl-achievements-sub">50 Career Trophies & Masteries</p>
             </div>
-            <span class="act-pill" style="background: rgba(46, 107, 86, 0.12); color: var(--color-forest);" id="lbl-achievements-count">5 / 6 Débloqués</span>
+            <div class="achievements-level-badge" id="achievements-level-badge">
+              <span class="level-badge-title" id="lbl-runner-level">Level 14 • Expert</span>
+            </div>
           </div>
 
+          <!-- Overall Progress Bar & Tier Chips -->
+          <div class="achievements-progression-panel">
+            <div class="progression-bar-header">
+              <span class="progression-summary-text" id="lbl-achievements-summary">24 / 50 Trophies Unlocked • 48% Complete</span>
+              <span class="progression-pct-val" id="lbl-achievements-pct">48%</span>
+            </div>
+            <div class="progression-track">
+              <div class="progression-fill" id="achievements-progression-fill" style="width: 48%;"></div>
+            </div>
+            <div class="tier-pills-row">
+              <div class="tier-pill tier-bronze" id="tier-pill-bronze">
+                <span class="tier-dot"></span>
+                <span class="tier-name" id="lbl-tier-bronze">Bronze</span>
+                <strong class="tier-count" id="count-tier-bronze">0/14</strong>
+              </div>
+              <div class="tier-pill tier-silver" id="tier-pill-silver">
+                <span class="tier-dot"></span>
+                <span class="tier-name" id="lbl-tier-silver">Silver</span>
+                <strong class="tier-count" id="count-tier-silver">0/16</strong>
+              </div>
+              <div class="tier-pill tier-gold" id="tier-pill-gold">
+                <span class="tier-dot"></span>
+                <span class="tier-name" id="lbl-tier-gold">Gold</span>
+                <strong class="tier-count" id="count-tier-gold">0/14</strong>
+              </div>
+              <div class="tier-pill tier-diamond" id="tier-pill-diamond">
+                <span class="tier-dot"></span>
+                <span class="tier-name" id="lbl-tier-diamond">Diamond</span>
+                <strong class="tier-count" id="count-tier-diamond">0/6</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category & Status Filter Tabs -->
+          <div class="achievements-filters-wrap">
+            <div class="category-tabs-scroll" id="achievements-category-tabs">
+              <button class="ach-tab-btn active" data-cat="all" id="tab-cat-all">All (50)</button>
+              <button class="ach-tab-btn" data-cat="speed" id="tab-cat-speed">Speed & Pace</button>
+              <button class="ach-tab-btn" data-cat="distance" id="tab-cat-distance">Distances</button>
+              <button class="ach-tab-btn" data-cat="training" id="tab-cat-training">Training & Cardio</button>
+              <button class="ach-tab-btn" data-cat="streak" id="tab-cat-streak">Consistency</button>
+              <button class="ach-tab-btn" data-cat="lifestyle" id="tab-cat-lifestyle">Lifestyle & Rituals</button>
+              <button class="ach-tab-btn" data-cat="gear" id="tab-cat-gear">Gear & Exploration</button>
+            </div>
+            <div class="status-tabs-wrap" id="achievements-status-tabs">
+              <button class="status-tab-btn active" data-status="all" id="tab-status-all">All</button>
+              <button class="status-tab-btn" data-status="unlocked" id="tab-status-unlocked">Unlocked</button>
+              <button class="status-tab-btn" data-status="locked" id="tab-status-locked">In progress</button>
+            </div>
+          </div>
+
+          <!-- 50 Achievements Grid -->
           <div class="achievements-grid" id="achievements-grid">
-            <!-- Dynamically populated badges -->
+            <!-- Dynamically populated 50 challenge cards -->
           </div>
         </div>
 

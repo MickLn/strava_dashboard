@@ -445,6 +445,30 @@ class App {
       });
     }
 
+    // Achievements Category Filter Tabs
+    const catTabs = document.querySelectorAll('#achievements-category-tabs .ach-tab-btn');
+    catTabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        catTabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.getAttribute('data-cat') || 'all';
+        UIRenderer.activeAchievementCat = cat;
+        if (this.dataset) UIRenderer.renderAchievements(this.dataset);
+      });
+    });
+
+    // Achievements Status Filter Tabs (All / Unlocked / Locked)
+    const statusTabs = document.querySelectorAll('#achievements-status-tabs .status-tab-btn');
+    statusTabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        statusTabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const status = btn.getAttribute('data-status') || 'all';
+        UIRenderer.activeAchievementStatus = status;
+        if (this.dataset) UIRenderer.renderAchievements(this.dataset);
+      });
+    });
+
     // Modal close
     const closeBtn = document.getElementById('modal-close-btn');
     if (closeBtn) {

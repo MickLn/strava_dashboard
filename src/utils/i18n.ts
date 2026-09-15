@@ -121,10 +121,26 @@ export const translations = {
     watchPaceSplit: (watches: number, paces: number) => `${watches} runs with heart rate • ${paces} runs with Jack Daniels model`,
 
     // Achievements
-    achievementsTitle: "Achievements & Milestones",
-    achievementsSubtitle: "Career badges & unlocked milestones",
+    achievementsTitle: "Universal Runner Achievements",
+    achievementsSubtitle: "50 Career Trophies & Masteries",
     unlockedBadge: "Unlocked",
     inProgressBadge: "In progress",
+    catAll: "All (50)",
+    catSpeed: "Speed & Pace",
+    catDistance: "Distances",
+    catTraining: "Training & Cardio",
+    catStreak: "Consistency",
+    catLifestyle: "Lifestyle & Rituals",
+    catGear: "Gear & Exploration",
+    tierBronze: "Bronze",
+    tierSilver: "Silver",
+    tierGold: "Gold",
+    tierDiamond: "Diamond",
+    achFilterAll: "All",
+    achFilterUnlocked: "Unlocked",
+    achFilterLocked: "In progress",
+    runnerLevel: (lvl: number, rank: string) => `Level ${lvl} • ${rank}`,
+    achievementsSummary: (unlocked: number, total: number, pct: number) => `${unlocked} / ${total} Trophies Unlocked • ${pct}% Complete`,
 
     // Shoe health
     cushionHealth: "Cushion health",
@@ -189,7 +205,7 @@ export const translations = {
     top15k: "Top 3 - Sorties longues (15k+)",
 
     // Shoe locker
-    shoeLockerTitle: "Parc de chaussures",
+    shoeLockerTitle: "Vestiaire chaussures",
     pairCount: (curr: number, total: number) => `Paire ${curr} sur ${total}`,
     primaryPair: "Paire principale",
     rotationPair: "Paire de rotation",
@@ -252,10 +268,26 @@ export const translations = {
     watchPaceSplit: (watches: number, paces: number) => `${watches} sorties avec cardio • ${paces} sorties avec modèle Jack Daniels`,
 
     // Achievements
-    achievementsTitle: "Trophées & Badges",
-    achievementsSubtitle: "Jalons et accomplissements de carrière",
+    achievementsTitle: "Les 50 Défis Universels",
+    achievementsSubtitle: "Trophées de Carrière & Accomplissements",
     unlockedBadge: "Débloqué",
     inProgressBadge: "En cours",
+    catAll: "Tous (50)",
+    catSpeed: "Vitesse & Allure",
+    catDistance: "Distances",
+    catTraining: "Entraînement & Cardio",
+    catStreak: "Régularité",
+    catLifestyle: "Rituels & Météo",
+    catGear: "Équipement & Spots",
+    tierBronze: "Bronze",
+    tierSilver: "Argent",
+    tierGold: "Or",
+    tierDiamond: "Diamant",
+    achFilterAll: "Tous",
+    achFilterUnlocked: "Débloqués",
+    achFilterLocked: "À débloquer",
+    runnerLevel: (lvl: number, rank: string) => `Niveau ${lvl} • ${rank}`,
+    achievementsSummary: (unlocked: number, total: number, pct: number) => `${unlocked} / ${total} Trophées Débloqués • ${pct}% Complété`,
 
     // Shoe health
     cushionHealth: "Santé de l'amorti",

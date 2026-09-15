@@ -634,8 +634,13 @@ export function calculateEffortZones(activities: Activity[]): { zones: ZoneData[
   return { zones, hasBpmCount, paceModelCount, totalKm: Math.round(totalKm) };
 }
 
+export type AchievementCategory = 'speed' | 'distance' | 'training' | 'streak' | 'lifestyle' | 'gear';
+export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'diamond';
+
 export interface Achievement {
   id: string;
+  category: AchievementCategory;
+  tier: AchievementTier;
   icon: string;
   title: string;
   titleFr: string;
@@ -648,90 +653,872 @@ export interface Achievement {
 }
 
 /**
- * Calcule les badges de succès et accomplissements de l'athlète
+ * Calcule l'ensemble des 50 Défis Universels de Course à Pied
  */
 export function calculateAchievements(dataset: StravaDataset): Achievement[] {
+  const activities = dataset.activities || [];
   const totalKm = (dataset.stats.all_run_totals?.distance || 2271000) / 1000;
-  const streakWeeks = calculateWeekStreak(dataset.activities);
+  const streakWeeks = calculateWeekStreak(activities);
+  const best5kSec = dataset.records?.top5k?.[0]?.timeSeconds || 1420; // ~23m 40s
   const best10kSec = dataset.records?.top10k?.[0]?.timeSeconds || 2879; // 47m 59s
-  const ytdElev = dataset.stats.ytd_run_totals?.elevation_gain || 4909;
-  const ytdRuns = dataset.stats.ytd_run_totals?.count || 117;
-  const maxDistanceKm = Math.max(...dataset.activities.map((a: Activity) => a.distance / 1000), 16.0);
+  const maxDistanceKm = activities.length > 0 ? Math.max(...activities.map((a: Activity) => a.distance / 1000)) : 16.0;
 
-  return [
+  // Calcul du max de jours consécutifs courus
+  const uniqueDates = Array.from(new Set(activities.map(a => a.start_date_local.slice(0, 10)))).sort();
+  let maxConsecutiveDays = uniqueDates.length > 0 ? 1 : 0;
+  let currentStreak = 1;
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const prev = new Date(uniqueDates[i - 1]).getTime();
+    const curr = new Date(uniqueDates[i]).getTime();
+    const diffDays = Math.round((curr - prev) / (1000 * 3600 * 24));
+    if (diffDays === 1) {
+      currentStreak++;
+      if (currentStreak > maxConsecutiveDays) maxConsecutiveDays = currentStreak;
+    } else if (diffDays > 1) {
+      currentStreak = 1;
+    }
+  }
+
+  // Calcul du max de runs dans une même semaine civile ISO
+  const weekCounts: Record<string, number> = {};
+  activities.forEach(a => {
+    const d = new Date(a.start_date_local);
+    const year = d.getFullYear();
+    const oneJan = new Date(year, 0, 1);
+    const weekNum = Math.ceil((((d.getTime() - oneJan.getTime()) / 86400000) + oneJan.getDay() + 1) / 7);
+    const key = `${year}-W${weekNum}`;
+    weekCounts[key] = (weekCounts[key] || 0) + 1;
+  });
+  const maxRunsInSingleWeek = Object.values(weekCounts).length > 0 ? Math.max(...Object.values(weekCounts)) : 0;
+
+  // Calcul du max de volume mensuel en km
+  const monthVolumes: Record<string, number> = {};
+  activities.forEach(a => {
+    const mKey = a.start_date_local.slice(0, 7); // YYYY-MM
+    monthVolumes[mKey] = (monthVolumes[mKey] || 0) + (a.distance / 1000);
+  });
+  const maxMonthlyKm = Object.values(monthVolumes).length > 0 ? Math.max(...Object.values(monthVolumes)) : 0;
+
+  // Jours de la semaine uniques courus (0 = Dimanche ... 6 = Samedi)
+  const weekdaysRan = new Set(activities.map(a => new Date(a.start_date_local).getDay()));
+
+  // Chaussures
+  const shoes = dataset.gear || [];
+  const maxShoeKm = shoes.length > 0 ? Math.max(...shoes.map(s => (s.distance || 0) / 1000)) : 0;
+  const shoesCountWithKm = shoes.filter(s => (s.distance || 0) > 50000).length;
+
+  // Analyses spécifiques sur les séances
+  let hasAerobic30 = false;
+  let hasAerobic60 = false;
+  let hasRecoveryRun = false;
+  let hasTempoRun = false;
+  let hasIntervals = false;
+  let hasCardioControl10k = false;
+  let hasNegativeSplit = false;
+  let hasMetronomeRun = false;
+  let hasRocketFinish = false;
+  let hasRoundPrecision = false;
+  let hasEarlyBird = false;
+  let hasNightOwl = false;
+  let hasLunchRun = false;
+  let hasWeekendWarrior = false;
+  let hasColdRun = false;
+  let hasSummerRun = false;
+  let hasRainRun = false;
+
+  // Recherche des sessions consécutives samedi et dimanche
+  const datesSet = new Set(activities.map(a => a.start_date_local.slice(0, 10)));
+  activities.forEach(a => {
+    const d = new Date(a.start_date_local);
+    const day = d.getDay();
+    if (day === 6) { // Samedi
+      const nextDay = new Date(d.getTime() + 86400000).toISOString().slice(0, 10);
+      if (datesSet.has(nextDay)) hasWeekendWarrior = true;
+    }
+
+    const h = d.getHours();
+    if (h < 7) hasEarlyBird = true;
+    if (h >= 21) hasNightOwl = true;
+    if (day >= 1 && day <= 5 && h >= 12 && h < 14) hasLunchRun = true;
+
+    const month = d.getMonth(); // 0-11
+    if (month === 11 || month === 0 || month === 1) hasColdRun = true;
+    if (month === 6 || month === 7) hasSummerRun = true;
+    if (a.name?.toLowerCase().includes('pluie') || (month >= 8 && month <= 10)) hasRainRun = true;
+
+    const km = a.distance / 1000;
+    const paceSec = a.average_speed > 0 ? (1000 / a.average_speed) : 999;
+    const hr = a.average_heartrate || 0;
+
+    // Précision horlogère (distance pile ronde)
+    const metersRem = a.distance % 1000;
+    if ((metersRem < 20 || metersRem > 980) && km >= 5) hasRoundPrecision = true;
+
+    // Aérobie
+    if (a.moving_time >= 1800 && (hr > 0 ? hr <= 145 : paceSec >= 330)) hasAerobic30 = true;
+    if (a.moving_time >= 3600 && (hr > 0 ? hr <= 145 : paceSec >= 330)) hasAerobic60 = true;
+    if (km >= 4 && km <= 6.5 && paceSec >= 340) hasRecoveryRun = true;
+    if (a.moving_time >= 1200 && paceSec >= 285 && paceSec <= 330) hasTempoRun = true;
+    if (km >= 10 && hr > 0 && hr <= 148) hasCardioControl10k = true;
+
+    // Splits
+    if (a.splits_metric && a.splits_metric.length >= 4) {
+      const splitsPaces = a.splits_metric.filter(s => s.distance > 800).map(s => 1000 / s.average_speed);
+      if (splitsPaces.length >= 4) {
+        const minPace = Math.min(...splitsPaces);
+        const maxPace = Math.max(...splitsPaces);
+        if (maxPace - minPace > 30) hasIntervals = true;
+
+        // Negative Split
+        if (km >= 8) {
+          const mid = Math.floor(splitsPaces.length / 2);
+          const firstHalfAvg = splitsPaces.slice(0, mid).reduce((acc, p) => acc + p, 0) / mid;
+          const secondHalfAvg = splitsPaces.slice(mid).reduce((acc, p) => acc + p, 0) / (splitsPaces.length - mid);
+          if (secondHalfAvg < firstHalfAvg - 3) hasNegativeSplit = true;
+        }
+
+        // Rocket finish
+        if (km >= 8 && splitsPaces[splitsPaces.length - 1] === minPace) {
+          hasRocketFinish = true;
+        }
+
+        // Métronome : 4 km consécutifs avec < 4s d'écart
+        for (let j = 0; j <= splitsPaces.length - 4; j++) {
+          const slice = splitsPaces.slice(j, j + 4);
+          const diff = Math.max(...slice) - Math.min(...slice);
+          if (diff <= 4) hasMetronomeRun = true;
+        }
+      }
+    }
+  });
+
+  const list: Achievement[] = [
+    // -------------------------------------------------------------------------
+    // 1. Vitesse & Allures Progressives (10 Défis)
+    // -------------------------------------------------------------------------
     {
-      id: 'club_2000k',
-      icon: '2K',
-      title: '2,000 km Club',
-      titleFr: 'Club des 2 000 km',
-      description: 'Accumulate over 2,000 km of running',
-      descriptionFr: 'Cumuler plus de 2 000 km de course au total',
-      unlocked: totalKm >= 2000,
-      progressPercent: Math.min(100, Math.round((totalKm / 2000) * 100)),
-      currentValue: `${Math.round(totalKm).toLocaleString('fr-FR')} km`,
-      targetValue: '2 000 km'
+      id: 'speed_pass_5k',
+      category: 'speed',
+      tier: 'bronze',
+      icon: '5K',
+      title: 'Passport 5K',
+      titleFr: 'Passeport 5K',
+      description: 'Complete a continuous 5 km run',
+      descriptionFr: 'Courir 5 km en continu',
+      unlocked: maxDistanceKm >= 5.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 5.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '5.0 km'
     },
     {
-      id: 'iron_streak',
-      icon: '52W',
-      title: 'Iron Consistency (52 Wk)',
-      titleFr: 'Série d\'Acier (52 Semaines)',
-      description: '52 consecutive weeks of active training',
-      descriptionFr: '52 semaines consécutives d\'entraînement régulier',
-      unlocked: streakWeeks >= 52,
-      progressPercent: Math.min(100, Math.round((streakWeeks / 52) * 100)),
-      currentValue: `${streakWeeks} ${streakWeeks > 1 ? 'semaines' : 'semaine'}`,
-      targetValue: '52 sem'
+      id: 'speed_sub_600_5k',
+      category: 'speed',
+      tier: 'bronze',
+      icon: '6:00',
+      title: 'Pace Barrier: 6:00 /km',
+      titleFr: 'Cap 6:00 /km (5K)',
+      description: 'Run 5 km with an average pace under 6:00 /km',
+      descriptionFr: 'Courir 5 km avec une allure moyenne < 6:00 /km',
+      unlocked: best5kSec <= 1800,
+      progressPercent: best5kSec <= 1800 ? 100 : Math.min(100, Math.round((1800 / best5kSec) * 100)),
+      currentValue: formatTimeShort(best5kSec),
+      targetValue: '30m 00s'
     },
     {
-      id: 'sub_50_10k',
+      id: 'speed_sub_530_5k',
+      category: 'speed',
+      tier: 'silver',
+      icon: '5:30',
+      title: 'Pace Barrier: 5:30 /km',
+      titleFr: 'Cap 5:30 /km (5K)',
+      description: 'Run 5 km with an average pace under 5:30 /km',
+      descriptionFr: 'Courir 5 km avec une allure moyenne < 5:30 /km',
+      unlocked: best5kSec <= 1650,
+      progressPercent: best5kSec <= 1650 ? 100 : Math.min(100, Math.round((1650 / best5kSec) * 100)),
+      currentValue: formatTimeShort(best5kSec),
+      targetValue: '27m 30s'
+    },
+    {
+      id: 'speed_sub_25_5k',
+      category: 'speed',
+      tier: 'silver',
+      icon: '25m',
+      title: 'Sub-25 (5K)',
+      titleFr: 'Sub-25 (5K)',
+      description: 'Run 5 km in under 25 minutes (< 5:00 /km)',
+      descriptionFr: 'Courir 5 km en moins de 25 minutes (< 5:00 /km)',
+      unlocked: best5kSec <= 1500,
+      progressPercent: best5kSec <= 1500 ? 100 : Math.min(100, Math.round((1500 / best5kSec) * 100)),
+      currentValue: formatTimeShort(best5kSec),
+      targetValue: '25m 00s'
+    },
+    {
+      id: 'speed_sub_22_5k',
+      category: 'speed',
+      tier: 'gold',
+      icon: '22m',
+      title: 'Sub-22 (5K)',
+      titleFr: 'Sub-22 (5K)',
+      description: 'Run 5 km in under 22 minutes (< 4:24 /km)',
+      descriptionFr: 'Courir 5 km en moins de 22 minutes (< 4:24 /km)',
+      unlocked: best5kSec <= 1320,
+      progressPercent: best5kSec <= 1320 ? 100 : Math.min(100, Math.round((1320 / best5kSec) * 100)),
+      currentValue: formatTimeShort(best5kSec),
+      targetValue: '22m 00s'
+    },
+    {
+      id: 'speed_sub_20_5k',
+      category: 'speed',
+      tier: 'diamond',
+      icon: '20m',
+      title: 'Sub-20 Barrier (5K)',
+      titleFr: 'La Barrière Sub-20 (5K)',
+      description: 'Break the mythic 20-minute barrier on 5 km (< 4:00 /km)',
+      descriptionFr: 'Franchir la barre mythique des 20 min sur 5 km (< 4:00 /km)',
+      unlocked: best5kSec <= 1200,
+      progressPercent: best5kSec <= 1200 ? 100 : Math.min(100, Math.round((1200 / best5kSec) * 100)),
+      currentValue: formatTimeShort(best5kSec),
+      targetValue: '20m 00s'
+    },
+    {
+      id: 'speed_pass_10k',
+      category: 'speed',
+      tier: 'bronze',
       icon: '10K',
-      title: 'Sub-50 10K',
-      titleFr: '10 km sous les 50 min',
-      description: 'Run 10 km in under 50 minutes (PR: 47:59)',
-      descriptionFr: 'Courir 10 km en moins de 50 minutes (Record: 47:59)',
+      title: 'Passport 10K',
+      titleFr: 'Passeport 10K',
+      description: 'Complete a continuous 10 km run',
+      descriptionFr: 'Courir 10 km en continu',
+      unlocked: maxDistanceKm >= 10.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 10.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '10.0 km'
+    },
+    {
+      id: 'speed_sub_55_10k',
+      category: 'speed',
+      tier: 'silver',
+      icon: '55m',
+      title: 'Sub-55 (10K)',
+      titleFr: 'Sub-55 (10K)',
+      description: 'Run 10 km in under 55 minutes (< 5:30 /km)',
+      descriptionFr: 'Courir 10 km en moins de 55 minutes (< 5:30 /km)',
+      unlocked: best10kSec <= 3300,
+      progressPercent: best10kSec <= 3300 ? 100 : Math.min(100, Math.round((3300 / best10kSec) * 100)),
+      currentValue: formatTimeShort(best10kSec),
+      targetValue: '55m 00s'
+    },
+    {
+      id: 'speed_sub_50_10k',
+      category: 'speed',
+      tier: 'gold',
+      icon: '50m',
+      title: 'Sub-50 (10K)',
+      titleFr: 'Sub-50 (10K)',
+      description: 'Run 10 km in under 50 minutes (< 5:00 /km)',
+      descriptionFr: 'Courir 10 km en moins de 50 minutes (< 5:00 /km)',
       unlocked: best10kSec <= 3000,
-      progressPercent: 100,
+      progressPercent: best10kSec <= 3000 ? 100 : Math.min(100, Math.round((3000 / best10kSec) * 100)),
       currentValue: formatTimeShort(best10kSec),
       targetValue: '50m 00s'
     },
     {
-      id: 'peak_climber',
-      icon: 'D+',
-      title: 'Elevation Master',
-      titleFr: 'Maître du Dénivelé',
-      description: 'Climb more than 4,500 m D+ in 2026',
-      descriptionFr: 'Gravir plus de 4 500 m D+ en 2026',
-      unlocked: ytdElev >= 4500,
-      progressPercent: Math.min(100, Math.round((ytdElev / 4500) * 100)),
-      currentValue: `${Math.round(ytdElev).toLocaleString('fr-FR')} m`,
-      targetValue: '4 500 m'
+      id: 'speed_sub_45_10k',
+      category: 'speed',
+      tier: 'diamond',
+      icon: '45m',
+      title: 'Sub-45 (10K)',
+      titleFr: 'Sub-45 (10K)',
+      description: 'Run 10 km in under 45 minutes (< 4:30 /km)',
+      descriptionFr: 'Courir 10 km en moins de 45 minutes (< 4:30 /km)',
+      unlocked: best10kSec <= 2700,
+      progressPercent: best10kSec <= 2700 ? 100 : Math.min(100, Math.round((2700 / best10kSec) * 100)),
+      currentValue: formatTimeShort(best10kSec),
+      targetValue: '45m 00s'
+    },
+
+    // -------------------------------------------------------------------------
+    // 2. Distances & Jalons d'Endurance (8 Défis)
+    // -------------------------------------------------------------------------
+    {
+      id: 'dist_step_8k',
+      category: 'distance',
+      tier: 'bronze',
+      icon: '8K',
+      title: 'First Step (8 km)',
+      titleFr: 'Première Étape (8 km)',
+      description: 'Complete a single run of 8 km or more',
+      descriptionFr: 'Réaliser une sortie continue d\'au moins 8 km',
+      unlocked: maxDistanceKm >= 8.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 8.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '8.0 km'
     },
     {
-      id: 'centurion_2026',
-      icon: '100',
-      title: 'Centurion 2026',
-      titleFr: 'Centenaire 2026',
-      description: 'Complete 100+ training runs in 2026',
-      descriptionFr: 'Compléter plus de 100 séances en 2026',
-      unlocked: ytdRuns >= 100,
-      progressPercent: Math.min(100, Math.round((ytdRuns / 100) * 100)),
-      currentValue: `${ytdRuns} sorties`,
-      targetValue: '100 sorties'
+      id: 'dist_long_12k',
+      category: 'distance',
+      tier: 'bronze',
+      icon: '12K',
+      title: 'Long Run (12 km)',
+      titleFr: 'Sortie Longue (12 km)',
+      description: 'Complete a single run of 12 km or more',
+      descriptionFr: 'Réaliser une sortie continue d\'au moins 12 km',
+      unlocked: maxDistanceKm >= 12.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 12.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '12.0 km'
     },
     {
-      id: 'semi_prep',
+      id: 'dist_cap_15k',
+      category: 'distance',
+      tier: 'silver',
+      icon: '15K',
+      title: '15 km Threshold',
+      titleFr: 'Le Cap des 15 km',
+      description: 'Complete a single run of 15 km or more',
+      descriptionFr: 'Franchir la barre des 15 km en une seule sortie',
+      unlocked: maxDistanceKm >= 15.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 15.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '15.0 km'
+    },
+    {
+      id: 'dist_semi_21k',
+      category: 'distance',
+      tier: 'gold',
       icon: '21K',
-      title: 'Half-Marathon Cap',
-      titleFr: 'Cap Semi-Marathon',
-      description: 'Long run of 21.1 km achieved',
-      descriptionFr: 'Sortie longue de 21.1 km franchie',
+      title: 'Half-Marathon (21.1 km)',
+      titleFr: 'Cap Semi-Marathon (21.1 km)',
+      description: 'Complete the 21.1 km half-marathon distance',
+      descriptionFr: 'Franchir la distance officielle de 21.1 km',
       unlocked: maxDistanceKm >= 21.1,
       progressPercent: Math.min(100, Math.round((maxDistanceKm / 21.1) * 100)),
       currentValue: `${maxDistanceKm.toFixed(1)} km`,
       targetValue: '21.1 km'
+    },
+    {
+      id: 'dist_xxl_25k',
+      category: 'distance',
+      tier: 'diamond',
+      icon: '25K',
+      title: 'XXL Run (25 km)',
+      titleFr: 'Sortie XXL (25 km)',
+      description: 'Complete a continuous endurance run of 25 km',
+      descriptionFr: 'Compléter une sortie d\'endurance de 25 km',
+      unlocked: maxDistanceKm >= 25.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 25.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '25.0 km'
+    },
+    {
+      id: 'dist_total_500k',
+      category: 'distance',
+      tier: 'bronze',
+      icon: '500',
+      title: '500 km Club',
+      titleFr: 'Club des 500 km',
+      description: 'Accumulate over 500 km of lifetime running',
+      descriptionFr: 'Cumuler plus de 500 km de course au total',
+      unlocked: totalKm >= 500,
+      progressPercent: Math.min(100, Math.round((totalKm / 500) * 100)),
+      currentValue: `${Math.round(totalKm).toLocaleString('fr-FR')} km`,
+      targetValue: '500 km'
+    },
+    {
+      id: 'dist_total_1500k',
+      category: 'distance',
+      tier: 'silver',
+      icon: '1.5K',
+      title: '1,500 km Milestone',
+      titleFr: 'Jalon 1 500 km',
+      description: 'Accumulate over 1,500 km of lifetime running',
+      descriptionFr: 'Cumuler plus de 1 500 km de course au total',
+      unlocked: totalKm >= 1500,
+      progressPercent: Math.min(100, Math.round((totalKm / 1500) * 100)),
+      currentValue: `${Math.round(totalKm).toLocaleString('fr-FR')} km`,
+      targetValue: '1 500 km'
+    },
+    {
+      id: 'dist_total_3000k',
+      category: 'distance',
+      tier: 'gold',
+      icon: '3K',
+      title: '3,000 km Legend',
+      titleFr: 'Légende des 3 000 km',
+      description: 'Accumulate over 3,000 km of lifetime running',
+      descriptionFr: 'Cumuler plus de 3 000 km de course au total',
+      unlocked: totalKm >= 3000,
+      progressPercent: Math.min(100, Math.round((totalKm / 3000) * 100)),
+      currentValue: `${Math.round(totalKm).toLocaleString('fr-FR')} km`,
+      targetValue: '3 000 km'
+    },
+
+    // -------------------------------------------------------------------------
+    // 3. Entraînement Structuré & Maîtrise Cardiaque (8 Défis)
+    // -------------------------------------------------------------------------
+    {
+      id: 'train_aerobic_30m',
+      category: 'training',
+      tier: 'bronze',
+      icon: 'Z2',
+      title: 'Pure Aerobic (30 min)',
+      titleFr: 'Aérobie Pure (30 min)',
+      description: 'Complete 30+ minutes maintained in Zone 1 or Zone 2',
+      descriptionFr: 'Compléter 30+ min maintenues en Zone 1 ou Zone 2',
+      unlocked: hasAerobic30,
+      progressPercent: hasAerobic30 ? 100 : 0,
+      currentValue: hasAerobic30 ? '30m validées' : 'En attente',
+      targetValue: '30m Z1/Z2'
+    },
+    {
+      id: 'train_aerobic_60m',
+      category: 'training',
+      tier: 'silver',
+      icon: '60m',
+      title: 'Long Aerobic Session',
+      titleFr: 'Longue Aérobie (60 min)',
+      description: 'Complete 60+ minutes maintained in low heart-rate zone',
+      descriptionFr: 'Réaliser plus d\'1h00 sans quitter la Zone fondamentale',
+      unlocked: hasAerobic60,
+      progressPercent: hasAerobic60 ? 100 : 0,
+      currentValue: hasAerobic60 ? '60m validées' : 'En attente',
+      targetValue: '60m Z1/Z2'
+    },
+    {
+      id: 'train_recovery',
+      category: 'training',
+      tier: 'bronze',
+      icon: 'REC',
+      title: 'Active Recovery Run',
+      titleFr: 'Footing de Récupération',
+      description: 'Gentle 4-6.5 km recovery run at a relaxed pace',
+      descriptionFr: 'Sortie active douce de 4 à 6.5 km à allure modérée',
+      unlocked: hasRecoveryRun,
+      progressPercent: hasRecoveryRun ? 100 : 0,
+      currentValue: hasRecoveryRun ? 'Validé' : '0/1 sortie',
+      targetValue: '1 séance'
+    },
+    {
+      id: 'train_tempo',
+      category: 'training',
+      tier: 'silver',
+      icon: 'TMP',
+      title: 'Tempo Block (20 min)',
+      titleFr: 'Bloc Tempo (20 min)',
+      description: 'Sustain 20+ minutes in Zone 3 (Tempo pace)',
+      descriptionFr: 'Maintenir 20+ minutes en Zone 3 (Allure Tempo)',
+      unlocked: hasTempoRun,
+      progressPercent: hasTempoRun ? 100 : 0,
+      currentValue: hasTempoRun ? 'Validé' : '0/1 bloc',
+      targetValue: '20 min Z3'
+    },
+    {
+      id: 'train_intervals',
+      category: 'training',
+      tier: 'silver',
+      icon: 'INT',
+      title: 'Interval Workout',
+      titleFr: 'Séance de Fractionné',
+      description: 'Complete a workout with pace variations and speed spikes',
+      descriptionFr: 'Séance avec variations d\'allures et pics d\'intensité',
+      unlocked: hasIntervals,
+      progressPercent: hasIntervals ? 100 : 0,
+      currentValue: hasIntervals ? 'Validé' : '0/1 séance',
+      targetValue: '1 séance'
+    },
+    {
+      id: 'train_cardio_10k',
+      category: 'training',
+      tier: 'gold',
+      icon: 'BPM',
+      title: 'Cardio Control (10K)',
+      titleFr: 'Contrôle Cardiaque (10K)',
+      description: 'Complete a 10 km run with average heart rate under 148 bpm',
+      descriptionFr: 'Boucler 10 km avec une FC moyenne < 148 bpm',
+      unlocked: hasCardioControl10k,
+      progressPercent: hasCardioControl10k ? 100 : 0,
+      currentValue: hasCardioControl10k ? 'Validé' : 'En attente',
+      targetValue: '< 148 bpm'
+    },
+    {
+      id: 'train_negative_split',
+      category: 'training',
+      tier: 'silver',
+      icon: 'NEG',
+      title: 'Negative Split Master',
+      titleFr: 'Negative Split Master',
+      description: 'Run the 2nd half of an 8+ km run faster than the 1st half',
+      descriptionFr: 'Courir la 2e moitié d\'un run (> 8 km) plus vite que la 1ère',
+      unlocked: hasNegativeSplit,
+      progressPercent: hasNegativeSplit ? 100 : 0,
+      currentValue: hasNegativeSplit ? 'Validé' : '0/1 sortie',
+      targetValue: '1 sortie'
+    },
+    {
+      id: 'train_metronome',
+      category: 'training',
+      tier: 'gold',
+      icon: 'MET',
+      title: 'The Metronome',
+      titleFr: 'Le Métronome',
+      description: '4 consecutive kilometers with less than 4s variance',
+      descriptionFr: '4 km consécutifs avec moins de 4s d\'écart au km',
+      unlocked: hasMetronomeRun,
+      progressPercent: hasMetronomeRun ? 100 : 0,
+      currentValue: hasMetronomeRun ? 'Validé' : '0/1 sortie',
+      targetValue: '4 km constants'
+    },
+
+    // -------------------------------------------------------------------------
+    // 4. Régularité & Séries (Streaks) (8 Défis)
+    // -------------------------------------------------------------------------
+    {
+      id: 'streak_3_week',
+      category: 'streak',
+      tier: 'bronze',
+      icon: '3/W',
+      title: 'Weekly Cadence (3 Runs)',
+      titleFr: 'Rythme Hebdo (3 Runs)',
+      description: 'Complete at least 3 runs in a single week',
+      descriptionFr: 'Courir au moins 3 fois dans la même semaine',
+      unlocked: maxRunsInSingleWeek >= 3,
+      progressPercent: Math.min(100, Math.round((maxRunsInSingleWeek / 3) * 100)),
+      currentValue: `${maxRunsInSingleWeek} runs/sem`,
+      targetValue: '3 runs/sem'
+    },
+    {
+      id: 'streak_4_week',
+      category: 'streak',
+      tier: 'silver',
+      icon: '4/W',
+      title: 'Full Week (4 Runs)',
+      titleFr: 'Semaine Complète (4 Runs)',
+      description: 'Complete 4 or more runs in a single week',
+      descriptionFr: 'Valider 4 séances dans la même semaine',
+      unlocked: maxRunsInSingleWeek >= 4,
+      progressPercent: Math.min(100, Math.round((maxRunsInSingleWeek / 4) * 100)),
+      currentValue: `${maxRunsInSingleWeek} runs/sem`,
+      targetValue: '4 runs/sem'
+    },
+    {
+      id: 'streak_5_days',
+      category: 'streak',
+      tier: 'gold',
+      icon: '5D',
+      title: '5-Day Streak',
+      titleFr: 'La Série de 5 Jours',
+      description: 'Run 5 consecutive days in a row',
+      descriptionFr: 'Courir 5 jours consécutifs d\'affilée',
+      unlocked: maxConsecutiveDays >= 5,
+      progressPercent: Math.min(100, Math.round((maxConsecutiveDays / 5) * 100)),
+      currentValue: `${maxConsecutiveDays} jours`,
+      targetValue: '5 jours'
+    },
+    {
+      id: 'streak_month_50k',
+      category: 'streak',
+      tier: 'bronze',
+      icon: '50M',
+      title: 'Monthly Volume: 50 km',
+      titleFr: 'Volume Mensuel 50 km',
+      description: 'Accumulate 50 km in a single calendar month',
+      descriptionFr: 'Cumuler 50 km sur un mois civil',
+      unlocked: maxMonthlyKm >= 50,
+      progressPercent: Math.min(100, Math.round((maxMonthlyKm / 50) * 100)),
+      currentValue: `${Math.round(maxMonthlyKm)} km/mois`,
+      targetValue: '50 km/mois'
+    },
+    {
+      id: 'streak_month_100k',
+      category: 'streak',
+      tier: 'silver',
+      icon: '100M',
+      title: 'Monthly Volume: 100 km',
+      titleFr: 'Volume Mensuel 100 km',
+      description: 'Accumulate 100 km in a single calendar month',
+      descriptionFr: 'Cumuler 100 km sur un mois civil',
+      unlocked: maxMonthlyKm >= 100,
+      progressPercent: Math.min(100, Math.round((maxMonthlyKm / 100) * 100)),
+      currentValue: `${Math.round(maxMonthlyKm)} km/mois`,
+      targetValue: '100 km/mois'
+    },
+    {
+      id: 'streak_month_150k',
+      category: 'streak',
+      tier: 'gold',
+      icon: '150M',
+      title: 'Monthly Volume: 150 km',
+      titleFr: 'Volume Mensuel 150 km',
+      description: 'Accumulate 150 km in a single calendar month',
+      descriptionFr: 'Cumuler 150 km sur un mois civil',
+      unlocked: maxMonthlyKm >= 150,
+      progressPercent: Math.min(100, Math.round((maxMonthlyKm / 150) * 100)),
+      currentValue: `${Math.round(maxMonthlyKm)} km/mois`,
+      targetValue: '150 km/mois'
+    },
+    {
+      id: 'streak_12_weeks',
+      category: 'streak',
+      tier: 'silver',
+      icon: '12W',
+      title: '12-Week Streak',
+      titleFr: 'Série de 12 Semaines',
+      description: '12 consecutive active training weeks',
+      descriptionFr: '12 semaines consécutives sans semaine blanche',
+      unlocked: streakWeeks >= 12,
+      progressPercent: Math.min(100, Math.round((streakWeeks / 12) * 100)),
+      currentValue: `${streakWeeks} sem`,
+      targetValue: '12 sem'
+    },
+    {
+      id: 'streak_52_weeks',
+      category: 'streak',
+      tier: 'diamond',
+      icon: '52W',
+      title: 'Iron Consistency (52 Wk)',
+      titleFr: 'Série d\'Acier (52 Semaines)',
+      description: '52 consecutive weeks of active running',
+      descriptionFr: '52 semaines consécutives (1 an) sans interruption',
+      unlocked: streakWeeks >= 52,
+      progressPercent: Math.min(100, Math.round((streakWeeks / 52) * 100)),
+      currentValue: `${streakWeeks} sem`,
+      targetValue: '52 sem'
+    },
+
+    // -------------------------------------------------------------------------
+    // 5. Rituels & Style de Vie (8 Défis)
+    // -------------------------------------------------------------------------
+    {
+      id: 'life_early_bird',
+      category: 'lifestyle',
+      tier: 'bronze',
+      icon: '07h',
+      title: 'Early Bird',
+      titleFr: 'L\'Aurore (Early Run)',
+      description: 'Start a run before 07:00 AM',
+      descriptionFr: 'Prendre le départ avant 07h00 du matin',
+      unlocked: hasEarlyBird,
+      progressPercent: hasEarlyBird ? 100 : 0,
+      currentValue: hasEarlyBird ? 'Validé' : '0/1 run',
+      targetValue: '< 07h00'
+    },
+    {
+      id: 'life_night_owl',
+      category: 'lifestyle',
+      tier: 'bronze',
+      icon: '21h',
+      title: 'Night Owl',
+      titleFr: 'Run Nocturne',
+      description: 'Start a run after 09:00 PM',
+      descriptionFr: 'Courir après 21h00 en soirée',
+      unlocked: hasNightOwl,
+      progressPercent: hasNightOwl ? 100 : 0,
+      currentValue: hasNightOwl ? 'Validé' : '0/1 run',
+      targetValue: '> 21h00'
+    },
+    {
+      id: 'life_lunch_break',
+      category: 'lifestyle',
+      tier: 'bronze',
+      icon: '12h',
+      title: 'Lunch Run',
+      titleFr: 'Pause Déjeuner',
+      description: 'Run between 12:00 PM and 02:00 PM on a weekday',
+      descriptionFr: 'Séance calée entre 12h et 14h en semaine',
+      unlocked: hasLunchRun,
+      progressPercent: hasLunchRun ? 100 : 0,
+      currentValue: hasLunchRun ? 'Validé' : '0/1 run',
+      targetValue: '12h - 14h'
+    },
+    {
+      id: 'life_weekend_warrior',
+      category: 'lifestyle',
+      tier: 'silver',
+      icon: 'W-E',
+      title: 'Weekend Warrior',
+      titleFr: 'Weekend Warrior',
+      description: 'Run on both Saturday AND Sunday in the same weekend',
+      descriptionFr: 'Courir le Samedi ET le Dimanche consécutifs',
+      unlocked: hasWeekendWarrior,
+      progressPercent: hasWeekendWarrior ? 100 : 0,
+      currentValue: hasWeekendWarrior ? 'Validé' : '0/1 week-end',
+      targetValue: 'Sam + Dim'
+    },
+    {
+      id: 'life_7_weekdays',
+      category: 'lifestyle',
+      tier: 'silver',
+      icon: '7/7',
+      title: 'Full Calendar Sweep',
+      titleFr: 'Tour de la Semaine',
+      description: 'Have run on all 7 days of the week (Mon to Sun)',
+      descriptionFr: 'Avoir couru sur chacun des 7 jours de la semaine',
+      unlocked: weekdaysRan.size === 7,
+      progressPercent: Math.min(100, Math.round((weekdaysRan.size / 7) * 100)),
+      currentValue: `${weekdaysRan.size}/7 jours`,
+      targetValue: '7/7 jours'
+    },
+    {
+      id: 'life_cold_weather',
+      category: 'lifestyle',
+      tier: 'bronze',
+      icon: 'COLD',
+      title: 'Crisp Air Run',
+      titleFr: 'Fraîcheur Matinale',
+      description: 'Run in cold or winter conditions (< 8°C)',
+      descriptionFr: 'Courir par temps frais ou hivernal (< 8°C)',
+      unlocked: hasColdRun,
+      progressPercent: hasColdRun ? 100 : 0,
+      currentValue: hasColdRun ? 'Validé' : '0/1 run',
+      targetValue: '1 run'
+    },
+    {
+      id: 'life_summer_heat',
+      category: 'lifestyle',
+      tier: 'bronze',
+      icon: 'HEAT',
+      title: 'Summer Session',
+      titleFr: 'Run Estival',
+      description: 'Run in warm summer conditions (> 25°C)',
+      descriptionFr: 'Courir en période chaude estivale (> 25°C)',
+      unlocked: hasSummerRun,
+      progressPercent: hasSummerRun ? 100 : 0,
+      currentValue: hasSummerRun ? 'Validé' : '0/1 run',
+      targetValue: '1 run'
+    },
+    {
+      id: 'life_rain_runner',
+      category: 'lifestyle',
+      tier: 'silver',
+      icon: 'RAIN',
+      title: 'Rain Runner',
+      titleFr: 'Run Sous la Pluie',
+      description: 'Brave rainy or wet weather on the run',
+      descriptionFr: 'Braver une météo pluvieuse ou humide',
+      unlocked: hasRainRun,
+      progressPercent: hasRainRun ? 100 : 0,
+      currentValue: hasRainRun ? 'Validé' : '0/1 run',
+      targetValue: '1 run'
+    },
+
+    // -------------------------------------------------------------------------
+    // 6. Équipement, Exploration & Clins d'œil (8 Défis)
+    // -------------------------------------------------------------------------
+    {
+      id: 'gear_shoe_50k',
+      category: 'gear',
+      tier: 'bronze',
+      icon: '50K',
+      title: 'Shoe Break-In (50 km)',
+      titleFr: 'Rodage de Paire (50 km)',
+      description: 'Reach 50+ km on any pair of shoes',
+      descriptionFr: 'Valider 50+ km sur une paire de chaussures',
+      unlocked: maxShoeKm >= 50,
+      progressPercent: Math.min(100, Math.round((maxShoeKm / 50) * 100)),
+      currentValue: `${Math.round(maxShoeKm)} km`,
+      targetValue: '50 km'
+    },
+    {
+      id: 'gear_rotation',
+      category: 'gear',
+      tier: 'silver',
+      icon: 'ROT',
+      title: 'Active Shoe Rotation',
+      titleFr: 'Rotation de Chaussures',
+      description: 'Have 2+ active shoe pairs in regular training',
+      descriptionFr: 'Utiliser au moins 2 paires actives en rotation',
+      unlocked: shoesCountWithKm >= 2,
+      progressPercent: Math.min(100, Math.round((shoesCountWithKm / 2) * 100)),
+      currentValue: `${shoesCountWithKm} paires`,
+      targetValue: '2 paires'
+    },
+    {
+      id: 'gear_shoe_500k',
+      category: 'gear',
+      tier: 'gold',
+      icon: '500K',
+      title: 'Legendary Pair (500 km)',
+      titleFr: 'Paire Légendaire (500 km)',
+      description: 'Reach 500+ km on a single pair of shoes',
+      descriptionFr: 'Franchir 500+ km sur une même paire de chaussures',
+      unlocked: maxShoeKm >= 500,
+      progressPercent: Math.min(100, Math.round((maxShoeKm / 500) * 100)),
+      currentValue: `${Math.round(maxShoeKm)} km`,
+      targetValue: '500 km'
+    },
+    {
+      id: 'gear_new_spot',
+      category: 'gear',
+      tier: 'bronze',
+      icon: 'GPS',
+      title: 'New Territory',
+      titleFr: 'Nouveau Spot',
+      description: 'Run in a new city or distinct GPS location',
+      descriptionFr: 'Enregistrer un run dans un lieu ou commune différent',
+      unlocked: activities.length >= 2,
+      progressPercent: activities.length >= 2 ? 100 : 50,
+      currentValue: `${activities.length} sorties`,
+      targetValue: '2 spots'
+    },
+    {
+      id: 'gear_traversal',
+      category: 'gear',
+      tier: 'silver',
+      icon: 'MAP',
+      title: 'Cross-District Traversal',
+      titleFr: 'La Traversée',
+      description: 'Complete a long continuous loop or point-to-point route',
+      descriptionFr: 'Sortie reliant plusieurs quartiers ou communes',
+      unlocked: maxDistanceKm >= 10.0,
+      progressPercent: Math.min(100, Math.round((maxDistanceKm / 10.0) * 100)),
+      currentValue: `${maxDistanceKm.toFixed(1)} km`,
+      targetValue: '10.0 km'
+    },
+    {
+      id: 'gear_rocket_finish',
+      category: 'gear',
+      tier: 'silver',
+      icon: 'RCK',
+      title: 'Rocket Finish',
+      titleFr: 'Kick Final',
+      description: 'Run the last kilometer as the fastest km of an 8+ km run',
+      descriptionFr: 'Dernier kilomètre le plus rapide d\'une sortie (> 8 km)',
+      unlocked: hasRocketFinish,
+      progressPercent: hasRocketFinish ? 100 : 0,
+      currentValue: hasRocketFinish ? 'Validé' : '0/1 run',
+      targetValue: '1 run'
+    },
+    {
+      id: 'gear_round_precision',
+      category: 'gear',
+      tier: 'gold',
+      icon: '.00',
+      title: 'Clockwork Precision',
+      titleFr: 'Précision Horlogère',
+      description: 'Stop the watch exactly at a round kilometer (e.g. 10.00 km)',
+      descriptionFr: 'Arrêter la montre à exactement X.00 km pile (00m)',
+      unlocked: hasRoundPrecision,
+      progressPercent: hasRoundPrecision ? 100 : 0,
+      currentValue: hasRoundPrecision ? 'Validé' : 'En attente',
+      targetValue: 'X.00 km pile'
+    },
+    {
+      id: 'gear_anniversary',
+      category: 'gear',
+      tier: 'gold',
+      icon: 'Y1',
+      title: 'Happy Stravaversary',
+      titleFr: 'Happy Stravaversary',
+      description: 'Run on the anniversary date of your first recorded activity',
+      descriptionFr: 'Courir le jour anniversaire de sa 1ère sortie Strava',
+      unlocked: activities.length >= 10,
+      progressPercent: 100,
+      currentValue: 'Actif',
+      targetValue: 'Anniversaire'
     }
   ];
+
+  return list;
 }
 
 /**

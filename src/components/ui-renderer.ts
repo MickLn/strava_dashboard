@@ -23,6 +23,8 @@ import {
 import { i18n } from '../utils/i18n.ts';
 
 export class UIRenderer {
+  public static activeAchievementCat: string = 'all';
+  public static activeAchievementStatus: string = 'all';
   private static activeShoeIndex: number = 0;
   private static miniMapInstances: Map<number, L.Map> = new Map();
   private static modalMapInstance: L.Map | null = null;
@@ -103,6 +105,20 @@ export class UIRenderer {
     setTxt('lbl-effort-zones-sub', t.effortZonesSubtitle);
     setTxt('lbl-achievements-title', t.achievementsTitle);
     setTxt('lbl-achievements-sub', t.achievementsSubtitle);
+    setTxt('lbl-tier-bronze', t.tierBronze);
+    setTxt('lbl-tier-silver', t.tierSilver);
+    setTxt('lbl-tier-gold', t.tierGold);
+    setTxt('lbl-tier-diamond', t.tierDiamond);
+    setTxt('tab-cat-all', t.catAll);
+    setTxt('tab-cat-speed', t.catSpeed);
+    setTxt('tab-cat-distance', t.catDistance);
+    setTxt('tab-cat-training', t.catTraining);
+    setTxt('tab-cat-streak', t.catStreak);
+    setTxt('tab-cat-lifestyle', t.catLifestyle);
+    setTxt('tab-cat-gear', t.catGear);
+    setTxt('tab-status-all', t.achFilterAll);
+    setTxt('tab-status-unlocked', t.achFilterUnlocked);
+    setTxt('tab-status-locked', t.achFilterLocked);
     
     const closeHeatmapBtnEl = document.getElementById('btn-close-heatmap');
     if (closeHeatmapBtnEl) {
@@ -728,43 +744,89 @@ export class UIRenderer {
   }
 
   /**
-   * Rendu des Trophées & Badges d'Accomplissement
+   * Rendu des 50 Défis Universels & Trophées de Course
    */
   public static renderAchievements(dataset: StravaDataset): void {
     const grid = document.getElementById('achievements-grid');
-    const countEl = document.getElementById('lbl-achievements-count');
     if (!grid) return;
 
     const achievements = calculateAchievements(dataset);
     const unlockedCount = achievements.filter(a => a.unlocked).length;
     const isFr = i18n.getLang() === 'fr';
+    const t = i18n.t();
 
-    if (countEl) {
-      countEl.textContent = isFr
-        ? `${unlockedCount} / ${achievements.length} Débloqués`
-        : `${unlockedCount} / ${achievements.length} Unlocked`;
-    }
+    const pct = Math.round((unlockedCount / achievements.length) * 100);
+    const level = Math.max(1, Math.floor(unlockedCount * 0.8) + 1);
+    let rankTitle = isFr ? 'Initié' : 'Rookie';
+    if (pct >= 85) rankTitle = isFr ? 'Légende Vivante' : 'Living Legend';
+    else if (pct >= 65) rankTitle = isFr ? 'Coureur Élite' : 'Elite Runner';
+    else if (pct >= 45) rankTitle = isFr ? 'Athlète Expert' : 'Expert Athlete';
+    else if (pct >= 25) rankTitle = isFr ? 'Coureur Confirmé' : 'Confirmed Runner';
+
+    const bronzeUnlocked = achievements.filter(a => a.tier === 'bronze' && a.unlocked).length;
+    const bronzeTotal = achievements.filter(a => a.tier === 'bronze').length;
+    const silverUnlocked = achievements.filter(a => a.tier === 'silver' && a.unlocked).length;
+    const silverTotal = achievements.filter(a => a.tier === 'silver').length;
+    const goldUnlocked = achievements.filter(a => a.tier === 'gold' && a.unlocked).length;
+    const goldTotal = achievements.filter(a => a.tier === 'gold').length;
+    const diamondUnlocked = achievements.filter(a => a.tier === 'diamond' && a.unlocked).length;
+    const diamondTotal = achievements.filter(a => a.tier === 'diamond').length;
+
+    const runnerLevelEl = document.getElementById('lbl-runner-level');
+    if (runnerLevelEl) runnerLevelEl.textContent = t.runnerLevel(level, rankTitle);
+
+    const summaryEl = document.getElementById('lbl-achievements-summary');
+    if (summaryEl) summaryEl.textContent = t.achievementsSummary(unlockedCount, achievements.length, pct);
+
+    const pctEl = document.getElementById('lbl-achievements-pct');
+    if (pctEl) pctEl.textContent = `${pct}%`;
+
+    const fillEl = document.getElementById('achievements-progression-fill');
+    if (fillEl) fillEl.style.width = `${pct}%`;
+
+    const cBronze = document.getElementById('count-tier-bronze');
+    if (cBronze) cBronze.textContent = `${bronzeUnlocked}/${bronzeTotal}`;
+
+    const cSilver = document.getElementById('count-tier-silver');
+    if (cSilver) cSilver.textContent = `${silverUnlocked}/${silverTotal}`;
+
+    const cGold = document.getElementById('count-tier-gold');
+    if (cGold) cGold.textContent = `${goldUnlocked}/${goldTotal}`;
+
+    const cDiamond = document.getElementById('count-tier-diamond');
+    if (cDiamond) cDiamond.textContent = `${diamondUnlocked}/${diamondTotal}`;
+
+    const filtered = achievements.filter(ach => {
+      if (this.activeAchievementCat !== 'all' && ach.category !== this.activeAchievementCat) return false;
+      if (this.activeAchievementStatus === 'unlocked' && !ach.unlocked) return false;
+      if (this.activeAchievementStatus === 'locked' && ach.unlocked) return false;
+      return true;
+    });
 
     grid.innerHTML = '';
-    achievements.forEach(ach => {
+    filtered.forEach(ach => {
       const card = document.createElement('div');
-      card.className = `achievement-badge-card ${ach.unlocked ? 'unlocked' : 'locked'}`;
+      card.className = `achievement-badge-card tier-${ach.tier} ${ach.unlocked ? 'unlocked' : 'locked'}`;
       card.innerHTML = `
-        <div class="achievement-icon">${ach.icon}</div>
-        <div class="achievement-body">
-          <div class="achievement-title-row">
-            <h4 class="achievement-title">${isFr ? ach.titleFr : ach.title}</h4>
-            <span class="achievement-tag ${ach.unlocked ? 'tag-unlocked' : 'tag-locked'}">
-              ${ach.unlocked ? (isFr ? 'Débloqué' : 'Unlocked') : `${ach.progressPercent}%`}
-            </span>
+        <div class="achievement-card-top">
+          <div class="achievement-icon-box">${ach.icon}</div>
+          <div class="achievement-content">
+            <div class="achievement-title-row">
+              <h4 class="achievement-title">${isFr ? ach.titleFr : ach.title}</h4>
+              <span class="achievement-tag ${ach.unlocked ? 'tag-unlocked' : 'tag-locked'}">
+                ${ach.unlocked ? (isFr ? 'Débloqué' : 'Unlocked') : `${ach.progressPercent}%`}
+              </span>
+            </div>
+            <p class="achievement-desc">${isFr ? ach.descriptionFr : ach.description}</p>
           </div>
-          <p class="achievement-desc">${isFr ? ach.descriptionFr : ach.description}</p>
+        </div>
+        <div class="achievement-card-bottom">
           <div class="achievement-progress-wrap">
             <div class="achievement-progress-fill" style="width: ${ach.progressPercent}%;"></div>
           </div>
           <div class="achievement-val-row">
             <span>${ach.currentValue}</span>
-            <span>Objectif : ${ach.targetValue}</span>
+            <span>${isFr ? 'Objectif :' : 'Goal:'} ${ach.targetValue}</span>
           </div>
         </div>
       `;
