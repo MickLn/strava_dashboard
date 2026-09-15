@@ -1101,7 +1101,7 @@ export class UIRenderer {
 
     if (distEl) distEl.textContent = `${(activity.distance / 1000).toFixed(2)} km`;
     if (timeEl) timeEl.textContent = formatTimeShort(activity.moving_time);
-    if (paceEl) paceEl.textContent = `${formatPace(activity.average_speed)} /km`;
+    if (paceEl) paceEl.textContent = formatPace(activity.average_speed);
     if (calEl) calEl.textContent = `${caloriesVal} kcal`;
 
     if (lblDist) lblDist.textContent = t.distance.toUpperCase();
@@ -1152,9 +1152,20 @@ export class UIRenderer {
             lineCap: 'round'
           }).addTo(map);
 
-          map.fitBounds(polyline.getBounds(), { padding: [16, 16] });
+          const bounds = polyline.getBounds();
+          map.fitBounds(bounds, { padding: [16, 16] });
           this.modalMapInstance = map;
-          setTimeout(() => map.invalidateSize(), 80);
+
+          const refreshMapBounds = () => {
+            if (this.modalMapInstance) {
+              this.modalMapInstance.invalidateSize();
+              this.modalMapInstance.fitBounds(bounds, { padding: [16, 16], animate: false });
+            }
+          };
+
+          requestAnimationFrame(refreshMapBounds);
+          setTimeout(refreshMapBounds, 100);
+          setTimeout(refreshMapBounds, 300);
         } catch (e) {
           console.warn('Modal map init note:', e);
         }
