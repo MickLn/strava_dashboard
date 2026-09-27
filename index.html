@@ -422,11 +422,40 @@
         <div class="runner-card annual-calendar-card">
           <div class="annual-calendar-header">
             <div class="annual-calendar-title-block">
-              <h3 class="chart-title" id="lbl-annual-calendar-title">Calendrier annuel</h3>
+              <div class="annual-calendar-title-row">
+                <h3 class="chart-title" id="lbl-annual-calendar-title">Calendrier annuel</h3>
+                <button class="btn-annual-legend-toggle" id="btn-annual-legend-toggle" type="button" aria-expanded="false" title="Légende d'intensité">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
+              </div>
               <p class="chart-subtitle" id="lbl-annual-calendar-sub">Jours courus par date dans l'année</p>
             </div>
             <div class="annual-calendar-summary-badge" id="annual-calendar-summary-badge">
               <span id="lbl-annual-calendar-summary">0 / 366 jours courus (0%)</span>
+            </div>
+          </div>
+
+          <!-- Mobile dropdown legend panel -->
+          <div class="annual-calendar-mobile-legend" id="annual-calendar-mobile-legend">
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-0"></span>
+              <span id="lbl-annual-legend-0-m">0 course</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-1"></span>
+              <span id="lbl-annual-legend-1-m">1 an</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-2"></span>
+              <span id="lbl-annual-legend-2-m">2 ans</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-3"></span>
+              <span id="lbl-annual-legend-3-m">3 ans</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-4"></span>
+              <span id="lbl-annual-legend-4-m">4+ ans</span>
             </div>
           </div>
 
@@ -450,7 +479,11 @@
             </div>
             <div class="annual-legend-item">
               <span class="annual-legend-swatch level-3"></span>
-              <span id="lbl-annual-legend-3">3+ ans</span>
+              <span id="lbl-annual-legend-3">3 ans</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-4"></span>
+              <span id="lbl-annual-legend-4">4+ ans</span>
             </div>
           </div>
         </div>
@@ -801,7 +834,6 @@
               </svg>
             </button>
           </div>
-          <p class="modal-subtitle" id="annual-multi-run-sub">Sélectionnez une course pour afficher les détails</p>
         </div>
       </div>
       <div class="annual-multi-run-list" id="annual-multi-run-list"></div>

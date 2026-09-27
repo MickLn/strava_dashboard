@@ -405,6 +405,17 @@ class App {
       });
     }
 
+    // Bascule de la légende d'intensité du calendrier annuel (Mobile)
+    const annualLegendBtn = document.getElementById('btn-annual-legend-toggle');
+    const annualMobileLegend = document.getElementById('annual-calendar-mobile-legend');
+    if (annualLegendBtn && annualMobileLegend) {
+      annualLegendBtn.addEventListener('click', () => {
+        const isOpen = annualMobileLegend.classList.toggle('open');
+        annualLegendBtn.classList.toggle('active', isOpen);
+        annualLegendBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    }
+
     // Featured Map (Card A) Controls : Recentrer et Plein Écran
     const btnRecenterFeatured = document.getElementById('btn-recenter-featured-map');
     if (btnRecenterFeatured) {

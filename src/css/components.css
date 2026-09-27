@@ -992,9 +992,9 @@
 }
 
 .record-row:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: var(--border-medium);
-  transform: translateX(2px);
+  background-color: var(--bg-surface-subtle);
+  border-color: var(--color-primary);
+  transform: none;
 }
 
 .record-rank {
@@ -2501,6 +2501,76 @@
   min-width: 0;
 }
 
+.annual-calendar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-annual-legend-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-annual-legend-toggle:hover,
+.btn-annual-legend-toggle.active {
+  background-color: var(--bg-surface-hover);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.annual-calendar-mobile-legend {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+  animation: fadeIn 0.2s ease;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+}
+
+.annual-calendar-mobile-legend.open {
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  /* Constance mensuelle : icône i uniquement, sans la mention 'Légende' */
+  #btn-cal-legend-toggle #lbl-cal-legend-btn {
+    display: none;
+  }
+  .btn-cal-legend-toggle {
+    padding: 0;
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+    justify-content: center;
+  }
+
+  /* Calendrier annuel : bouton i visible en haut, légende du bas masquée */
+  .btn-annual-legend-toggle {
+    display: inline-flex;
+  }
+  .annual-calendar-legend {
+    display: none !important;
+  }
+}
+
 .annual-calendar-summary-badge {
   display: inline-flex;
   align-items: center;
@@ -2550,6 +2620,32 @@
   flex-direction: column;
   box-sizing: border-box;
   overflow: visible;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.annual-month-block.current-month {
+  border: 1.5px solid var(--color-primary);
+  background: linear-gradient(180deg, rgba(224, 90, 54, 0.05) 0%, var(--bg-surface-subtle) 100%);
+  box-shadow: 0 0 0 1px rgba(224, 90, 54, 0.2), var(--shadow-sm);
+  position: relative;
+}
+
+.annual-month-block.current-month .annual-month-name {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.annual-current-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: var(--color-primary);
+  background: rgba(224, 90, 54, 0.12);
+  border: 1px solid rgba(224, 90, 54, 0.28);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .annual-month-header {
@@ -2592,7 +2688,7 @@
   user-select: none;
 }
 
-/* 4 intensity levels (Option A: Monochrome Terracotta) */
+/* 4 intensity levels (Monochrome Terracotta) */
 .annual-day-cell.level-0 {
   background: var(--bg-surface);
   color: var(--text-tertiary);
@@ -2602,32 +2698,40 @@
 }
 
 .annual-day-cell.level-1 {
-  background: rgba(224, 90, 54, 0.15);
+  background: rgba(224, 90, 54, 0.14);
   color: var(--color-primary);
-  border: 1px solid rgba(224, 90, 54, 0.35);
+  border: 1px solid rgba(224, 90, 54, 0.28);
   font-weight: 700;
   cursor: pointer;
 }
 
 .annual-day-cell.level-2 {
-  background: rgba(224, 90, 54, 0.65);
+  background: rgba(224, 90, 54, 0.38);
+  color: #b83d1b;
+  border: 1px solid rgba(224, 90, 54, 0.55);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.annual-day-cell.level-3 {
+  background: rgba(224, 90, 54, 0.70);
   color: #ffffff;
   border: 1px solid rgba(224, 90, 54, 0.85);
   font-weight: 700;
   cursor: pointer;
 }
 
-.annual-day-cell.level-3 {
+.annual-day-cell.level-4 {
   background: var(--color-primary);
   color: #ffffff;
   border: 1px solid var(--color-primary);
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(224, 90, 54, 0.3);
+  box-shadow: 0 2px 6px rgba(224, 90, 54, 0.32);
 }
 
 .annual-day-cell:not(.level-0):hover {
-  transform: translateY(-2px) scale(1.08);
+  transform: translateY(-1px) scale(1.02);
   z-index: 25;
 }
 
@@ -2704,16 +2808,21 @@
 }
 
 .annual-legend-swatch.level-1 {
-  background: rgba(224, 90, 54, 0.15);
-  border: 1px solid rgba(224, 90, 54, 0.35);
+  background: rgba(224, 90, 54, 0.14);
+  border: 1px solid rgba(224, 90, 54, 0.28);
 }
 
 .annual-legend-swatch.level-2 {
-  background: rgba(224, 90, 54, 0.65);
-  border: 1px solid rgba(224, 90, 54, 0.85);
+  background: rgba(224, 90, 54, 0.38);
+  border: 1px solid rgba(224, 90, 54, 0.55);
 }
 
 .annual-legend-swatch.level-3 {
+  background: rgba(224, 90, 54, 0.70);
+  border: 1px solid rgba(224, 90, 54, 0.85);
+}
+
+.annual-legend-swatch.level-4 {
   background: var(--color-primary);
   border: 1px solid var(--color-primary);
 }
@@ -2753,10 +2862,10 @@
 }
 
 .annual-multi-run-item:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: rgba(224, 90, 54, 0.4);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--bg-surface-subtle);
+  border-color: var(--color-primary);
+  transform: none;
+  box-shadow: none;
 }
 
 .annual-multi-run-item-left {
@@ -2812,7 +2921,7 @@
 
 .annual-multi-run-item:hover .annual-run-arrow {
   color: var(--color-primary);
-  transform: translateX(2px);
+  transform: none;
 }
 
 /* -------------------------------------------------------------------------

@@ -21,7 +21,8 @@ import {
   generateKilometerSplits,
   getMonthCalendarData,
   calculateAnnualCalendarMatrix,
-  AnnualCalendarDay
+  AnnualCalendarDay,
+  getActivityDateKey
 } from '../utils/metrics.ts';
 import { i18n } from '../utils/i18n.ts';
 
@@ -85,7 +86,13 @@ export class UIRenderer {
     setTxt('lbl-annual-legend-1', t.annualLegend1);
     setTxt('lbl-annual-legend-2', t.annualLegend2);
     setTxt('lbl-annual-legend-3', t.annualLegend3);
-    setTxt('annual-multi-run-sub', t.multiRunSubtitle);
+    setTxt('lbl-annual-legend-4', t.annualLegend4);
+
+    setTxt('lbl-annual-legend-0-m', t.annualLegend0);
+    setTxt('lbl-annual-legend-1-m', t.annualLegend1);
+    setTxt('lbl-annual-legend-2-m', t.annualLegend2);
+    setTxt('lbl-annual-legend-3-m', t.annualLegend3);
+    setTxt('lbl-annual-legend-4-m', t.annualLegend4);
 
     setTxt('lbl-shoe-title', t.shoeLockerTitle);
     setTxt('lbl-shoe-time', t.cushioningTime);
@@ -697,17 +704,22 @@ export class UIRenderer {
       summaryBadge.textContent = t.annualCalendarSummary(matrix.totalActiveDays, matrix.totalPossibleDays, matrix.coveragePercent);
     }
 
+    const currentMonthIndex = new Date().getMonth();
+
     container.innerHTML = '';
 
     matrix.months.forEach(month => {
       const monthBlock = document.createElement('div');
-      monthBlock.className = 'annual-month-block';
+      const isCurrent = month.monthIndex === currentMonthIndex;
+      monthBlock.className = `annual-month-block${isCurrent ? ' current-month' : ''}`;
 
       const monthName = isFr ? month.monthNameFr : month.monthNameEn;
+      const currentBadgeHtml = isCurrent ? `<span class="annual-current-pill">${t.currentMonthBadge}</span>` : '';
 
       monthBlock.innerHTML = `
         <div class="annual-month-header">
           <span class="annual-month-name">${monthName}</span>
+          ${currentBadgeHtml}
         </div>
         <div class="annual-month-days-grid" id="annual-month-${month.monthIndex}"></div>
       `;
@@ -716,7 +728,8 @@ export class UIRenderer {
       if (daysGrid) {
         month.days.forEach(day => {
           const cell = document.createElement('div');
-          const level = day.count >= 3 ? 3 : day.count === 2 ? 2 : day.count === 1 ? 1 : 0;
+          // 4 intensités de couleur actives (1, 2, 3, 4+)
+          const level = day.count >= 4 ? 4 : day.count === 3 ? 3 : day.count === 2 ? 2 : day.count === 1 ? 1 : 0;
           cell.className = `annual-day-cell level-${level}`;
           cell.textContent = String(day.dayNumber);
 
@@ -773,12 +786,8 @@ export class UIRenderer {
       : `${monthNamesEn[day.monthIndex]} ${day.dayNumber}`;
 
     const titleEl = document.getElementById('annual-multi-run-title');
-    const subEl = document.getElementById('annual-multi-run-sub');
     if (titleEl) {
-      titleEl.textContent = i18n.t().multiRunTitle(formattedDate, day.count);
-    }
-    if (subEl) {
-      subEl.textContent = i18n.t().multiRunSubtitle;
+      titleEl.textContent = formattedDate;
     }
 
     const listEl = document.getElementById('annual-multi-run-list');
@@ -787,7 +796,7 @@ export class UIRenderer {
       const sortedActs = [...day.activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
       
       sortedActs.forEach(act => {
-        const year = new Date(act.start_date_local).getFullYear();
+        const { year } = getActivityDateKey(act.start_date_local);
         const distKm = (act.distance / 1000).toFixed(1) + ' km';
         const item = document.createElement('div');
         item.className = 'annual-multi-run-item';

@@ -50,8 +50,38 @@ export function formatTimeLong(seconds: number): string {
   return `${minutes}m`;
 }
 
+/**
+ * Parse une date d'activité en respectant scrupuleusement l'heure locale enregistrée (start_date_local).
+ * Évite le décalage provoqué par new Date('...Z') lorsque la chaîne contient un 'Z' alors qu'il s'agit déjà d'une heure locale.
+ */
+export function parseActivityDate(dateString: string): Date {
+  if (!dateString) return new Date();
+  const cleanStr = dateString.endsWith('Z') ? dateString.slice(0, -1) : dateString;
+  return new Date(cleanStr);
+}
+
+/**
+ * Extrait directement les composantes de date locale sans passage par les fuseaux horaires du navigateur
+ */
+export function getActivityDateKey(dateString: string): { year: number; month: number; day: number; keyMMDD: string; keyYYYYMMDD: string } {
+  if (!dateString) return { year: 2026, month: 1, day: 1, keyMMDD: '01-01', keyYYYYMMDD: '2026-01-01' };
+  const datePart = dateString.split('T')[0];
+  const parts = datePart.split('-');
+  const year = parseInt(parts[0], 10) || 2026;
+  const month = parseInt(parts[1], 10) || 1;
+  const day = parseInt(parts[2], 10) || 1;
+  const keyMMDD = `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return { year, month, day, keyMMDD, keyYYYYMMDD: datePart };
+}
+
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  if (!dateString) return '';
+  const datePart = dateString.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  const date = parseActivityDate(dateString);
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
@@ -59,7 +89,13 @@ export function formatDate(dateString: string): string {
 }
 
 export function formatDateShort(dateString: string): string {
-  const date = new Date(dateString);
+  if (!dateString) return '';
+  const datePart = dateString.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length >= 3) {
+    return `${parts[2]}/${parts[1]}`;
+  }
+  const date = parseActivityDate(dateString);
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   return `${day}/${month}`;
@@ -2146,11 +2182,11 @@ export function getMonthCalendarData(activities: Activity[], year: number, month
   let monthRunCount = 0;
   
   for (const act of activities) {
-    const d = new Date(act.start_date_local);
-    if (d.getFullYear() === year && d.getMonth() === monthIndex) {
-      const key = act.start_date_local.split('T')[0];
-      if (!actMap.has(key)) actMap.set(key, []);
-      actMap.get(key)!.push(act);
+    if (!act.start_date_local) continue;
+    const { year: actYear, month: actMonth, keyYYYYMMDD } = getActivityDateKey(act.start_date_local);
+    if (actYear === year && (actMonth - 1) === monthIndex) {
+      if (!actMap.has(keyYYYYMMDD)) actMap.set(keyYYYYMMDD, []);
+      actMap.get(keyYYYYMMDD)!.push(act);
       monthTotalDistance += act.distance / 1000;
       monthRunCount++;
     }
@@ -2243,15 +2279,11 @@ export function calculateAnnualCalendarMatrix(activities: Activity[]): AnnualCal
 
   (activities || []).forEach(act => {
     if (!act.start_date_local) return;
-    const dateObj = new Date(act.start_date_local);
-    if (isNaN(dateObj.getTime())) return;
-    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const d = String(dateObj.getDate()).padStart(2, '0');
-    const key = `${m}-${d}`;
+    const { keyMMDD } = getActivityDateKey(act.start_date_local);
 
-    const existing = dateMap.get(key) || [];
+    const existing = dateMap.get(keyMMDD) || [];
     existing.push(act);
-    dateMap.set(key, existing);
+    dateMap.set(keyMMDD, existing);
   });
 
   let totalActiveDays = 0;
@@ -2268,8 +2300,8 @@ export function calculateAnnualCalendarMatrix(activities: Activity[]): AnnualCal
       const acts = dateMap.get(key) || [];
       const yearsSet = new Set<number>();
       acts.forEach(a => {
-        const y = new Date(a.start_date_local).getFullYear();
-        if (!isNaN(y)) yearsSet.add(y);
+        const { year } = getActivityDateKey(a.start_date_local);
+        if (!isNaN(year)) yearsSet.add(year);
       });
       const years = Array.from(yearsSet).sort((a, b) => a - b);
 

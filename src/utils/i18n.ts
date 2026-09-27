@@ -63,7 +63,9 @@ export const translations = {
     annualLegend0: "0 run",
     annualLegend1: "1 year",
     annualLegend2: "2 years",
-    annualLegend3: "3+ years",
+    annualLegend3: "3 years",
+    annualLegend4: "4+ years",
+    currentMonthBadge: "Current",
     multiRunTitle: (dateStr: string, count: number) => `${count} runs on ${dateStr}`,
     multiRunSubtitle: "Select a run to view activity details",
 
@@ -236,7 +238,9 @@ export const translations = {
     annualLegend0: "0 course",
     annualLegend1: "1 an",
     annualLegend2: "2 ans",
-    annualLegend3: "3+ ans",
+    annualLegend3: "3 ans",
+    annualLegend4: "4+ ans",
+    currentMonthBadge: "En cours",
     multiRunTitle: (dateStr: string, count: number) => `${count} courses le ${dateStr}`,
     multiRunSubtitle: "Sélectionnez une course pour afficher les détails",
 
