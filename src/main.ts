@@ -120,8 +120,14 @@ class App {
     renderCharts(this.dataset.activities, 2026);
     UIRenderer.renderYtdStrip(this.dataset);
 
-    // Page 3 : Records & Trophées
+    // Page 3 : Records, Calendrier Annuel & Trophées
     UIRenderer.renderRecords(this.dataset, (activityId) => {
+      const act = this.dataset?.activities.find(a => a.id === activityId);
+      if (act) {
+        UIRenderer.openActivityModal(act, this.dataset!);
+      }
+    });
+    UIRenderer.renderAnnualCalendar(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {
         UIRenderer.openActivityModal(act, this.dataset!);
@@ -494,6 +500,26 @@ class App {
       }, { passive: false });
     }
 
+    // Annual multi-run modal close
+    const annualMultiRunCloseBtn = document.getElementById('annual-multi-run-close-btn');
+    if (annualMultiRunCloseBtn) {
+      annualMultiRunCloseBtn.addEventListener('click', () => UIRenderer.closeAnnualMultiRunModal());
+    }
+
+    const annualMultiRunOverlay = document.getElementById('annual-multi-run-modal');
+    if (annualMultiRunOverlay) {
+      annualMultiRunOverlay.addEventListener('click', (e) => {
+        if (e.target === annualMultiRunOverlay) {
+          UIRenderer.closeAnnualMultiRunModal();
+        }
+      });
+      annualMultiRunOverlay.addEventListener('touchmove', (e) => {
+        if (e.target === annualMultiRunOverlay) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
+
     // Gestion globale et prioritaire de la touche Échap (capture phase) pour fermer n'importe quelle modale
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
@@ -506,6 +532,12 @@ class App {
         const activityModal = document.getElementById('activity-modal');
         if (activityModal && (activityModal.classList.contains('open') || activityModal.classList.contains('active'))) {
           UIRenderer.closeActivityModal();
+          return;
+        }
+
+        const annualMultiRunModal = document.getElementById('annual-multi-run-modal');
+        if (annualMultiRunModal && annualMultiRunModal.classList.contains('open')) {
+          UIRenderer.closeAnnualMultiRunModal();
           return;
         }
 

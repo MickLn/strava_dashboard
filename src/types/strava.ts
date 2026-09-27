@@ -30,6 +30,16 @@ export interface SplitMetric {
   average_heartrate?: number;
 }
 
+export interface BestEffort {
+  id?: number;
+  name: string;
+  distance: number;
+  elapsed_time: number;
+  moving_time: number;
+  start_date_local?: string;
+  pr_rank?: number | null;
+}
+
 export interface Activity {
   id: number;
   name: string;
@@ -57,6 +67,7 @@ export interface Activity {
   elev_high?: number;
   elev_low?: number;
   splits_metric?: SplitMetric[];
+  best_efforts?: BestEffort[];
 }
 
 export interface GearItem {

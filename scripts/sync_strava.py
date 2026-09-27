@@ -91,7 +91,7 @@ def format_time_short(seconds):
     m = (seconds % 3600) // 60
     s = seconds % 60
     if h > 0:
-        return f"{h}h {m}m"
+        return f"{h}h {m}m {s:02d}s" if s > 0 else f"{h}h {m}m"
     return f"{m}m {s:02d}s"
 
 def format_pace(meters_per_sec):
@@ -103,7 +103,7 @@ def format_pace(meters_per_sec):
     return f"{m}:{s:02d} /km"
 
 def extract_records(activities):
-    """Calcule les Top 3 authentiques pour 5k, 10k et sorties longues (>15k) par segments contigus et courses globales"""
+    """Calcule les Top 3 authentiques pour 5k, 10k et sorties longues (>15k) depuis les best_efforts officiels de Strava ou les splits contigus"""
     efforts_5k = []
     efforts_10k = []
     efforts_15k = []
@@ -123,46 +123,75 @@ def extract_records(activities):
         dist = act.get("distance", 0)
         time_s = act.get("moving_time", 0)
 
-        # 1. Vérifier les segments contigus depuis les splits kilométriques réels
+        # 1. Vérifier en priorité les best_efforts officiels calculés par Strava
+        has_5k_be = False
+        has_10k_be = False
+        has_15k_be = False
+
+        for be in act.get("best_efforts", []):
+            b_name = (be.get("name") or "").lower().strip()
+            b_time = be.get("moving_time") or be.get("elapsed_time") or 0
+            if b_time <= 0:
+                continue
+            if b_name in ["5k", "5 km"]:
+                has_5k_be = True
+                efforts_5k.append({
+                    "timeSeconds": b_time,
+                    "timeFormatted": format_time_short(b_time),
+                    "activityName": name,
+                    "activityId": act_id,
+                    "date": date_str,
+                    "distanceKm": 5.0,
+                    "paceFormatted": format_pace_exact(b_time, 5000)
+                })
+            elif b_name in ["10k", "10 km"]:
+                has_10k_be = True
+                efforts_10k.append({
+                    "timeSeconds": b_time,
+                    "timeFormatted": format_time_short(b_time),
+                    "activityName": name,
+                    "activityId": act_id,
+                    "date": date_str,
+                    "distanceKm": 10.0,
+                    "paceFormatted": format_pace_exact(b_time, 10000)
+                })
+            elif b_name in ["15k", "15 km", "10 mile", "20k", "half-marathon", "semi-marathon"]:
+                has_15k_be = True
+                efforts_15k.append({
+                    "timeSeconds": time_s,
+                    "timeFormatted": format_time_short(time_s),
+                    "activityName": name,
+                    "activityId": act_id,
+                    "date": date_str,
+                    "distanceKm": round(dist / 1000, 1),
+                    "paceFormatted": format_pace(act.get("average_speed", 0))
+                })
+
+        # 2. Si pas de best_efforts Strava enregistré, analyser les splits métriques contigus
         splits = act.get("splits_metric", [])
-        if splits and len(splits) >= 5:
+        if not has_5k_be and splits and len(splits) >= 5:
+            best_win_5k = None
             for start in range(len(splits) - 4):
                 w_dist = sum(s.get("distance", 0) for s in splits[start:start+5])
                 w_time = sum(s.get("moving_time", 0) for s in splits[start:start+5])
-                if w_dist >= 4900:
+                if w_dist >= 4800:
                     scale = 5000.0 / w_dist
                     t_5k = int(w_time * scale)
-                    efforts_5k.append({
-                        "timeSeconds": t_5k,
-                        "timeFormatted": format_time_short(t_5k),
-                        "activityName": name,
-                        "activityId": act_id,
-                        "date": date_str,
-                        "distanceKm": 5.0,
-                        "paceFormatted": format_pace_exact(t_5k, 5000)
-                    })
-
-        if splits and len(splits) >= 10:
-            for start in range(len(splits) - 9):
-                w_dist = sum(s.get("distance", 0) for s in splits[start:start+10])
-                w_time = sum(s.get("moving_time", 0) for s in splits[start:start+10])
-                if w_dist >= 9800:
-                    scale = 10000.0 / w_dist
-                    t_10k = int(w_time * scale)
-                    efforts_10k.append({
-                        "timeSeconds": t_10k,
-                        "timeFormatted": format_time_short(t_10k),
-                        "activityName": name,
-                        "activityId": act_id,
-                        "date": date_str,
-                        "distanceKm": 10.0,
-                        "paceFormatted": format_pace_exact(t_10k, 10000)
-                    })
-
-        # 2. Vérifier les courses isolées
-        if 4800 <= dist <= 6500 and time_s > 0:
-            scale = 5000.0 / dist if dist < 5000 else 1.0
-            t_adj = int(time_s * scale) if dist < 5000 else time_s
+                    if best_win_5k is None or t_5k < best_win_5k:
+                        best_win_5k = t_5k
+            if best_win_5k:
+                efforts_5k.append({
+                    "timeSeconds": best_win_5k,
+                    "timeFormatted": format_time_short(best_win_5k),
+                    "activityName": name,
+                    "activityId": act_id,
+                    "date": date_str,
+                    "distanceKm": 5.0,
+                    "paceFormatted": format_pace_exact(best_win_5k, 5000)
+                })
+        elif not has_5k_be and 4900 <= dist <= 5500 and time_s > 0:
+            scale = 5000.0 / dist
+            t_adj = int(time_s * scale)
             efforts_5k.append({
                 "timeSeconds": t_adj,
                 "timeFormatted": format_time_short(t_adj),
@@ -170,12 +199,32 @@ def extract_records(activities):
                 "activityId": act_id,
                 "date": date_str,
                 "distanceKm": round(dist / 1000, 1),
-                "paceFormatted": format_pace(act.get("average_speed", 0))
+                "paceFormatted": format_pace_exact(t_adj, 5000)
             })
 
-        if 9500 <= dist <= 12500 and time_s > 0:
-            scale = 10000.0 / dist if dist < 10000 else 1.0
-            t_adj = int(time_s * scale) if dist < 10000 else time_s
+        if not has_10k_be and splits and len(splits) >= 10:
+            best_win_10k = None
+            for start in range(len(splits) - 9):
+                w_dist = sum(s.get("distance", 0) for s in splits[start:start+10])
+                w_time = sum(s.get("moving_time", 0) for s in splits[start:start+10])
+                if w_dist >= 9700:
+                    scale = 10000.0 / w_dist
+                    t_10k = int(w_time * scale)
+                    if best_win_10k is None or t_10k < best_win_10k:
+                        best_win_10k = t_10k
+            if best_win_10k:
+                efforts_10k.append({
+                    "timeSeconds": best_win_10k,
+                    "timeFormatted": format_time_short(best_win_10k),
+                    "activityName": name,
+                    "activityId": act_id,
+                    "date": date_str,
+                    "distanceKm": 10.0,
+                    "paceFormatted": format_pace_exact(best_win_10k, 10000)
+                })
+        elif not has_10k_be and 9800 <= dist <= 10600 and time_s > 0:
+            scale = 10000.0 / dist
+            t_adj = int(time_s * scale)
             efforts_10k.append({
                 "timeSeconds": t_adj,
                 "timeFormatted": format_time_short(t_adj),
@@ -183,10 +232,10 @@ def extract_records(activities):
                 "activityId": act_id,
                 "date": date_str,
                 "distanceKm": round(dist / 1000, 1),
-                "paceFormatted": format_pace(act.get("average_speed", 0))
+                "paceFormatted": format_pace_exact(t_adj, 10000)
             })
 
-        if dist >= 14500 and time_s > 0:
+        if not has_15k_be and dist >= 14800 and time_s > 0:
             efforts_15k.append({
                 "timeSeconds": time_s,
                 "timeFormatted": format_time_short(time_s),
@@ -249,8 +298,8 @@ def main():
             break
         page += 1
 
-    # Récupérer les splits_metric authentiques pour les nouvelles courses (dans la limite API de Strava)
-    # Charger l'ancien cache pour ne pas re-télécharger les splits déjà présents
+    # Récupérer les splits_metric et best_efforts authentiques pour les courses (dans la limite API de Strava)
+    # Charger l'ancien cache pour ne pas re-télécharger les détails déjà présents
     existing_activities_cache = {}
     existing_gear_cache = {}
     if os.path.exists(OUTPUT_PATH):
@@ -269,22 +318,39 @@ def main():
     detail_fetch_count = 0
     for act in all_runs:
         aid_str = str(act.get("id"))
-        if aid_str in existing_activities_cache and existing_activities_cache[aid_str].get("splits_metric"):
+        if aid_str in existing_activities_cache and (
+            existing_activities_cache[aid_str].get("splits_metric") or
+            existing_activities_cache[aid_str].get("best_efforts")
+        ):
             cached_act = existing_activities_cache[aid_str]
-            act["splits_metric"] = cached_act.get("splits_metric")
+            if cached_act.get("splits_metric"):
+                act["splits_metric"] = cached_act.get("splits_metric")
+            if cached_act.get("best_efforts"):
+                act["best_efforts"] = cached_act.get("best_efforts")
             if cached_act.get("elev_high") is not None:
                 act["elev_high"] = cached_act.get("elev_high")
             if cached_act.get("elev_low") is not None:
                 act["elev_low"] = cached_act.get("elev_low")
-        elif detail_fetch_count < 10:
+            if cached_act.get("device_name"):
+                act["device_name"] = cached_act.get("device_name")
+            if cached_act.get("suffer_score") is not None:
+                act["suffer_score"] = cached_act.get("suffer_score")
+        elif detail_fetch_count < 75:
             try:
                 detailed = fetch_strava(f"activities/{aid_str}", token)
-                if detailed and detailed.get("splits_metric"):
-                    act["splits_metric"] = detailed.get("splits_metric")
+                if detailed:
+                    if detailed.get("splits_metric"):
+                        act["splits_metric"] = detailed.get("splits_metric")
+                    if detailed.get("best_efforts"):
+                        act["best_efforts"] = detailed.get("best_efforts")
                     if detailed.get("elev_high") is not None:
                         act["elev_high"] = detailed.get("elev_high")
                     if detailed.get("elev_low") is not None:
                         act["elev_low"] = detailed.get("elev_low")
+                    if detailed.get("device_name"):
+                        act["device_name"] = detailed.get("device_name")
+                    if detailed.get("suffer_score") is not None:
+                        act["suffer_score"] = detailed.get("suffer_score")
                     detail_fetch_count += 1
             except Exception as e:
                 print(f"Note splits {aid_str}: {e}", flush=True)
@@ -368,7 +434,8 @@ def main():
                 same_latest = (len(old_acts) == 0 and len(all_runs) == 0) or (len(old_acts) > 0 and len(all_runs) > 0 and old_acts[0].get("id") == all_runs[0].get("id"))
                 same_totals = old_stats.get("all_run_totals", {}).get("count") == stats.get("all_run_totals", {}).get("count")
 
-                if same_count and same_latest and same_totals and old_gear == gear_items:
+                old_records = existing_file_data.get("records", {})
+                if detail_fetch_count == 0 and same_count and same_latest and same_totals and old_gear == gear_items and old_records == records:
                     has_changes = False
         except Exception:
             has_changes = True

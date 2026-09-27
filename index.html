@@ -418,6 +418,43 @@
           </div>
         </div>
 
+        <!-- Annual Perpetual Calendar Card -->
+        <div class="runner-card annual-calendar-card">
+          <div class="annual-calendar-header">
+            <div class="annual-calendar-title-block">
+              <h3 class="chart-title" id="lbl-annual-calendar-title">Calendrier annuel</h3>
+              <p class="chart-subtitle" id="lbl-annual-calendar-sub">Jours courus par date dans l'année</p>
+            </div>
+            <div class="annual-calendar-summary-badge" id="annual-calendar-summary-badge">
+              <span id="lbl-annual-calendar-summary">0 / 366 jours courus (0%)</span>
+            </div>
+          </div>
+
+          <!-- Months Grid (12 months) -->
+          <div class="annual-calendar-months-grid" id="annual-calendar-months-grid"></div>
+
+          <!-- Subtle Minimalist Legend -->
+          <div class="annual-calendar-legend">
+            <span class="annual-legend-label" id="lbl-annual-legend">Intensité :</span>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-0"></span>
+              <span id="lbl-annual-legend-0">0 course</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-1"></span>
+              <span id="lbl-annual-legend-1">1 an</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-2"></span>
+              <span id="lbl-annual-legend-2">2 ans</span>
+            </div>
+            <div class="annual-legend-item">
+              <span class="annual-legend-swatch level-3"></span>
+              <span id="lbl-annual-legend-3">3+ ans</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Achievements & Milestones Gallery Card -->
         <div class="runner-card achievements-card">
           <!-- Hub Header & Level Banner -->
@@ -747,6 +784,27 @@
       <button id="btn-close-heatmap" class="map-icon-btn" aria-label="Fermer le plein écran" title="Fermer (Échap)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Annual Calendar Multi-Run Day Selection Modal -->
+  <div class="modal-overlay" id="annual-multi-run-modal">
+    <div class="modal-box annual-multi-run-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-title-row">
+            <h3 class="modal-title" id="annual-multi-run-title">Courses enregistrées</h3>
+            <button class="modal-close-btn" id="annual-multi-run-close-btn" aria-label="Fermer la liste des courses">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <p class="modal-subtitle" id="annual-multi-run-sub">Sélectionnez une course pour afficher les détails</p>
+        </div>
+      </div>
+      <div class="annual-multi-run-list" id="annual-multi-run-list"></div>
     </div>
   </div>
 

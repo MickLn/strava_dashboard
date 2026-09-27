@@ -56,6 +56,16 @@ export const translations = {
     top5k: "Top 3 - 5 km",
     top10k: "Top 3 - 10 km",
     top15k: "Top 3 - Long runs (15k+)",
+    annualCalendarTitle: "Annual calendar",
+    annualCalendarSubtitle: "Days run by date throughout the year",
+    annualCalendarSummary: (active: number, total: number, pct: number) => `${active} / ${total} days run (${pct}%)`,
+    annualLegendLabel: "Intensity:",
+    annualLegend0: "0 run",
+    annualLegend1: "1 year",
+    annualLegend2: "2 years",
+    annualLegend3: "3+ years",
+    multiRunTitle: (dateStr: string, count: number) => `${count} runs on ${dateStr}`,
+    multiRunSubtitle: "Select a run to view activity details",
 
     // Shoe locker
     shoeLockerTitle: "Shoe locker",
@@ -219,6 +229,16 @@ export const translations = {
     top5k: "Top 3 - 5 km",
     top10k: "Top 3 - 10 km",
     top15k: "Top 3 - Sorties longues (15k+)",
+    annualCalendarTitle: "Calendrier annuel",
+    annualCalendarSubtitle: "Jours courus par date dans l'année",
+    annualCalendarSummary: (active: number, total: number, pct: number) => `${active} / ${total} jours courus (${pct}%)`,
+    annualLegendLabel: "Intensité :",
+    annualLegend0: "0 course",
+    annualLegend1: "1 an",
+    annualLegend2: "2 ans",
+    annualLegend3: "3+ ans",
+    multiRunTitle: (dateStr: string, count: number) => `${count} courses le ${dateStr}`,
+    multiRunSubtitle: "Sélectionnez une course pour afficher les détails",
 
     // Shoe locker
     shoeLockerTitle: "Vestiaire chaussures",

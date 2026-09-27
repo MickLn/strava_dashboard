@@ -19,7 +19,9 @@ import {
   calculateAchievements,
   generateActivityTags,
   generateKilometerSplits,
-  getMonthCalendarData
+  getMonthCalendarData,
+  calculateAnnualCalendarMatrix,
+  AnnualCalendarDay
 } from '../utils/metrics.ts';
 import { i18n } from '../utils/i18n.ts';
 
@@ -75,6 +77,15 @@ export class UIRenderer {
     setTxt('lbl-top-5k', t.top5k);
     setTxt('lbl-top-10k', t.top10k);
     setTxt('lbl-top-15k', t.top15k);
+
+    setTxt('lbl-annual-calendar-title', t.annualCalendarTitle);
+    setTxt('lbl-annual-calendar-sub', t.annualCalendarSubtitle);
+    setTxt('lbl-annual-legend', t.annualLegendLabel);
+    setTxt('lbl-annual-legend-0', t.annualLegend0);
+    setTxt('lbl-annual-legend-1', t.annualLegend1);
+    setTxt('lbl-annual-legend-2', t.annualLegend2);
+    setTxt('lbl-annual-legend-3', t.annualLegend3);
+    setTxt('annual-multi-run-sub', t.multiRunSubtitle);
 
     setTxt('lbl-shoe-title', t.shoeLockerTitle);
     setTxt('lbl-shoe-time', t.cushioningTime);
@@ -667,6 +678,150 @@ export class UIRenderer {
       renderList(top10kContainer, dataset.records.top10k);
       renderList(top15kContainer, dataset.records.top15k);
     }
+  }
+
+  /**
+   * Calendrier annuel perpétuel (Matrice des 366 jours courus sur l'année complète)
+   */
+  public static renderAnnualCalendar(dataset: StravaDataset, onSelectActivity?: (id: number) => void): void {
+    const container = document.getElementById('annual-calendar-months-grid');
+    if (!container) return;
+
+    const t = i18n.t();
+    const isFr = i18n.getLang() === 'fr';
+    const matrix = calculateAnnualCalendarMatrix(dataset.activities);
+
+    // Mettre à jour le badge de synthèse (factuel)
+    const summaryBadge = document.getElementById('lbl-annual-calendar-summary');
+    if (summaryBadge) {
+      summaryBadge.textContent = t.annualCalendarSummary(matrix.totalActiveDays, matrix.totalPossibleDays, matrix.coveragePercent);
+    }
+
+    container.innerHTML = '';
+
+    matrix.months.forEach(month => {
+      const monthBlock = document.createElement('div');
+      monthBlock.className = 'annual-month-block';
+
+      const monthName = isFr ? month.monthNameFr : month.monthNameEn;
+
+      monthBlock.innerHTML = `
+        <div class="annual-month-header">
+          <span class="annual-month-name">${monthName}</span>
+        </div>
+        <div class="annual-month-days-grid" id="annual-month-${month.monthIndex}"></div>
+      `;
+
+      const daysGrid = monthBlock.querySelector(`#annual-month-${month.monthIndex}`) as HTMLElement;
+      if (daysGrid) {
+        month.days.forEach(day => {
+          const cell = document.createElement('div');
+          const level = day.count >= 3 ? 3 : day.count === 2 ? 2 : day.count === 1 ? 1 : 0;
+          cell.className = `annual-day-cell level-${level}`;
+          cell.textContent = String(day.dayNumber);
+
+          if (day.count > 0) {
+            // Micro-interaction au survol : uniquement l'année ou les années
+            const yearsStr = day.years.join(', ');
+            cell.setAttribute('data-annual-tooltip', yearsStr);
+            cell.setAttribute('title', yearsStr);
+
+            // Interaction au clic
+            cell.addEventListener('click', () => {
+              if (day.count === 1) {
+                // 1 seule course : ouvre directement la modal de détail
+                if (onSelectActivity) {
+                  onSelectActivity(day.activities[0].id);
+                } else {
+                  UIRenderer.openActivityModal(day.activities[0], dataset);
+                }
+              } else {
+                // 2 courses ou plus : ouvre le pop-up listant les courses de cette date
+                UIRenderer.openAnnualMultiRunModal(day, (actId: number) => {
+                  if (onSelectActivity) {
+                    onSelectActivity(actId);
+                  } else {
+                    const act = dataset.activities.find(a => a.id === actId);
+                    if (act) UIRenderer.openActivityModal(act, dataset);
+                  }
+                });
+              }
+            });
+          }
+
+          daysGrid.appendChild(cell);
+        });
+      }
+
+      container.appendChild(monthBlock);
+    });
+  }
+
+  /**
+   * Ouvre la modal listant les sorties multiples pour une date précise
+   * Format requis : Année + Nom de la course + distance parcourue
+   */
+  public static openAnnualMultiRunModal(day: AnnualCalendarDay, onSelectActivity: (id: number) => void): void {
+    const modal = document.getElementById('annual-multi-run-modal');
+    if (!modal) return;
+
+    const isFr = i18n.getLang() === 'fr';
+    const monthNamesFr = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const monthNamesEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const formattedDate = isFr 
+      ? `${day.dayNumber} ${monthNamesFr[day.monthIndex]}` 
+      : `${monthNamesEn[day.monthIndex]} ${day.dayNumber}`;
+
+    const titleEl = document.getElementById('annual-multi-run-title');
+    const subEl = document.getElementById('annual-multi-run-sub');
+    if (titleEl) {
+      titleEl.textContent = i18n.t().multiRunTitle(formattedDate, day.count);
+    }
+    if (subEl) {
+      subEl.textContent = i18n.t().multiRunSubtitle;
+    }
+
+    const listEl = document.getElementById('annual-multi-run-list');
+    if (listEl) {
+      listEl.innerHTML = '';
+      const sortedActs = [...day.activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
+      
+      sortedActs.forEach(act => {
+        const year = new Date(act.start_date_local).getFullYear();
+        const distKm = (act.distance / 1000).toFixed(1) + ' km';
+        const item = document.createElement('div');
+        item.className = 'annual-multi-run-item';
+        item.innerHTML = `
+          <div class="annual-multi-run-item-left">
+            <span class="annual-run-year-pill">${year}</span>
+            <span class="annual-run-name" title="${act.name}">${act.name}</span>
+          </div>
+          <div class="annual-multi-run-item-right">
+            <span class="annual-run-distance">${distKm}</span>
+            <svg class="annual-run-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          UIRenderer.closeAnnualMultiRunModal();
+          onSelectActivity(act.id);
+        });
+        listEl.appendChild(item);
+      });
+    }
+
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Ferme la modal de sélection de course du calendrier annuel
+   */
+  public static closeAnnualMultiRunModal(): void {
+    const modal = document.getElementById('annual-multi-run-modal');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
   }
 
   public static currentCalendarYear: number = 2026;

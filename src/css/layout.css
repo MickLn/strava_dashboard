@@ -121,24 +121,27 @@
 /* 1. Bento Étage 1 : Live Hub (Dernière Sortie 60% / Weekly Pulse 40%) */
 .grid-bento-hero {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: var(--space-lg);
   align-items: stretch;
+  width: 100%;
 }
 
 /* 2. Bento Étage 2 : Records & Chaussures (50% / 50%) */
 .grid-bento-middle {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-lg);
   align-items: stretch;
+  width: 100%;
 }
 
 /* 3. Bento Étage 3 : Saison & Graphiques */
 .grid-bento-season {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-lg);
+  width: 100%;
 }
 
 /* Footer */
@@ -150,6 +153,7 @@
   text-align: center;
   font-size: 0.82rem;
   color: var(--text-secondary);
+  width: 100%;
 }
 
 .footer-content {
@@ -160,6 +164,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-md);
+  width: 100%;
 }
 
 /* Responsive Media Queries Mobile-First */
@@ -168,8 +173,9 @@
   .grid-bento-middle,
   .grid-bento-season,
   .grid-bento-insights {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-md);
+    width: 100%;
   }
 }
 

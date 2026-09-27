@@ -594,19 +594,78 @@ export function calculateShoeDetails(shoeId: string, activities: Activity[]): Sh
       };
     }
 
-    // Calcul 1k le plus rapide (splits_metric ou allure)
-    if (act.splits_metric && act.splits_metric.length > 0) {
-      for (const sp of act.splits_metric) {
-        if (sp.distance >= 900 && sp.distance <= 1100 && sp.moving_time > 140) {
-          const spTime = Math.round((1000 / sp.distance) * sp.moving_time);
-          if (!best1k || spTime < best1k.timeSeconds) {
+    // 0. Vérification en priorité des best_efforts officiels Strava
+    if (act.best_efforts && act.best_efforts.length > 0) {
+      for (const be of act.best_efforts) {
+        const beName = (be.name || '').toLowerCase().trim();
+        const beTime = be.moving_time || be.elapsed_time || 0;
+        if (beTime <= 0) continue;
+
+        if (beName === '1k' || beName === '1 km' || be.distance === 1000) {
+          if (!best1k || beTime < best1k.timeSeconds) {
             best1k = {
               distanceKey: '1k',
               distanceLabel: '1 km',
               distanceLabelFr: '1 km',
-              timeFormatted: formatTimeShort(spTime),
-              timeSeconds: spTime,
-              paceFormatted: formatPace(1000 / spTime),
+              timeFormatted: formatTimeShort(beTime),
+              timeSeconds: beTime,
+              paceFormatted: formatPace(1000 / beTime),
+              activityId: act.id,
+              activityName: act.name,
+              date: actDate
+            };
+          }
+        } else if (beName === '5k' || beName === '5 km' || be.distance === 5000) {
+          if (!best5k || beTime < best5k.timeSeconds) {
+            best5k = {
+              distanceKey: '5k',
+              distanceLabel: '5 km',
+              distanceLabelFr: '5 km',
+              timeFormatted: formatTimeShort(beTime),
+              timeSeconds: beTime,
+              paceFormatted: formatPace(5000 / beTime),
+              activityId: act.id,
+              activityName: act.name,
+              date: actDate
+            };
+          }
+        } else if (beName === '10k' || beName === '10 km' || be.distance === 10000) {
+          if (!best10k || beTime < best10k.timeSeconds) {
+            best10k = {
+              distanceKey: '10k',
+              distanceLabel: '10 km',
+              distanceLabelFr: '10 km',
+              timeFormatted: formatTimeShort(beTime),
+              timeSeconds: beTime,
+              paceFormatted: formatPace(10000 / beTime),
+              activityId: act.id,
+              activityName: act.name,
+              date: actDate
+            };
+          }
+        } else if (beName === '15k' || beName === '15 km' || be.distance === 15000) {
+          if (!best15k || beTime < best15k.timeSeconds) {
+            best15k = {
+              distanceKey: '15k',
+              distanceLabel: '15 km',
+              distanceLabelFr: '15 km',
+              timeFormatted: formatTimeShort(beTime),
+              timeSeconds: beTime,
+              paceFormatted: formatPace(15000 / beTime),
+              activityId: act.id,
+              activityName: act.name,
+              date: actDate
+            };
+          }
+        } else if (beName.includes('half') || beName.includes('semi') || be.distance >= 21000) {
+          if (!bestSemi || beTime < bestSemi.timeSeconds) {
+            bestSemi = {
+              distanceKey: 'semi',
+              distanceLabel: 'Semi-Marathon (21.1k)',
+              distanceLabelFr: 'Semi-Marathon (21.1k)',
+              timeFormatted: formatTimeShort(beTime),
+              timeSeconds: beTime,
+              paceFormatted: formatPace(21097 / beTime),
               activityId: act.id,
               activityName: act.name,
               date: actDate
@@ -614,20 +673,44 @@ export function calculateShoeDetails(shoeId: string, activities: Activity[]): Sh
           }
         }
       }
-    } else if (distKm >= 1.0 && speed > 0) {
-      const est1kTime = Math.round(1000 / speed);
-      if (!best1k || est1kTime < best1k.timeSeconds) {
-        best1k = {
-          distanceKey: '1k',
-          distanceLabel: '1 km',
-          distanceLabelFr: '1 km',
-          timeFormatted: formatTimeShort(est1kTime),
-          timeSeconds: est1kTime,
-          paceFormatted: formatPace(speed),
-          activityId: act.id,
-          activityName: act.name,
-          date: actDate
-        };
+    }
+
+    // Calcul 1k le plus rapide (splits_metric ou allure si pas de best_efforts 1k)
+    if (!best1k || best1k.activityId !== act.id) {
+      if (act.splits_metric && act.splits_metric.length > 0) {
+        for (const sp of act.splits_metric) {
+          if (sp.distance >= 900 && sp.distance <= 1100 && sp.moving_time > 140) {
+            const spTime = Math.round((1000 / sp.distance) * sp.moving_time);
+            if (!best1k || spTime < best1k.timeSeconds) {
+              best1k = {
+                distanceKey: '1k',
+                distanceLabel: '1 km',
+                distanceLabelFr: '1 km',
+                timeFormatted: formatTimeShort(spTime),
+                timeSeconds: spTime,
+                paceFormatted: formatPace(1000 / spTime),
+                activityId: act.id,
+                activityName: act.name,
+                date: actDate
+              };
+            }
+          }
+        }
+      } else if (distKm >= 1.0 && speed > 0) {
+        const est1kTime = Math.round(1000 / speed);
+        if (!best1k || est1kTime < best1k.timeSeconds) {
+          best1k = {
+            distanceKey: '1k',
+            distanceLabel: '1 km',
+            distanceLabelFr: '1 km',
+            timeFormatted: formatTimeShort(est1kTime),
+            timeSeconds: est1kTime,
+            paceFormatted: formatPace(speed),
+            activityId: act.id,
+            activityName: act.name,
+            date: actDate
+          };
+        }
       }
     }
 
@@ -2112,5 +2195,115 @@ export function getMonthCalendarData(activities: Activity[], year: number, month
     days,
     monthTotalKm: Math.round(monthTotalDistance * 10) / 10,
     monthRunCount
+  };
+}
+
+export interface AnnualCalendarDay {
+  monthIndex: number;
+  dayNumber: number;
+  dateKey: string;
+  count: number;
+  years: number[];
+  activities: Activity[];
+}
+
+export interface AnnualCalendarMonth {
+  monthIndex: number;
+  monthNameFr: string;
+  monthNameEn: string;
+  daysCount: number;
+  days: AnnualCalendarDay[];
+  activeDaysCount: number;
+}
+
+export interface AnnualCalendarMatrix {
+  months: AnnualCalendarMonth[];
+  totalActiveDays: number;
+  totalPossibleDays: number;
+  coveragePercent: number;
+}
+
+export function calculateAnnualCalendarMatrix(activities: Activity[]): AnnualCalendarMatrix {
+  const monthConfigs = [
+    { index: 0, fr: 'Janvier', en: 'January', days: 31 },
+    { index: 1, fr: 'Février', en: 'February', days: 29 },
+    { index: 2, fr: 'Mars', en: 'March', days: 31 },
+    { index: 3, fr: 'Avril', en: 'April', days: 30 },
+    { index: 4, fr: 'Mai', en: 'May', days: 31 },
+    { index: 5, fr: 'Juin', en: 'June', days: 30 },
+    { index: 6, fr: 'Juillet', en: 'July', days: 31 },
+    { index: 7, fr: 'Août', en: 'August', days: 31 },
+    { index: 8, fr: 'Septembre', en: 'September', days: 30 },
+    { index: 9, fr: 'Octobre', en: 'October', days: 31 },
+    { index: 10, fr: 'Novembre', en: 'November', days: 30 },
+    { index: 11, fr: 'Décembre', en: 'December', days: 31 }
+  ];
+
+  const dateMap = new Map<string, Activity[]>();
+
+  (activities || []).forEach(act => {
+    if (!act.start_date_local) return;
+    const dateObj = new Date(act.start_date_local);
+    if (isNaN(dateObj.getTime())) return;
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    const key = `${m}-${d}`;
+
+    const existing = dateMap.get(key) || [];
+    existing.push(act);
+    dateMap.set(key, existing);
+  });
+
+  let totalActiveDays = 0;
+  const totalPossibleDays = 366;
+
+  const months: AnnualCalendarMonth[] = monthConfigs.map(cfg => {
+    const days: AnnualCalendarDay[] = [];
+    let monthActiveDays = 0;
+
+    for (let day = 1; day <= cfg.days; day++) {
+      const mStr = String(cfg.index + 1).padStart(2, '0');
+      const dStr = String(day).padStart(2, '0');
+      const key = `${mStr}-${dStr}`;
+      const acts = dateMap.get(key) || [];
+      const yearsSet = new Set<number>();
+      acts.forEach(a => {
+        const y = new Date(a.start_date_local).getFullYear();
+        if (!isNaN(y)) yearsSet.add(y);
+      });
+      const years = Array.from(yearsSet).sort((a, b) => a - b);
+
+      if (acts.length > 0) {
+        monthActiveDays++;
+        totalActiveDays++;
+      }
+
+      days.push({
+        monthIndex: cfg.index,
+        dayNumber: day,
+        dateKey: key,
+        count: acts.length,
+        years,
+        activities: acts
+      });
+    }
+
+    return {
+      monthIndex: cfg.index,
+      monthNameFr: cfg.fr,
+      monthNameEn: cfg.en,
+      daysCount: cfg.days,
+      days,
+      activeDaysCount: monthActiveDays
+    };
+  });
+
+  const coveragePercent = Math.round((totalActiveDays / totalPossibleDays) * 100);
+
+  return {
+    months,
+    totalActiveDays,
+    totalPossibleDays,
+    coveragePercent
   };
 }
