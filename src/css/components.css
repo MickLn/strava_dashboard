@@ -1173,34 +1173,130 @@
   text-overflow: ellipsis;
 }
 
-/* 5. Charts Card */
-.chart-card {
+/* 5. Charts & Analytics Cards (Bespoke Runner Analytics) */
+.chart-card,
+.analytics-chart-card {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  min-height: 340px;
+  min-height: 360px;
+  box-sizing: border-box;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  position: relative;
+  transition: border-color var(--transition-fast);
 }
 
-.chart-header {
+.analytics-chart-card:hover {
+  border-color: rgba(224, 90, 54, 0.35);
+}
+
+.chart-header,
+.analytics-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-md);
+  gap: 12px;
+  width: 100%;
   flex-wrap: wrap;
 }
 
-.chart-title {
-  font-size: 1.05rem;
+.analytics-header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.analytics-card-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  line-height: 1;
+}
+
+.chart-title,
+.analytics-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.chart-subtitle,
+.analytics-card-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.analytics-header-badge-wrap {
+  flex-shrink: 0;
+}
+
+.act-pill-accent {
+  background: rgba(224, 90, 54, 0.08);
+  color: var(--color-primary);
+  border: 1px solid rgba(224, 90, 54, 0.22);
   font-weight: 700;
 }
 
-.chart-stats-strip {
+/* Legend Strip */
+.analytics-legend-strip {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 14px;
   flex-wrap: wrap;
-  padding-top: var(--space-xs);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: -4px;
+  margin-bottom: -4px;
+}
+
+.analytics-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.analytics-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.analytics-legend-dot.dot-2026 {
+  background-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(224, 90, 54, 0.15);
+}
+
+.analytics-legend-dot.dot-2025 {
+  background-color: #64748B;
+}
+
+.analytics-legend-dot.dot-2024 {
+  background-color: #D4CEBF;
+}
+
+.chart-stats-strip,
+.analytics-stats-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 10px;
   border-top: 1px dashed var(--border-light);
+  margin-top: auto;
 }
 
 .mini-stat {
@@ -1222,10 +1318,80 @@
   color: var(--color-primary);
 }
 
-.chart-container {
+.chart-container,
+.analytics-chart-container {
   position: relative;
   width: 100%;
-  height: 230px;
+  height: 240px;
+  min-height: 200px;
+}
+
+/* Distance Types Breakdown */
+.dist-types-breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.dist-type-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  transition: border-color var(--transition-fast);
+}
+
+.dist-type-card:hover {
+  border-color: var(--border-medium);
+}
+
+.dist-type-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dist-type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dist-type-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dist-type-right {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.dist-type-runs {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.dist-type-pct {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
 }
 
 /* 6. Monthly Training Calendar (Strava Training Log Style) */
@@ -2690,6 +2856,27 @@
     justify-content: center;
   }
 
+  /* Analytics Cards Responsive */
+  .analytics-chart-container {
+    height: 220px;
+  }
+  .analytics-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .analytics-header-badge-wrap {
+    align-self: flex-start;
+  }
+  .dist-types-breakdown {
+    grid-template-columns: 1fr;
+  }
+  .analytics-stats-footer {
+    gap: 8px;
+  }
+  .analytics-stats-footer .mini-stat {
+    flex: 1 1 28%;
+  }
 
   /* Calendrier annuel : bouton i visible en haut et aligné à droite, légende du bas masquée */
   .annual-calendar-header {

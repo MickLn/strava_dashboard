@@ -116,9 +116,8 @@ class App {
     renderActivityTraces(this.dataset.activities, this.currentHighlightedActivityId);
     this.renderActivitiesForCurrentPeriod();
 
-    // Page 2 : Analytics (Progression YTD & Objectif)
+    // Page 2 : Analytics & Graphiques (Volume, D+, Allure & Habitudes)
     renderCharts(this.dataset.activities, 2026);
-    UIRenderer.renderYtdStrip(this.dataset);
 
     // Page 3 : Records, Statistiques Globales, Calendrier Annuel & Trophées
     UIRenderer.renderRecords(this.dataset, (activityId) => {

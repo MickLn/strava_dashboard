@@ -2339,3 +2339,393 @@ export function calculateAnnualCalendarMatrix(activities: Activity[]): AnnualCal
     coveragePercent
   };
 }
+
+// =========================================================================
+// ANALYTICS & CHARTS METRICS (Comparatif Multi-Années, D+, Allure, Habitudes)
+// =========================================================================
+
+export interface MultiYearMonthlyData {
+  labelsFr: string[];
+  labelsEn: string[];
+  km2026: number[];
+  km2025: number[];
+  km2024: number[];
+  pctChange2026vs2025: (number | null)[];
+  total2026Km: number;
+  total2025Km: number;
+  compToDatePct: number;
+  peak2026Km: number;
+  peak2026MonthFr: string;
+  peak2026MonthEn: string;
+}
+
+export function calculateMultiYearMonthlyComparison(activities: Activity[]): MultiYearMonthlyData {
+  const labelsFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const labelsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fullMonthsFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const fullMonthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const km2026 = new Array(12).fill(0);
+  const km2025 = new Array(12).fill(0);
+  const km2024 = new Array(12).fill(0);
+
+  activities.forEach(act => {
+    if (!act.start_date_local || !act.distance) return;
+    const dt = new Date(act.start_date_local);
+    const y = dt.getFullYear();
+    const m = dt.getMonth();
+    const km = act.distance / 1000;
+
+    if (y === 2026 && m >= 0 && m < 12) km2026[m] += km;
+    else if (y === 2025 && m >= 0 && m < 12) km2025[m] += km;
+    else if (y === 2024 && m >= 0 && m < 12) km2024[m] += km;
+  });
+
+  const rounded2026 = km2026.map(v => Math.round(v * 10) / 10);
+  const rounded2025 = km2025.map(v => Math.round(v * 10) / 10);
+  const rounded2024 = km2024.map(v => Math.round(v * 10) / 10);
+
+  const pctChange2026vs2025: (number | null)[] = rounded2026.map((v26, idx) => {
+    const v25 = rounded2025[idx];
+    if (v25 > 0 && v26 > 0) {
+      return Math.round(((v26 - v25) / v25) * 100);
+    }
+    return null;
+  });
+
+  const total2026Km = Math.round(rounded2026.reduce((acc, v) => acc + v, 0));
+  const total2025Km = Math.round(rounded2025.reduce((acc, v) => acc + v, 0));
+
+  // Comparatif à date (mois avec sorties en 2026)
+  let active2026Sum = 0;
+  let active2025Sum = 0;
+  let peak2026Km = 0;
+  let peak2026Idx = 0;
+
+  rounded2026.forEach((v26, idx) => {
+    if (v26 > 0) {
+      active2026Sum += v26;
+      active2025Sum += rounded2025[idx];
+      if (v26 > peak2026Km) {
+        peak2026Km = v26;
+        peak2026Idx = idx;
+      }
+    }
+  });
+
+  const compToDatePct = active2025Sum > 0 ? Math.round(((active2026Sum - active2025Sum) / active2025Sum) * 100) : 0;
+
+  return {
+    labelsFr,
+    labelsEn,
+    km2026: rounded2026,
+    km2025: rounded2025,
+    km2024: rounded2024,
+    pctChange2026vs2025,
+    total2026Km,
+    total2025Km,
+    compToDatePct,
+    peak2026Km: Math.round(peak2026Km),
+    peak2026MonthFr: fullMonthsFr[peak2026Idx],
+    peak2026MonthEn: fullMonthsEn[peak2026Idx]
+  };
+}
+
+export interface MonthlyElevationData {
+  labelsFr: string[];
+  labelsEn: string[];
+  elevation: number[];
+  totalElevation: number;
+  avgElevation: number;
+  peakElevation: number;
+  peakMonthFr: string;
+  peakMonthEn: string;
+  avgPerRun: number;
+}
+
+export function calculateMonthlyElevationGain(activities: Activity[], targetYear: number = 2026): MonthlyElevationData {
+  const labelsFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const labelsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fullMonthsFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const fullMonthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const monthlyElev = new Array(12).fill(0);
+  let yearRunsCount = 0;
+
+  activities.forEach(act => {
+    if (!act.start_date_local) return;
+    const dt = new Date(act.start_date_local);
+    if (dt.getFullYear() === targetYear) {
+      const m = dt.getMonth();
+      const dPlus = act.total_elevation_gain || 0;
+      monthlyElev[m] += dPlus;
+      yearRunsCount++;
+    }
+  });
+
+  const roundedElev = monthlyElev.map(v => Math.round(v));
+  const totalElevation = roundedElev.reduce((acc, v) => acc + v, 0);
+
+  let activeMonths = 0;
+  let peakElevation = 0;
+  let peakMonthIdx = 0;
+
+  roundedElev.forEach((v, idx) => {
+    if (v > 0) {
+      activeMonths++;
+      if (v > peakElevation) {
+        peakElevation = v;
+        peakMonthIdx = idx;
+      }
+    }
+  });
+
+  const avgElevation = activeMonths > 0 ? Math.round(totalElevation / activeMonths) : 0;
+  const avgPerRun = yearRunsCount > 0 ? Math.round(totalElevation / yearRunsCount) : 0;
+
+  return {
+    labelsFr,
+    labelsEn,
+    elevation: roundedElev,
+    totalElevation,
+    avgElevation,
+    peakElevation,
+    peakMonthFr: fullMonthsFr[peakMonthIdx],
+    peakMonthEn: fullMonthsEn[peakMonthIdx],
+    avgPerRun
+  };
+}
+
+export interface PaceTrendData {
+  labelsFr: string[];
+  labelsEn: string[];
+  paceSeconds: number[];
+  paceFormatted: string[];
+  kmList: number[];
+  currentPaceFormatted: string;
+  bestPaceFormatted: string;
+  bestMonthLabelFr: string;
+  bestMonthLabelEn: string;
+  paceRangeSeconds: number;
+}
+
+export function calculatePaceTrend(activities: Activity[], limitMonths: number = 12): PaceTrendData {
+  const monthMap = new Map<string, { time: number; dist: number; year: number; month: number }>();
+
+  activities.forEach(act => {
+    if (!act.start_date_local || !act.distance || !act.moving_time) return;
+    const dt = new Date(act.start_date_local);
+    const ym = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    const curr = monthMap.get(ym) || { time: 0, dist: 0, year: dt.getFullYear(), month: dt.getMonth() };
+    curr.time += act.moving_time;
+    curr.dist += act.distance / 1000;
+    monthMap.set(ym, curr);
+  });
+
+  // Filtrer les mois avec au moins 10 km courus pour éviter les aberrations
+  const activeYms = Array.from(monthMap.keys())
+    .filter(ym => (monthMap.get(ym)?.dist || 0) >= 10)
+    .sort();
+
+  const selectedYms = activeYms.slice(-limitMonths);
+
+  const monthsFrShort = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const monthsEnShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fullMonthsFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const fullMonthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const labelsFr: string[] = [];
+  const labelsEn: string[] = [];
+  const paceSeconds: number[] = [];
+  const paceFormatted: string[] = [];
+  const kmList: number[] = [];
+
+  let minPaceSec = Infinity;
+  let maxPaceSec = -Infinity;
+  let bestIdx = 0;
+
+  selectedYms.forEach((ym, idx) => {
+    const data = monthMap.get(ym)!;
+    const secKm = Math.round((data.time / data.dist) * 10) / 10;
+    const m = Math.floor(secKm / 60);
+    const s = Math.floor(secKm % 60);
+    const formatted = `${m}:${String(s).padStart(2, '0')}`;
+
+    const shortYear = String(data.year).slice(2);
+    labelsFr.push(`${monthsFrShort[data.month]} ${shortYear}`);
+    labelsEn.push(`${monthsEnShort[data.month]} ${shortYear}`);
+    paceSeconds.push(secKm);
+    paceFormatted.push(formatted);
+    kmList.push(Math.round(data.dist));
+
+    if (secKm < minPaceSec) {
+      minPaceSec = secKm;
+      bestIdx = idx;
+    }
+    if (secKm > maxPaceSec) {
+      maxPaceSec = secKm;
+    }
+  });
+
+  const bestData = monthMap.get(selectedYms[bestIdx]);
+  const bestMonthLabelFr = bestData ? `${fullMonthsFr[bestData.month]} ${bestData.year}` : '';
+  const bestMonthLabelEn = bestData ? `${fullMonthsEn[bestData.month]} ${bestData.year}` : '';
+
+  const currentPaceFormatted = paceFormatted.length > 0 ? paceFormatted[paceFormatted.length - 1] : '5:44';
+  const bestPaceFormatted = paceFormatted.length > 0 ? paceFormatted[bestIdx] : '5:27';
+  const paceRangeSeconds = Math.round(maxPaceSec - minPaceSec);
+
+  return {
+    labelsFr,
+    labelsEn,
+    paceSeconds,
+    paceFormatted,
+    kmList,
+    currentPaceFormatted,
+    bestPaceFormatted,
+    bestMonthLabelFr,
+    bestMonthLabelEn,
+    paceRangeSeconds
+  };
+}
+
+export interface DistanceDistributionData {
+  shortCount: number;
+  shortKm: number;
+  shortPct: number;
+  midCount: number;
+  midKm: number;
+  midPct: number;
+  longCount: number;
+  longKm: number;
+  longPct: number;
+  xlCount: number;
+  xlKm: number;
+  xlPct: number;
+  totalRuns: number;
+  totalKm: number;
+}
+
+export function calculateDistanceBreakdown(activities: Activity[]): DistanceDistributionData {
+  let shortCount = 0;
+  let shortKm = 0;
+  let midCount = 0;
+  let midKm = 0;
+  let longCount = 0;
+  let longKm = 0;
+  let xlCount = 0;
+  let xlKm = 0;
+
+  activities.forEach(act => {
+    const km = (act.distance || 0) / 1000;
+    if (km <= 0) return;
+
+    if (km < 6) {
+      shortCount++;
+      shortKm += km;
+    } else if (km < 12) {
+      midCount++;
+      midKm += km;
+    } else if (km < 18) {
+      longCount++;
+      longKm += km;
+    } else {
+      xlCount++;
+      xlKm += km;
+    }
+  });
+
+  const totalRuns = shortCount + midCount + longCount + xlCount;
+  const totalKm = Math.round(shortKm + midKm + longKm + xlKm);
+
+  return {
+    shortCount,
+    shortKm: Math.round(shortKm),
+    shortPct: totalRuns > 0 ? Math.round((shortCount / totalRuns) * 100) : 0,
+    midCount,
+    midKm: Math.round(midKm),
+    midPct: totalRuns > 0 ? Math.round((midCount / totalRuns) * 100) : 0,
+    longCount,
+    longKm: Math.round(longKm),
+    longPct: totalRuns > 0 ? Math.round((longCount / totalRuns) * 100) : 0,
+    xlCount,
+    xlKm: Math.round(xlKm),
+    xlPct: totalRuns > 0 ? Math.round((xlCount / totalRuns) * 100) : 0,
+    totalRuns,
+    totalKm
+  };
+}
+
+export interface DayFrequencyData {
+  labelsFr: string[];
+  labelsEn: string[];
+  counts: number[];
+  percentages: number[];
+  peakDayFr: string;
+  peakDayEn: string;
+  peakCount: number;
+  weekendPct: number;
+  weekdayPct: number;
+  restDayFr: string;
+  restDayEn: string;
+  restCount: number;
+}
+
+export function calculateDayFrequency(activities: Activity[]): DayFrequencyData {
+  const daysFr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const daysEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysFrShort = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const daysEnShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+
+  activities.forEach(act => {
+    if (!act.start_date_local) return;
+    const dt = new Date(act.start_date_local);
+    // getDay() renvoie 0 pour Dimanche, 1 pour Lundi ... 6 pour Samedi
+    const rawDay = dt.getDay();
+    const mondayIdx = (rawDay + 6) % 7; // Lundi = 0, Dimanche = 6
+    counts[mondayIdx]++;
+  });
+
+  const total = counts.reduce((acc, c) => acc + c, 0);
+  const percentages = counts.map(c => (total > 0 ? Math.round((c / total) * 100) : 0));
+
+  let peakCount = -1;
+  let peakIdx = 0;
+  let restCount = Infinity;
+  let restIdx = 0;
+
+  counts.forEach((c, idx) => {
+    if (c > peakCount) {
+      peakCount = c;
+      peakIdx = idx;
+    }
+    if (c < restCount) {
+      restCount = c;
+      restIdx = idx;
+    }
+  });
+
+  const weekdayCount = counts.slice(0, 5).reduce((acc, c) => acc + c, 0);
+  const weekendCount = counts.slice(5).reduce((acc, c) => acc + c, 0);
+
+  const weekdayPct = total > 0 ? Math.round((weekdayCount / total) * 100) : 72;
+  const weekendPct = total > 0 ? Math.round((weekendCount / total) * 100) : 28;
+
+  return {
+    labelsFr: daysFrShort,
+    labelsEn: daysEnShort,
+    counts,
+    percentages,
+    peakDayFr: daysFr[peakIdx],
+    peakDayEn: daysEn[peakIdx],
+    peakCount,
+    weekendPct,
+    weekdayPct,
+    restDayFr: daysFr[restIdx],
+    restDayEn: daysEn[restIdx],
+    restCount
+  };
+}
+

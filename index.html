@@ -350,40 +350,188 @@
     </main>
 
     <!-- =========================================================================
-         PAGE 2 : ANALYTICS & PROGRESSION (Kilométrage Cumulé vs Objectif)
+         PAGE 2 : ANALYTICS & STATISTIQUES (Volume, Dénivelé, Allure & Habitudes)
          ========================================================================= -->
     <main id="page-analytics" class="page-view">
       
-      <section class="grid-bento-season" style="grid-template-columns: 1fr;">
-        <!-- Cumulative YTD chart -->
-        <div class="runner-card chart-card">
-          <div class="chart-header">
-            <div>
-              <h3 class="chart-title" id="lbl-chart-title">Year-to-date progress (2026)</h3>
+      <!-- Étage 1 : Comparatif Multi-Années & Dénivelé Positif Simple -->
+      <section class="grid-bento-season">
+        
+        <!-- 1. Comparatif multi-années (Km par mois & %) -->
+        <div class="runner-card analytics-chart-card">
+          <div class="analytics-card-header">
+            <div class="analytics-header-titles">
+              <span class="analytics-card-eyebrow" id="lbl-multiyear-eyebrow">VOLUME MENSUEL</span>
+              <h3 class="analytics-card-title" id="lbl-multiyear-title">Comparatif multi-années</h3>
+              <p class="analytics-card-subtitle" id="lbl-multiyear-sub">Kilomètres courus par mois et évolution en %</p>
             </div>
-            <span class="act-pill" id="lbl-chart-badge">2026 goal</span>
-          </div>
-          <div class="chart-container" style="height: 320px;">
-            <canvas id="chart-ytd-cumulative"></canvas>
-          </div>
-          <div class="chart-stats-strip">
-            <div class="mini-stat">
-              <span class="mini-stat-label" id="lbl-ytd-runs">YTD runs</span>
-              <span class="mini-stat-val" id="ytd-strip-runs">117</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-stat-label" id="lbl-ytd-time">YTD time</span>
-              <span class="mini-stat-val" id="ytd-strip-time">3d 22h 39m</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-stat-label" id="lbl-ytd-dist">YTD distance</span>
-              <span class="mini-stat-val" id="ytd-strip-dist">1 013 km</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-stat-label" id="lbl-ytd-elev">YTD elevation</span>
-              <span class="mini-stat-val" id="ytd-strip-elev">4 910 m</span>
+            <div class="analytics-header-badge-wrap">
+              <span class="act-pill act-pill-accent" id="lbl-multiyear-badge">+44% vs 2025</span>
             </div>
           </div>
+          
+          <div class="analytics-legend-strip">
+            <span class="analytics-legend-item"><span class="analytics-legend-dot dot-2026"></span> <span id="lbl-legend-2026">2026 (En cours)</span></span>
+            <span class="analytics-legend-item"><span class="analytics-legend-dot dot-2025"></span> <span id="lbl-legend-2025">2025</span></span>
+            <span class="analytics-legend-item"><span class="analytics-legend-dot dot-2024"></span> <span id="lbl-legend-2024">2024</span></span>
+          </div>
+
+          <div class="chart-container analytics-chart-container">
+            <canvas id="chart-multiyear-comparison"></canvas>
+          </div>
+
+          <div class="analytics-stats-footer">
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-multiyear-stat-total">Total 2026</span>
+              <span class="mini-stat-val" id="val-multiyear-total">1 082 km</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-multiyear-stat-comp">Progression vs 2025</span>
+              <span class="mini-stat-val" id="val-multiyear-comp">+132% (à date)</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-multiyear-stat-peak">Pic mensuel</span>
+              <span class="mini-stat-val" id="val-multiyear-peak">168 km (Mars)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Dénivelé positif mensuel (Aperçu simple en mètres de D+) -->
+        <div class="runner-card analytics-chart-card">
+          <div class="analytics-card-header">
+            <div class="analytics-header-titles">
+              <span class="analytics-card-eyebrow" id="lbl-elevation-eyebrow">DÉNIVELÉ POSITIF</span>
+              <h3 class="analytics-card-title" id="lbl-elevation-title">Dénivelé positif mensuel</h3>
+              <p class="analytics-card-subtitle" id="lbl-elevation-sub">Mètres de D+ gravis chaque mois (2026)</p>
+            </div>
+            <div class="analytics-header-badge-wrap">
+              <span class="act-pill" id="lbl-elevation-badge">+5 212 m D+ en 2026</span>
+            </div>
+          </div>
+
+          <div class="chart-container analytics-chart-container">
+            <canvas id="chart-monthly-elevation"></canvas>
+          </div>
+
+          <div class="analytics-stats-footer">
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-elev-stat-avg">Moyenne mensuelle</span>
+              <span class="mini-stat-val" id="val-elev-avg">579 m / mois</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-elev-stat-peak">Mois le plus raide</span>
+              <span class="mini-stat-val" id="val-elev-peak">+764 m (Juin)</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-elev-stat-ratio">D+ moyen par run</span>
+              <span class="mini-stat-val" id="val-elev-ratio">41 m / sortie</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Étage 2 : Évolution de l'allure moyenne dans le temps -->
+      <section style="margin-top: var(--space-lg);">
+        <div class="runner-card analytics-chart-card">
+          <div class="analytics-card-header">
+            <div class="analytics-header-titles">
+              <span class="analytics-card-eyebrow" id="lbl-pace-eyebrow">RYTHME & VITESSE</span>
+              <h3 class="analytics-card-title" id="lbl-pace-title">Évolution de l'allure moyenne dans le temps</h3>
+              <p class="analytics-card-subtitle" id="lbl-pace-sub">Moyenne mensuelle (min/km) sur les 12 derniers mois actifs</p>
+            </div>
+            <div class="analytics-header-badge-wrap">
+              <span class="act-pill act-pill-accent" id="lbl-pace-badge">Allure pic : 5:27 /km</span>
+            </div>
+          </div>
+
+          <div class="chart-container analytics-chart-container" style="height: 260px;">
+            <canvas id="chart-pace-trend"></canvas>
+          </div>
+
+          <div class="analytics-stats-footer">
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-pace-stat-cur">Allure récente</span>
+              <span class="mini-stat-val" id="val-pace-cur">5:44 /km</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-pace-stat-best">Record mensuel</span>
+              <span class="mini-stat-val" id="val-pace-best">5:27 /km (Mai 2026)</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-stat-label" id="lbl-pace-stat-range">Amplitude d'allure</span>
+              <span class="mini-stat-val" id="val-pace-range">21s /km</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Étage 3 : Habitudes & Typologie de sorties -->
+      <section style="margin-top: var(--space-xl);">
+        <div class="analytics-section-title-wrap">
+          <div>
+            <h2 class="section-title" id="lbl-habits-section-title">Habitudes & Typologie de sorties</h2>
+            <p class="section-subtitle" id="lbl-habits-section-sub">Profil des séances et routines d'entraînement réelles</p>
+          </div>
+        </div>
+
+        <div class="grid-bento-season" style="margin-top: var(--space-md);">
+          
+          <!-- 4. Distribution par typologie de distance -->
+          <div class="runner-card analytics-chart-card">
+            <div class="analytics-card-header">
+              <div class="analytics-header-titles">
+                <span class="analytics-card-eyebrow" id="lbl-dist-types-eyebrow">PROFIL DES SÉANCES</span>
+                <h3 class="analytics-card-title" id="lbl-dist-types-title">Distribution par distance</h3>
+                <p class="analytics-card-subtitle" id="lbl-dist-types-sub">Répartition des 290 séances selon leur longueur</p>
+              </div>
+              <div class="analytics-header-badge-wrap">
+                <span class="act-pill" id="lbl-dist-types-badge">73% en 6-12 km</span>
+              </div>
+            </div>
+
+            <div class="chart-container analytics-chart-container" style="height: 240px;">
+              <canvas id="chart-distance-types"></canvas>
+            </div>
+
+            <div class="dist-types-breakdown" id="dist-types-breakdown">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- 5. Jours d'entraînement favoris -->
+          <div class="runner-card analytics-chart-card">
+            <div class="analytics-card-header">
+              <div class="analytics-header-titles">
+                <span class="analytics-card-eyebrow" id="lbl-day-freq-eyebrow">ROUTINE HEBDOMADAIRE</span>
+                <h3 class="analytics-card-title" id="lbl-day-freq-title">Jours d'entraînement favoris</h3>
+                <p class="analytics-card-subtitle" id="lbl-day-freq-sub">Nombre de sorties par jour de la semaine</p>
+              </div>
+              <div class="analytics-header-badge-wrap">
+                <span class="act-pill act-pill-accent" id="lbl-day-freq-badge">Samedi n°1 (62 sorties)</span>
+              </div>
+            </div>
+
+            <div class="chart-container analytics-chart-container" style="height: 240px;">
+              <canvas id="chart-day-frequency"></canvas>
+            </div>
+
+            <div class="analytics-stats-footer">
+              <div class="mini-stat">
+                <span class="mini-stat-label" id="lbl-day-stat-top">Jour de pointe</span>
+                <span class="mini-stat-val" id="val-day-top">Samedi (62 runs)</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-stat-label" id="lbl-day-stat-split">Semaine vs Week-end</span>
+                <span class="mini-stat-val" id="val-day-split">72% / 28%</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-stat-label" id="lbl-day-stat-rest">Jour de repos privilégié</span>
+                <span class="mini-stat-val" id="val-day-rest">Dimanche (19 runs)</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 

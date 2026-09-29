@@ -124,6 +124,55 @@ export const translations = {
     ytdDist: "YTD distance",
     ytdElev: "YTD elevation",
 
+    // Analytics & Charts (Volume, D+, Allure, Habitudes)
+    chartMultiyearEyebrow: "MONTHLY VOLUME",
+    chartMultiyearTitle: "Multi-Year Comparison",
+    chartMultiyearSub: "Kilometers run per month and % variation",
+    chartMultiyearBadge: "+44% vs 2025",
+    chartMultiyearStatTotal: "2026 Volume",
+    chartMultiyearStatComp: "YTD Progression",
+    chartMultiyearStatPeak: "Monthly Peak",
+    chartMultiyearLegend2026: "2026 (Current)",
+    chartMultiyearLegend2025: "2025",
+    chartMultiyearLegend2024: "2024",
+
+    chartElevationEyebrow: "ELEVATION GAIN",
+    chartElevationTitle: "Monthly Elevation Gain",
+    chartElevationSub: "Meters of D+ climbed each month (2026)",
+    chartElevationBadge: "+5,212 m D+ in 2026",
+    chartElevationAvg: "Monthly Average",
+    chartElevationPeak: "Steepest Month",
+    chartElevationRatio: "Avg D+ per run",
+
+    chartPaceEyebrow: "PACE & SPEED",
+    chartPaceTitle: "Average Pace Evolution Over Time",
+    chartPaceSub: "Monthly average pace (min/km) over the last 12 active months",
+    chartPaceBadge: "Peak pace: 5:27 /km",
+    chartPaceCurrent: "Recent Pace",
+    chartPaceBest: "Monthly Record",
+    chartPaceRange: "Pace Amplitude",
+
+    chartHabitsSectionTitle: "Training Habits & Run Types",
+    chartHabitsSectionSub: "Session breakdown and weekly training routines",
+
+    chartDistTypesEyebrow: "SESSION PROFILE",
+    chartDistTypesTitle: "Distance Distribution",
+    chartDistTypesSub: "Breakdown of the 290 sessions by distance",
+    chartDistTypesBadge: "73% in 6-12 km",
+
+    chartDayFreqEyebrow: "WEEKLY ROUTINE",
+    chartDayFreqTitle: "Favorite Training Days",
+    chartDayFreqSub: "Number of runs per day of the week",
+    chartDayFreqBadge: "Saturday #1 (62 runs)",
+    chartDayStatTop: "Peak Training Day",
+    chartDayStatSplit: "Weekday vs Weekend",
+    chartDayStatRest: "Preferred Rest Day",
+
+    distCatShort: "Short (< 6 km)",
+    distCatMid: "Mid (6 – 12 km)",
+    distCatLong: "Long (12 – 18 km)",
+    distCatXl: "Half & XL (> 18 km)",
+
     // Monthly Training Calendar (Strava style)
     calendarTitle: "Monthly consistency",
     calendarSubtitle: "",
@@ -320,6 +369,55 @@ export const translations = {
     ytdTime: "Temps 2026",
     ytdDist: "Distance 2026",
     ytdElev: "Dénivelé 2026",
+
+    // Analytics & Charts (Volume, D+, Allure, Habitudes)
+    chartMultiyearEyebrow: "VOLUME MENSUEL",
+    chartMultiyearTitle: "Comparatif multi-années",
+    chartMultiyearSub: "Kilomètres courus par mois et évolution en %",
+    chartMultiyearBadge: "+44% vs 2025",
+    chartMultiyearStatTotal: "Total 2026",
+    chartMultiyearStatComp: "Progression à date",
+    chartMultiyearStatPeak: "Pic mensuel",
+    chartMultiyearLegend2026: "2026 (En cours)",
+    chartMultiyearLegend2025: "2025",
+    chartMultiyearLegend2024: "2024",
+
+    chartElevationEyebrow: "DÉNIVELÉ POSITIF",
+    chartElevationTitle: "Dénivelé positif mensuel",
+    chartElevationSub: "Mètres de D+ gravis chaque mois (2026)",
+    chartElevationBadge: "+5 212 m D+ en 2026",
+    chartElevationAvg: "Moyenne mensuelle",
+    chartElevationPeak: "Mois le plus raide",
+    chartElevationRatio: "D+ moyen par run",
+
+    chartPaceEyebrow: "RYTHME & VITESSE",
+    chartPaceTitle: "Évolution de l'allure moyenne dans le temps",
+    chartPaceSub: "Moyenne mensuelle (min/km) sur les 12 derniers mois actifs",
+    chartPaceBadge: "Allure pic : 5:27 /km",
+    chartPaceCurrent: "Allure récente",
+    chartPaceBest: "Record mensuel",
+    chartPaceRange: "Amplitude d'allure",
+
+    chartHabitsSectionTitle: "Habitudes & Typologie de sorties",
+    chartHabitsSectionSub: "Profil des séances et routines d'entraînement réelles",
+
+    chartDistTypesEyebrow: "PROFIL DES SÉANCES",
+    chartDistTypesTitle: "Distribution par distance",
+    chartDistTypesSub: "Répartition des 290 séances selon leur longueur",
+    chartDistTypesBadge: "73% en 6-12 km",
+
+    chartDayFreqEyebrow: "ROUTINE HEBDOMADAIRE",
+    chartDayFreqTitle: "Jours d'entraînement favoris",
+    chartDayFreqSub: "Nombre de sorties par jour de la semaine",
+    chartDayFreqBadge: "Samedi n°1 (62 sorties)",
+    chartDayStatTop: "Jour de pointe",
+    chartDayStatSplit: "Semaine vs Week-end",
+    chartDayStatRest: "Jour de repos privilégié",
+
+    distCatShort: "Courtes (< 6 km)",
+    distCatMid: "Moyennes (6 – 12 km)",
+    distCatLong: "Longues (12 – 18 km)",
+    distCatXl: "Semi & XL (> 18 km)",
 
     // Monthly Training Calendar (Strava style)
     calendarTitle: "Constance mensuelle",
