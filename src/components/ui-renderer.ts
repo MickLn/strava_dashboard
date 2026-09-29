@@ -80,8 +80,6 @@ export class UIRenderer {
     setTxt('lbl-top-15k', t.top15k);
 
     setTxt('lbl-career-stats-title', t.careerStatsTitle);
-    setTxt('lbl-career-stats-sub', t.careerStatsSubtitle);
-    setTxt('lbl-career-stats-badge', t.careerStatsBadge);
     setTxt('lbl-career-alltime-title', t.careerAllTimeTitle);
     setTxt('lbl-career-alltime-period', t.careerAllTimePeriod);
     setTxt('lbl-stat-dist-all', t.careerStatDist);
@@ -89,9 +87,6 @@ export class UIRenderer {
     setTxt('lbl-unit-runs-all', t.careerUnitRuns);
     setTxt('lbl-stat-time-all', t.careerStatTime);
     setTxt('lbl-stat-elev-all', t.careerStatElev);
-    setTxt('lbl-stat-runs-all-sub', t.careerStatRunsAllSub);
-    setTxt('lbl-stat-time-all-sub', t.careerStatTimeAllSub);
-    setTxt('lbl-stat-elev-all-sub', t.careerStatElevAllSub);
 
     setTxt('lbl-career-ytd-title', t.careerYtdTitle);
     setTxt('lbl-stat-dist-ytd', t.careerStatDistYtd);
@@ -99,9 +94,6 @@ export class UIRenderer {
     setTxt('lbl-unit-runs-ytd', t.careerUnitRuns);
     setTxt('lbl-stat-time-ytd', t.careerStatTimeYtd);
     setTxt('lbl-stat-elev-ytd', t.careerStatElevYtd);
-    setTxt('lbl-stat-runs-ytd-sub', t.careerStatRunsYtdSub);
-    setTxt('lbl-stat-time-ytd-sub', t.careerStatTimeYtdSub);
-    setTxt('lbl-stat-elev-ytd-sub', t.careerStatElevYtdSub);
 
     setTxt('lbl-annual-calendar-title', t.annualCalendarTitle);
     setTxt('lbl-annual-calendar-sub', t.annualCalendarSubtitle);
@@ -766,7 +758,6 @@ export class UIRenderer {
     }
 
     const allKm = Math.round(allDistMeters / 1000);
-    const allAvgKm = allRuns > 0 ? (allDistMeters / 1000 / allRuns).toFixed(1) : '0';
     const allHours = Math.floor(allTimeSeconds / 3600);
     const allMinutes = Math.floor((allTimeSeconds % 3600) / 60);
 
@@ -774,13 +765,11 @@ export class UIRenderer {
     const runsAllEl = document.getElementById('stat-runs-all');
     const timeAllEl = document.getElementById('stat-time-all');
     const elevAllEl = document.getElementById('stat-elev-all');
-    const distAllSubEl = document.getElementById('stat-dist-all-sub');
 
     if (distAllEl) distAllEl.textContent = allKm.toLocaleString(numLocale);
     if (runsAllEl) runsAllEl.textContent = allRuns.toLocaleString(numLocale);
     if (timeAllEl) timeAllEl.textContent = `${allHours}h ${allMinutes.toString().padStart(2, '0')}m`;
     if (elevAllEl) elevAllEl.textContent = `+${Math.round(allElevMeters).toLocaleString(numLocale)}`;
-    if (distAllSubEl) distAllSubEl.textContent = isFr ? `~${allAvgKm} km / sortie` : `~${allAvgKm} km / run`;
 
     // 2. YTD Totals (2026)
     const ytd = dataset.stats?.ytd_run_totals;
@@ -798,7 +787,6 @@ export class UIRenderer {
     }
 
     const ytdKm = Math.round(ytdDistMeters / 1000);
-    const ytdAvgKm = ytdRuns > 0 ? (ytdDistMeters / 1000 / ytdRuns).toFixed(1) : '0';
     const ytdHours = Math.floor(ytdTimeSeconds / 3600);
     const ytdMinutes = Math.floor((ytdTimeSeconds % 3600) / 60);
     const ytdPct = allDistMeters > 0 ? Math.round((ytdDistMeters / allDistMeters) * 100) : 0;
@@ -807,14 +795,12 @@ export class UIRenderer {
     const runsYtdEl = document.getElementById('stat-runs-ytd');
     const timeYtdEl = document.getElementById('stat-time-ytd');
     const elevYtdEl = document.getElementById('stat-elev-ytd');
-    const distYtdSubEl = document.getElementById('stat-dist-ytd-sub');
     const ytdPctBadge = document.getElementById('lbl-career-ytd-pct');
 
     if (distYtdEl) distYtdEl.textContent = ytdKm.toLocaleString(numLocale);
     if (runsYtdEl) runsYtdEl.textContent = ytdRuns.toLocaleString(numLocale);
     if (timeYtdEl) timeYtdEl.textContent = `${ytdHours}h ${ytdMinutes.toString().padStart(2, '0')}m`;
     if (elevYtdEl) elevYtdEl.textContent = `+${Math.round(ytdElevMeters).toLocaleString(numLocale)}`;
-    if (distYtdSubEl) distYtdSubEl.textContent = isFr ? `~${ytdAvgKm} km / sortie` : `~${ytdAvgKm} km / run`;
     if (ytdPctBadge) ytdPctBadge.textContent = isFr ? `${ytdPct}% du volume` : `${ytdPct}% of volume`;
   }
 

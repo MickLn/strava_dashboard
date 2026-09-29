@@ -1125,7 +1125,7 @@
 
 .career-stat-tile:hover {
   background-color: var(--bg-surface-subtle);
-  border-color: var(--color-primary);
+  border-color: var(--border-medium);
   transform: none;
 }
 
