@@ -471,7 +471,7 @@
   background-color: var(--color-primary);
   border-color: var(--color-primary);
   color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(224, 90, 54, 0.3);
+  box-shadow: 0 2px 6px rgba(224, 90, 54, 0.16);
   cursor: pointer;
 }
 
@@ -1043,6 +1043,134 @@
   white-space: nowrap;
   text-align: right;
   margin-left: 4px;
+}
+
+/* 4b. Global & YTD Career Stats Card */
+.career-stats-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: 380px;
+  box-sizing: border-box;
+}
+
+.career-stats-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.career-stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.career-stats-section.ytd-section {
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-light);
+}
+
+.career-stats-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.career-stats-group-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.career-stats-group-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+}
+
+.career-stats-group-badge.ytd-badge {
+  background: rgba(224, 90, 54, 0.08);
+  color: var(--color-primary);
+  border-color: rgba(224, 90, 54, 0.2);
+}
+
+.career-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.career-stat-tile {
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all var(--transition-fast);
+  min-width: 0;
+}
+
+.career-stat-tile:hover {
+  background-color: var(--bg-surface-subtle);
+  border-color: var(--color-primary);
+  transform: none;
+}
+
+.career-stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.career-stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.career-stat-val {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.career-stat-tile.ytd-tile .career-stat-val {
+  color: var(--color-primary);
+}
+
+.career-stat-unit {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.career-stat-sub {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 5. Charts Card */
@@ -1950,7 +2078,7 @@
   width: calc(50% - 4px);
   background-color: var(--color-primary);
   border-radius: var(--radius-pill);
-  box-shadow: 0 2px 6px rgba(224, 90, 58, 0.28);
+  box-shadow: 0 1px 4px rgba(224, 90, 58, 0.15);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: 1;
@@ -2562,9 +2690,27 @@
     justify-content: center;
   }
 
-  /* Calendrier annuel : bouton i visible en haut, légende du bas masquée */
+
+  /* Calendrier annuel : bouton i visible en haut et aligné à droite, légende du bas masquée */
+  .annual-calendar-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .annual-calendar-title-block {
+    width: 100%;
+  }
+  .annual-calendar-title-row {
+    width: 100%;
+    justify-content: space-between;
+  }
   .btn-annual-legend-toggle {
     display: inline-flex;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .annual-calendar-summary-badge {
+    align-self: flex-start;
   }
   .annual-calendar-legend {
     display: none !important;
@@ -2583,6 +2729,11 @@
   font-weight: 700;
   color: var(--color-primary);
   white-space: nowrap;
+}
+
+/* Quick Month Selector Bar (Mobile Carousel Nav) */
+.annual-calendar-month-nav {
+  display: none;
 }
 
 .annual-calendar-months-grid {
@@ -2605,9 +2756,87 @@
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
+  /* Month Nav Pills Bar */
+  .annual-calendar-month-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    width: 100%;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+  }
+
+  .annual-calendar-month-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .annual-month-nav-pill {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    color: var(--text-secondary);
+    background-color: var(--bg-surface-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .annual-month-nav-pill:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background-color: var(--bg-surface-subtle);
+  }
+
+  .annual-month-nav-pill.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(224, 90, 54, 0.2);
+  }
+
+  .annual-month-nav-pill.is-current:not(.active) {
+    border-color: rgba(224, 90, 54, 0.4);
+    color: var(--color-primary);
+    background-color: rgba(224, 90, 54, 0.08);
+  }
+
+  /* Horizontal Scroll-Snap Carousel for Months */
   .annual-calendar-months-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 2px 2px 8px;
+    scrollbar-width: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .annual-calendar-months-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .annual-month-block {
+    flex: 0 0 100%;
+    max-width: 100%;
+    min-width: 0;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    box-sizing: border-box;
   }
 }
 
@@ -2727,7 +2956,7 @@
   border: 1px solid var(--color-primary);
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(224, 90, 54, 0.32);
+  box-shadow: 0 1px 4px rgba(224, 90, 54, 0.16);
 }
 
 .annual-day-cell:not(.level-0):hover {
@@ -3730,7 +3959,7 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(224, 218, 206, 0.95);
     border-radius: 20px;
-    box-shadow: 0 4px 16px rgba(35, 25, 15, 0.08), 0 1px 4px rgba(35, 25, 15, 0.04);
+    box-shadow: 0 4px 14px rgba(35, 25, 15, 0.05), 0 1px 3px rgba(35, 25, 15, 0.025);
     padding: 5px 6px;
     overflow: hidden;
     user-select: none;
@@ -3738,7 +3967,7 @@
   }
 
   .mobile-week-pill.expanded {
-    box-shadow: 0 6px 20px rgba(35, 25, 15, 0.08), 0 2px 6px rgba(35, 25, 15, 0.04);
+    box-shadow: 0 6px 18px rgba(35, 25, 15, 0.06), 0 2px 6px rgba(35, 25, 15, 0.03);
     padding: 6px 12px 14px;
   }
 
@@ -3781,7 +4010,7 @@
     background-color: var(--color-primary);
     border-color: var(--color-primary);
     color: #FFFFFF;
-    box-shadow: 0 2px 6px rgba(224, 90, 54, 0.32);
+    box-shadow: 0 2px 6px rgba(224, 90, 54, 0.16);
     cursor: pointer;
   }
 

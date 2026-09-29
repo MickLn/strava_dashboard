@@ -120,13 +120,14 @@ class App {
     renderCharts(this.dataset.activities, 2026);
     UIRenderer.renderYtdStrip(this.dataset);
 
-    // Page 3 : Records, Calendrier Annuel & Trophées
+    // Page 3 : Records, Statistiques Globales, Calendrier Annuel & Trophées
     UIRenderer.renderRecords(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {
         UIRenderer.openActivityModal(act, this.dataset!);
       }
     });
+    UIRenderer.renderCareerStats(this.dataset);
     UIRenderer.renderAnnualCalendar(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {

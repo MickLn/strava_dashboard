@@ -79,6 +79,30 @@ export class UIRenderer {
     setTxt('lbl-top-10k', t.top10k);
     setTxt('lbl-top-15k', t.top15k);
 
+    setTxt('lbl-career-stats-title', t.careerStatsTitle);
+    setTxt('lbl-career-stats-sub', t.careerStatsSubtitle);
+    setTxt('lbl-career-stats-badge', t.careerStatsBadge);
+    setTxt('lbl-career-alltime-title', t.careerAllTimeTitle);
+    setTxt('lbl-career-alltime-period', t.careerAllTimePeriod);
+    setTxt('lbl-stat-dist-all', t.careerStatDist);
+    setTxt('lbl-stat-runs-all', t.careerStatRuns);
+    setTxt('lbl-unit-runs-all', t.careerUnitRuns);
+    setTxt('lbl-stat-time-all', t.careerStatTime);
+    setTxt('lbl-stat-elev-all', t.careerStatElev);
+    setTxt('lbl-stat-runs-all-sub', t.careerStatRunsAllSub);
+    setTxt('lbl-stat-time-all-sub', t.careerStatTimeAllSub);
+    setTxt('lbl-stat-elev-all-sub', t.careerStatElevAllSub);
+
+    setTxt('lbl-career-ytd-title', t.careerYtdTitle);
+    setTxt('lbl-stat-dist-ytd', t.careerStatDistYtd);
+    setTxt('lbl-stat-runs-ytd', t.careerStatRunsYtd);
+    setTxt('lbl-unit-runs-ytd', t.careerUnitRuns);
+    setTxt('lbl-stat-time-ytd', t.careerStatTimeYtd);
+    setTxt('lbl-stat-elev-ytd', t.careerStatElevYtd);
+    setTxt('lbl-stat-runs-ytd-sub', t.careerStatRunsYtdSub);
+    setTxt('lbl-stat-time-ytd-sub', t.careerStatTimeYtdSub);
+    setTxt('lbl-stat-elev-ytd-sub', t.careerStatElevYtdSub);
+
     setTxt('lbl-annual-calendar-title', t.annualCalendarTitle);
     setTxt('lbl-annual-calendar-sub', t.annualCalendarSubtitle);
     setTxt('lbl-annual-legend', t.annualLegendLabel);
@@ -688,6 +712,80 @@ export class UIRenderer {
   }
 
   /**
+   * Rendu des statistiques globales de carrière et saison en cours (YTD)
+   */
+  public static renderCareerStats(dataset: StravaDataset): void {
+    const isFr = i18n.getLang() === 'fr';
+    const numLocale = isFr ? 'fr-FR' : 'en-US';
+
+    // 1. All-time Totals
+    const all = dataset.stats?.all_run_totals;
+    let allRuns = all?.count || 0;
+    let allDistMeters = all?.distance || 0;
+    let allTimeSeconds = all?.moving_time || 0;
+    let allElevMeters = all?.elevation_gain || 0;
+
+    if (dataset.activities && dataset.activities.length > allRuns) {
+      allRuns = dataset.activities.length;
+      allDistMeters = dataset.activities.reduce((acc, a) => acc + (a.distance || 0), 0);
+      allTimeSeconds = dataset.activities.reduce((acc, a) => acc + (a.moving_time || 0), 0);
+      allElevMeters = dataset.activities.reduce((acc, a) => acc + (a.total_elevation_gain || 0), 0);
+    }
+
+    const allKm = Math.round(allDistMeters / 1000);
+    const allAvgKm = allRuns > 0 ? (allDistMeters / 1000 / allRuns).toFixed(1) : '0';
+    const allHours = Math.floor(allTimeSeconds / 3600);
+    const allMinutes = Math.floor((allTimeSeconds % 3600) / 60);
+
+    const distAllEl = document.getElementById('stat-dist-all');
+    const runsAllEl = document.getElementById('stat-runs-all');
+    const timeAllEl = document.getElementById('stat-time-all');
+    const elevAllEl = document.getElementById('stat-elev-all');
+    const distAllSubEl = document.getElementById('stat-dist-all-sub');
+
+    if (distAllEl) distAllEl.textContent = allKm.toLocaleString(numLocale);
+    if (runsAllEl) runsAllEl.textContent = allRuns.toLocaleString(numLocale);
+    if (timeAllEl) timeAllEl.textContent = `${allHours}h ${allMinutes.toString().padStart(2, '0')}m`;
+    if (elevAllEl) elevAllEl.textContent = `+${Math.round(allElevMeters).toLocaleString(numLocale)}`;
+    if (distAllSubEl) distAllSubEl.textContent = isFr ? `~${allAvgKm} km / sortie` : `~${allAvgKm} km / run`;
+
+    // 2. YTD Totals (2026)
+    const ytd = dataset.stats?.ytd_run_totals;
+    let ytdRuns = ytd?.count || 0;
+    let ytdDistMeters = ytd?.distance || 0;
+    let ytdTimeSeconds = ytd?.moving_time || 0;
+    let ytdElevMeters = ytd?.elevation_gain || 0;
+
+    const ytdActivities = (dataset.activities || []).filter(a => (a.start_date_local || '').startsWith('2026'));
+    if (ytdActivities.length > ytdRuns) {
+      ytdRuns = ytdActivities.length;
+      ytdDistMeters = ytdActivities.reduce((acc, a) => acc + (a.distance || 0), 0);
+      ytdTimeSeconds = ytdActivities.reduce((acc, a) => acc + (a.moving_time || 0), 0);
+      ytdElevMeters = ytdActivities.reduce((acc, a) => acc + (a.total_elevation_gain || 0), 0);
+    }
+
+    const ytdKm = Math.round(ytdDistMeters / 1000);
+    const ytdAvgKm = ytdRuns > 0 ? (ytdDistMeters / 1000 / ytdRuns).toFixed(1) : '0';
+    const ytdHours = Math.floor(ytdTimeSeconds / 3600);
+    const ytdMinutes = Math.floor((ytdTimeSeconds % 3600) / 60);
+    const ytdPct = allDistMeters > 0 ? Math.round((ytdDistMeters / allDistMeters) * 100) : 0;
+
+    const distYtdEl = document.getElementById('stat-dist-ytd');
+    const runsYtdEl = document.getElementById('stat-runs-ytd');
+    const timeYtdEl = document.getElementById('stat-time-ytd');
+    const elevYtdEl = document.getElementById('stat-elev-ytd');
+    const distYtdSubEl = document.getElementById('stat-dist-ytd-sub');
+    const ytdPctBadge = document.getElementById('lbl-career-ytd-pct');
+
+    if (distYtdEl) distYtdEl.textContent = ytdKm.toLocaleString(numLocale);
+    if (runsYtdEl) runsYtdEl.textContent = ytdRuns.toLocaleString(numLocale);
+    if (timeYtdEl) timeYtdEl.textContent = `${ytdHours}h ${ytdMinutes.toString().padStart(2, '0')}m`;
+    if (elevYtdEl) elevYtdEl.textContent = `+${Math.round(ytdElevMeters).toLocaleString(numLocale)}`;
+    if (distYtdSubEl) distYtdSubEl.textContent = isFr ? `~${ytdAvgKm} km / sortie` : `~${ytdAvgKm} km / run`;
+    if (ytdPctBadge) ytdPctBadge.textContent = isFr ? `${ytdPct}% du volume` : `${ytdPct}% of volume`;
+  }
+
+  /**
    * Calendrier annuel perpétuel (Matrice des 366 jours courus sur l'année complète)
    */
   public static renderAnnualCalendar(dataset: StravaDataset, onSelectActivity?: (id: number) => void): void {
@@ -768,6 +866,86 @@ export class UIRenderer {
 
       container.appendChild(monthBlock);
     });
+
+    // Rendu des pilules de navigation rapide des mois (Mobile Carousel Nav)
+    const monthNav = document.getElementById('annual-calendar-month-nav');
+    if (monthNav) {
+      monthNav.innerHTML = '';
+      const shortMonthsFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+      const shortMonthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const shortNames = isFr ? shortMonthsFr : shortMonthsEn;
+
+      matrix.months.forEach(month => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = `annual-month-nav-pill${month.monthIndex === currentMonthIndex ? ' is-current active' : ''}`;
+        pill.textContent = shortNames[month.monthIndex];
+        pill.setAttribute('data-month', String(month.monthIndex));
+
+        pill.addEventListener('click', () => {
+          monthNav.querySelectorAll('.annual-month-nav-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+
+          const targetBlock = container.children[month.monthIndex] as HTMLElement;
+          if (targetBlock) {
+            container.scrollTo({
+              left: targetBlock.offsetLeft - container.offsetLeft,
+              behavior: 'smooth'
+            });
+          }
+        });
+
+        monthNav.appendChild(pill);
+      });
+    }
+
+    // Synchronisation active au swipe dans le carrousel
+    let isScrollingAnim: number | null = null;
+    container.onscroll = () => {
+      if (!monthNav) return;
+      if (isScrollingAnim) cancelAnimationFrame(isScrollingAnim);
+      isScrollingAnim = requestAnimationFrame(() => {
+        const centerPos = container.scrollLeft + container.clientWidth / 2;
+        let closestIndex = 0;
+        let minDiff = Infinity;
+
+        Array.from(container.children).forEach((child, idx) => {
+          const block = child as HTMLElement;
+          const blockCenter = block.offsetLeft - container.offsetLeft + block.offsetWidth / 2;
+          const diff = Math.abs(centerPos - blockCenter);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIndex = idx;
+          }
+        });
+
+        const pills = monthNav.querySelectorAll<HTMLElement>('.annual-month-nav-pill');
+        pills.forEach((p, idx) => {
+          const isActive = idx === closestIndex;
+          p.classList.toggle('active', isActive);
+          if (isActive) {
+            p.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+          }
+        });
+      });
+    };
+
+    // Auto-centrage sur le mois en cours au chargement initial sur mobile
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        const currentBlock = container.children[currentMonthIndex] as HTMLElement;
+        if (currentBlock) {
+          container.scrollTo({
+            left: currentBlock.offsetLeft - container.offsetLeft,
+            behavior: 'auto'
+          });
+          const activePill = monthNav?.children[currentMonthIndex] as HTMLElement;
+          if (activePill) {
+            activePill.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
+          }
+        }
+      }, 80);
+    }
   }
 
   /**
