@@ -125,41 +125,27 @@ export class UIRenderer {
     if (shoeSearchInput) shoeSearchInput.placeholder = t.shoeHistorySearch;
 
     // Analytics & Charts (Volume, D+, Allure, Habitudes)
-    setTxt('lbl-multiyear-eyebrow', t.chartMultiyearEyebrow);
     setTxt('lbl-multiyear-title', t.chartMultiyearTitle);
-    setTxt('lbl-multiyear-sub', t.chartMultiyearSub);
-    setTxt('lbl-legend-2026', t.chartMultiyearLegend2026);
-    setTxt('lbl-legend-2025', t.chartMultiyearLegend2025);
-    setTxt('lbl-legend-2024', t.chartMultiyearLegend2024);
     setTxt('lbl-multiyear-stat-total', t.chartMultiyearStatTotal);
     setTxt('lbl-multiyear-stat-comp', t.chartMultiyearStatComp);
     setTxt('lbl-multiyear-stat-peak', t.chartMultiyearStatPeak);
 
-    setTxt('lbl-elevation-eyebrow', t.chartElevationEyebrow);
     setTxt('lbl-elevation-title', t.chartElevationTitle);
-    setTxt('lbl-elevation-sub', t.chartElevationSub);
     setTxt('lbl-elev-stat-avg', t.chartElevationAvg);
     setTxt('lbl-elev-stat-peak', t.chartElevationPeak);
     setTxt('lbl-elev-stat-ratio', t.chartElevationRatio);
 
-    setTxt('lbl-pace-eyebrow', t.chartPaceEyebrow);
     setTxt('lbl-pace-title', t.chartPaceTitle);
-    setTxt('lbl-pace-sub', t.chartPaceSub);
     setTxt('lbl-pace-stat-cur', t.chartPaceCurrent);
     setTxt('lbl-pace-stat-best', t.chartPaceBest);
     setTxt('lbl-pace-stat-range', t.chartPaceRange);
 
     setTxt('lbl-habits-section-title', t.chartHabitsSectionTitle);
-    setTxt('lbl-habits-section-sub', t.chartHabitsSectionSub);
 
-    setTxt('lbl-dist-types-eyebrow', t.chartDistTypesEyebrow);
     setTxt('lbl-dist-types-title', t.chartDistTypesTitle);
-    setTxt('lbl-dist-types-sub', t.chartDistTypesSub);
     setTxt('lbl-dist-types-badge', t.chartDistTypesBadge);
 
-    setTxt('lbl-day-freq-eyebrow', t.chartDayFreqEyebrow);
     setTxt('lbl-day-freq-title', t.chartDayFreqTitle);
-    setTxt('lbl-day-freq-sub', t.chartDayFreqSub);
     setTxt('lbl-day-stat-top', t.chartDayStatTop);
     setTxt('lbl-day-stat-split', t.chartDayStatSplit);
     setTxt('lbl-day-stat-rest', t.chartDayStatRest);

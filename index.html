@@ -357,23 +357,19 @@
       <!-- Étage 1 : Comparatif Multi-Années & Dénivelé Positif Simple -->
       <section class="grid-bento-season">
         
-        <!-- 1. Comparatif multi-années (Km par mois & %) -->
+        <!-- 1. Volume mensuel -->
         <div class="runner-card analytics-chart-card">
           <div class="analytics-card-header">
             <div class="analytics-header-titles">
-              <span class="analytics-card-eyebrow" id="lbl-multiyear-eyebrow">VOLUME MENSUEL</span>
-              <h3 class="analytics-card-title" id="lbl-multiyear-title">Comparatif multi-années</h3>
-              <p class="analytics-card-subtitle" id="lbl-multiyear-sub">Kilomètres courus par mois et évolution en %</p>
+              <h3 class="analytics-card-title" id="lbl-multiyear-title">Volume mensuel</h3>
             </div>
             <div class="analytics-header-badge-wrap">
               <span class="act-pill act-pill-accent" id="lbl-multiyear-badge">+44% vs 2025</span>
             </div>
           </div>
           
-          <div class="analytics-legend-strip">
-            <span class="analytics-legend-item"><span class="analytics-legend-dot dot-2026"></span> <span id="lbl-legend-2026">2026 (En cours)</span></span>
-            <span class="analytics-legend-item"><span class="analytics-legend-dot dot-2025"></span> <span id="lbl-legend-2025">2025</span></span>
-            <span class="analytics-legend-item"><span class="analytics-legend-dot dot-2024"></span> <span id="lbl-legend-2024">2024</span></span>
+          <div class="year-compare-selector" id="year-compare-selector">
+            <!-- Dynamically populated year selector pills -->
           </div>
 
           <div class="chart-container analytics-chart-container">
@@ -400,9 +396,7 @@
         <div class="runner-card analytics-chart-card">
           <div class="analytics-card-header">
             <div class="analytics-header-titles">
-              <span class="analytics-card-eyebrow" id="lbl-elevation-eyebrow">DÉNIVELÉ POSITIF</span>
-              <h3 class="analytics-card-title" id="lbl-elevation-title">Dénivelé positif mensuel</h3>
-              <p class="analytics-card-subtitle" id="lbl-elevation-sub">Mètres de D+ gravis chaque mois (2026)</p>
+              <h3 class="analytics-card-title" id="lbl-elevation-title">Dénivelé positif</h3>
             </div>
             <div class="analytics-header-badge-wrap">
               <span class="act-pill" id="lbl-elevation-badge">+5 212 m D+ en 2026</span>
@@ -431,14 +425,12 @@
 
       </section>
 
-      <!-- Étage 2 : Évolution de l'allure moyenne dans le temps -->
+      <!-- Étage 2 : Allure moyenne -->
       <section style="margin-top: var(--space-lg);">
         <div class="runner-card analytics-chart-card">
           <div class="analytics-card-header">
             <div class="analytics-header-titles">
-              <span class="analytics-card-eyebrow" id="lbl-pace-eyebrow">RYTHME & VITESSE</span>
-              <h3 class="analytics-card-title" id="lbl-pace-title">Évolution de l'allure moyenne dans le temps</h3>
-              <p class="analytics-card-subtitle" id="lbl-pace-sub">Moyenne mensuelle (min/km) sur les 12 derniers mois actifs</p>
+              <h3 class="analytics-card-title" id="lbl-pace-title">Allure moyenne</h3>
             </div>
             <div class="analytics-header-badge-wrap">
               <span class="act-pill act-pill-accent" id="lbl-pace-badge">Allure pic : 5:27 /km</span>
@@ -471,7 +463,6 @@
         <div class="analytics-section-title-wrap">
           <div>
             <h2 class="section-title" id="lbl-habits-section-title">Habitudes & Typologie de sorties</h2>
-            <p class="section-subtitle" id="lbl-habits-section-sub">Profil des séances et routines d'entraînement réelles</p>
           </div>
         </div>
 
@@ -481,9 +472,7 @@
           <div class="runner-card analytics-chart-card">
             <div class="analytics-card-header">
               <div class="analytics-header-titles">
-                <span class="analytics-card-eyebrow" id="lbl-dist-types-eyebrow">PROFIL DES SÉANCES</span>
                 <h3 class="analytics-card-title" id="lbl-dist-types-title">Distribution par distance</h3>
-                <p class="analytics-card-subtitle" id="lbl-dist-types-sub">Répartition des 290 séances selon leur longueur</p>
               </div>
               <div class="analytics-header-badge-wrap">
                 <span class="act-pill" id="lbl-dist-types-badge">73% en 6-12 km</span>
@@ -503,9 +492,7 @@
           <div class="runner-card analytics-chart-card">
             <div class="analytics-card-header">
               <div class="analytics-header-titles">
-                <span class="analytics-card-eyebrow" id="lbl-day-freq-eyebrow">ROUTINE HEBDOMADAIRE</span>
                 <h3 class="analytics-card-title" id="lbl-day-freq-title">Jours d'entraînement favoris</h3>
-                <p class="analytics-card-subtitle" id="lbl-day-freq-sub">Nombre de sorties par jour de la semaine</p>
               </div>
               <div class="analytics-header-badge-wrap">
                 <span class="act-pill act-pill-accent" id="lbl-day-freq-badge">Samedi n°1 (62 sorties)</span>

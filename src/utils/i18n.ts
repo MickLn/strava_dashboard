@@ -126,7 +126,7 @@ export const translations = {
 
     // Analytics & Charts (Volume, D+, Allure, Habitudes)
     chartMultiyearEyebrow: "MONTHLY VOLUME",
-    chartMultiyearTitle: "Multi-Year Comparison",
+    chartMultiyearTitle: "Monthly Volume",
     chartMultiyearSub: "Kilometers run per month and % variation",
     chartMultiyearBadge: "+44% vs 2025",
     chartMultiyearStatTotal: "2026 Volume",
@@ -137,7 +137,7 @@ export const translations = {
     chartMultiyearLegend2024: "2024",
 
     chartElevationEyebrow: "ELEVATION GAIN",
-    chartElevationTitle: "Monthly Elevation Gain",
+    chartElevationTitle: "Elevation Gain",
     chartElevationSub: "Meters of D+ climbed each month (2026)",
     chartElevationBadge: "+5,212 m D+ in 2026",
     chartElevationAvg: "Monthly Average",
@@ -145,7 +145,7 @@ export const translations = {
     chartElevationRatio: "Avg D+ per run",
 
     chartPaceEyebrow: "PACE & SPEED",
-    chartPaceTitle: "Average Pace Evolution Over Time",
+    chartPaceTitle: "Average Pace",
     chartPaceSub: "Monthly average pace (min/km) over the last 12 active months",
     chartPaceBadge: "Peak pace: 5:27 /km",
     chartPaceCurrent: "Recent Pace",
@@ -372,7 +372,7 @@ export const translations = {
 
     // Analytics & Charts (Volume, D+, Allure, Habitudes)
     chartMultiyearEyebrow: "VOLUME MENSUEL",
-    chartMultiyearTitle: "Comparatif multi-années",
+    chartMultiyearTitle: "Volume mensuel",
     chartMultiyearSub: "Kilomètres courus par mois et évolution en %",
     chartMultiyearBadge: "+44% vs 2025",
     chartMultiyearStatTotal: "Total 2026",
@@ -383,7 +383,7 @@ export const translations = {
     chartMultiyearLegend2024: "2024",
 
     chartElevationEyebrow: "DÉNIVELÉ POSITIF",
-    chartElevationTitle: "Dénivelé positif mensuel",
+    chartElevationTitle: "Dénivelé positif",
     chartElevationSub: "Mètres de D+ gravis chaque mois (2026)",
     chartElevationBadge: "+5 212 m D+ en 2026",
     chartElevationAvg: "Moyenne mensuelle",
@@ -391,7 +391,7 @@ export const translations = {
     chartElevationRatio: "D+ moyen par run",
 
     chartPaceEyebrow: "RYTHME & VITESSE",
-    chartPaceTitle: "Évolution de l'allure moyenne dans le temps",
+    chartPaceTitle: "Allure moyenne",
     chartPaceSub: "Moyenne mensuelle (min/km) sur les 12 derniers mois actifs",
     chartPaceBadge: "Allure pic : 5:27 /km",
     chartPaceCurrent: "Allure récente",
