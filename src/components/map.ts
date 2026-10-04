@@ -32,10 +32,28 @@ export function initMap(elementId: string = 'leaflet-map'): L.Map | null {
     attribution: '&copy; Esri World Light Gray Base'
   }).addTo(mapInstance);
 
+  // Panes Leaflet personnalisés avec zIndex stricts pour garantir que les tracés gris sont toujours en-dessous du tracé orange
+  mapInstance.createPane('bgTracksPane');
+  const bgPane = mapInstance.getPane('bgTracksPane');
+  if (bgPane) {
+    bgPane.style.zIndex = '350';
+  }
+
+  mapInstance.createPane('featuredTrackPane');
+  const featPane = mapInstance.getPane('featuredTrackPane');
+  if (featPane) {
+    featPane.style.zIndex = '450';
+  }
+
+  bgTracksLayerGroup = L.layerGroup().addTo(mapInstance);
   currentLayerGroup = L.layerGroup().addTo(mapInstance);
 
   return mapInstance;
 }
+
+// Couche dédiée aux tracés secondaires d'arrière-plan pour bascule interactive
+let bgTracksLayerGroup: L.LayerGroup | null = null;
+let isBgTracksVisible: boolean = true;
 
 export function invalidateMapSize(): void {
   if (mapInstance) {
@@ -55,10 +73,15 @@ let lastAtlasLatestBounds: L.LatLngBounds | null = null;
 export function recenterFeaturedMap(activities: Activity[], highlightActivityId?: number): void {
   if (!mapInstance || !activities || activities.length === 0) return;
 
+  const isMobile = window.innerWidth <= 768;
+  const paddingBottom = isMobile ? Math.round(window.innerHeight * 0.45) : 30;
+  const paddingTop = isMobile ? 80 : 20;
+
   if (lastFeaturedTargetBounds && lastFeaturedTargetBounds.isValid()) {
-    mapInstance.flyToBounds(lastFeaturedTargetBounds.pad(0.25), {
-      padding: [30, 30],
-      maxZoom: 14,
+    mapInstance.flyToBounds(lastFeaturedTargetBounds.pad(0.20), {
+      paddingTopLeft: [20, paddingTop],
+      paddingBottomRight: [20, paddingBottom],
+      maxZoom: 15,
       duration: 0.8
     });
     return;
@@ -74,9 +97,10 @@ export function recenterFeaturedMap(activities: Activity[], highlightActivityId?
     if (coords.length > 0) {
       const poly = L.polyline(coords);
       lastFeaturedTargetBounds = poly.getBounds();
-      mapInstance.flyToBounds(lastFeaturedTargetBounds.pad(0.25), {
-        padding: [30, 30],
-        maxZoom: 14,
+      mapInstance.flyToBounds(lastFeaturedTargetBounds.pad(0.20), {
+        paddingTopLeft: [20, paddingTop],
+        paddingBottomRight: [20, paddingBottom],
+        maxZoom: 15,
         duration: 0.8
       });
     }
@@ -87,6 +111,9 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
   if (!mapInstance || !currentLayerGroup || !activities || activities.length === 0) return;
 
   currentLayerGroup.clearLayers();
+  if (bgTracksLayerGroup) {
+    bgTracksLayerGroup.clearLayers();
+  }
 
   const sortedByDate = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
   const targetActivity = highlightActivityId
@@ -95,12 +122,13 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
   let targetBounds: L.LatLngBounds | null = null;
 
-  // 1. Dessiner l'ensemble de tous les tracés en gris épuré translucide en arrière-plan
+  // 1. Dessiner l'ensemble de tous les autres tracés dans la couche dédiée d'arrière-plan (sous la course orange)
   activities.forEach(activity => {
     if (activity.id !== targetActivity?.id && activity.map?.summary_polyline) {
       const coords = decodePolyline(activity.map.summary_polyline);
       if (coords.length > 0) {
         const polyline = L.polyline(coords, {
+          pane: 'bgTracksPane',
           color: '#717885',
           weight: 2.2,
           opacity: 0.40,
@@ -117,16 +145,32 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
           </div>
         `);
 
-        polyline.addTo(currentLayerGroup!);
+        if (bgTracksLayerGroup) {
+          polyline.addTo(bgTracksLayerGroup);
+        }
       }
     }
   });
 
-  // 2. Dessiner la séance sélectionnée au premier plan en Terracotta vibrant
+  // Appliquer la visibilité actuelle de la couche d'arrière-plan
+  if (mapInstance && bgTracksLayerGroup) {
+    if (isBgTracksVisible) {
+      if (!mapInstance.hasLayer(bgTracksLayerGroup)) {
+        bgTracksLayerGroup.addTo(mapInstance);
+      }
+    } else {
+      if (mapInstance.hasLayer(bgTracksLayerGroup)) {
+        mapInstance.removeLayer(bgTracksLayerGroup);
+      }
+    }
+  }
+
+  // 2. Dessiner la séance sélectionnée au premier plan en Terracotta vibrant (au-dessus des autres tracés)
   if (targetActivity && targetActivity.map?.summary_polyline) {
     const coords = decodePolyline(targetActivity.map.summary_polyline);
     if (coords.length > 0) {
       const mainPolyline = L.polyline(coords, {
+        pane: 'featuredTrackPane',
         color: '#E05A36',
         weight: 5,
         opacity: 1,
@@ -150,9 +194,10 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
       targetBounds = mainPolyline.getBounds();
       lastFeaturedTargetBounds = targetBounds;
 
-      // Marqueur de départ (vert forêt)
+      // Marqueur de départ (vert forêt) au premier plan
       const startPt = coords[0];
       L.circleMarker(startPt, {
+        pane: 'featuredTrackPane',
         radius: 7,
         color: '#FFFFFF',
         weight: 2.5,
@@ -160,9 +205,10 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
         fillOpacity: 1
       }).bindTooltip("Start", { permanent: false }).addTo(currentLayerGroup!);
 
-      // Marqueur d'arrivée (terracotta)
+      // Marqueur d'arrivée (terracotta) au premier plan
       const endPt = coords[coords.length - 1];
       L.circleMarker(endPt, {
+        pane: 'featuredTrackPane',
         radius: 7,
         color: '#FFFFFF',
         weight: 2.5,
@@ -174,9 +220,13 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
 
   // 3. Cadrage épuré centré sur la zone de course
   if (targetBounds && targetBounds.isValid()) {
-    mapInstance.fitBounds(targetBounds.pad(0.25), {
-      padding: [25, 25],
-      maxZoom: 14
+    const isMobile = window.innerWidth <= 768;
+    const paddingBottom = isMobile ? Math.round(window.innerHeight * 0.45) : 25;
+    const paddingTop = isMobile ? 80 : 20;
+    mapInstance.fitBounds(targetBounds.pad(0.20), {
+      paddingTopLeft: [20, paddingTop],
+      paddingBottomRight: [20, paddingBottom],
+      maxZoom: 15
     });
   }
 
@@ -526,4 +576,29 @@ export function closeFullscreenHeatmap() {
   if (fullscreenMapInstance) {
     fullscreenMapInstance.closePopup();
   }
+}
+
+/**
+ * Bascule l'affichage de l'ensemble des autres traces en arrière-plan
+ */
+export function toggleBackgroundTracks(): boolean {
+  isBgTracksVisible = !isBgTracksVisible;
+  if (mapInstance && bgTracksLayerGroup) {
+    if (isBgTracksVisible) {
+      if (!mapInstance.hasLayer(bgTracksLayerGroup)) {
+        bgTracksLayerGroup.addTo(mapInstance);
+      }
+    } else {
+      if (mapInstance.hasLayer(bgTracksLayerGroup)) {
+        mapInstance.removeLayer(bgTracksLayerGroup);
+      }
+    }
+  }
+
+  const btnToggle = document.getElementById('btn-toggle-bg-tracks');
+  if (btnToggle) {
+    btnToggle.classList.toggle('active', isBgTracksVisible);
+  }
+
+  return isBgTracksVisible;
 }

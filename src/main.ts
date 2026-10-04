@@ -2,7 +2,8 @@ import { DataService } from './services/data-service.ts';
 import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
 import { renderEquivalents } from './components/equivalents.ts';
-import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap, recenterFeaturedMap, recenterAtlasMap, recenterAtlasToLatest, recenterFullscreenMap } from './components/map.ts';
+import { mobileSheetController } from './components/mobile-sheet.ts';
+import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap, recenterFeaturedMap, recenterAtlasMap, recenterAtlasToLatest, recenterFullscreenMap, toggleBackgroundTracks } from './components/map.ts';
 import { InteractivePreloader } from './components/preloader.ts';
 import { Router, PageId } from './components/router.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
@@ -53,7 +54,10 @@ class App {
       // 5. Écouteurs d'événements
       this.setupEventListeners();
 
-      // 6. Gestion de la page courante au chargement
+      // 6. Initialisation du volet coulissant interactif Mobile
+      mobileSheetController.init();
+
+      // 7. Gestion de la page courante au chargement
       this.handlePageSwitch(this.router.getCurrentPage());
 
     } catch (error) {
@@ -74,28 +78,32 @@ class App {
     if (page === 'dashboard') {
       setTimeout(() => {
         invalidateMapSize();
+        mobileSheetController.snapTo('half', false);
         if (this.dataset?.activities) {
           renderActivityTraces(this.dataset.activities);
         }
       }, 50);
-    } else if (page === 'analytics') {
-      setTimeout(() => {
-        if (this.dataset?.activities) {
-          renderCharts(this.dataset.activities, 2026);
-        }
-      }, 50);
-    } else if (page === 'records') {
-      setTimeout(() => {
-        if (this.dataset) {
-          renderEquivalents(this.dataset.activities, this.dataset.stats);
-        }
-      }, 50);
-    } else if (page === 'map') {
-      setTimeout(() => {
-        if (this.dataset?.activities) {
-          initPageAtlasMap('page-heatmap-container', this.dataset.activities);
-        }
-      }, 50);
+    } else {
+      mobileSheetController.resetDesktop();
+      if (page === 'analytics') {
+        setTimeout(() => {
+          if (this.dataset?.activities) {
+            renderCharts(this.dataset.activities, 2026);
+          }
+        }, 50);
+      } else if (page === 'records') {
+        setTimeout(() => {
+          if (this.dataset) {
+            renderEquivalents(this.dataset.activities, this.dataset.stats);
+          }
+        }, 50);
+      } else if (page === 'map') {
+        setTimeout(() => {
+          if (this.dataset?.activities) {
+            initPageAtlasMap('page-heatmap-container', this.dataset.activities);
+          }
+        }, 50);
+      }
     }
   }
 
@@ -109,7 +117,7 @@ class App {
     // Page 1 : Dashboard (Dernière sortie, Weekly Pulse, Calendrier mensuel)
     UIRenderer.renderFeaturedLatestRun(this.dataset.activities, (act: Activity) => {
       UIRenderer.openActivityModal(act, this.dataset!);
-    });
+    }, this.dataset);
     UIRenderer.renderWeeklyPulse(this.dataset);
 
     const onSelectCalActivity = (act: Activity) => {
@@ -424,7 +432,15 @@ class App {
       });
     }
 
-    // Featured Map (Card A) Controls : Recentrer et Plein Écran
+    // Featured Map (Card A) Controls : Bascule des tracés, Recentrer et Plein Écran
+    const btnToggleBg = document.getElementById('btn-toggle-bg-tracks');
+    if (btnToggleBg) {
+      btnToggleBg.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleBackgroundTracks();
+      });
+    }
+
     const btnRecenterFeatured = document.getElementById('btn-recenter-featured-map');
     if (btnRecenterFeatured) {
       btnRecenterFeatured.addEventListener('click', (e) => {

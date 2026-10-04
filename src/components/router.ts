@@ -84,6 +84,9 @@ export class Router {
       activePage.classList.add('page-active');
     }
 
+    // Mise à jour de l'attribut de page active sur le body pour le style conditionnel
+    document.body.setAttribute('data-active-page', pageId);
+
     // 2. Mise à jour des liens et de la pastille glissante
     if (this.navLinks) {
       this.navLinks.forEach(link => {

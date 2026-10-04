@@ -11,8 +11,9 @@
   <link rel="stylesheet" href="./src/css/components.css">
   <link rel="stylesheet" href="./src/css/preloader.css">
   <link rel="stylesheet" href="./src/css/navbar.css">
+  <link rel="stylesheet" href="./src/css/mobile-hub.css">
 </head>
-<body>
+<body data-active-page="dashboard">
   <!-- Interactive Ribbon Preloader & Entrance Animation -->
   <div id="preloader-overlay" class="preloader-overlay">
     <canvas id="preloader-canvas" class="preloader-canvas"></canvas>
@@ -151,201 +152,248 @@
          ========================================================================= -->
     <main id="page-dashboard" class="page-view page-active">
       
-      <!-- Live Hub : Featured latest run + Weekly pulse -->
-      <section class="grid-bento-hero">
-        
-        <!-- Card A : Featured latest run -->
-        <div class="runner-card featured-run-card" id="featured-run-card">
-          <div class="featured-run-header">
-            <div>
-              <span class="featured-badge" id="lbl-latest-badge">Latest run</span>
-              <h2 class="featured-title" id="featured-run-title">281/ Morning run</h2>
-              <span class="featured-date" id="featured-run-date">Sunday 23 August 2026 • 08:30</span>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button id="btn-featured-details" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
-                <span id="lbl-full-details">Full details</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Integrated Leaflet map preview with floating pill & controls -->
-          <div class="featured-map-wrap">
-            <div id="leaflet-map"></div>
-
-            <div class="map-floating-pill">
-              <span id="lbl-card-map-count">282 courses</span>
-            </div>
-
-            <div class="map-floating-controls">
-              <button id="btn-recenter-featured-map" class="map-icon-btn" title="Recentrer sur la course" aria-label="Recentrer sur la course">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-              </button>
-              <button id="btn-fullscreen-featured-map" class="map-icon-btn" title="Plein écran (Échap pour quitter)" aria-label="Plein écran">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Key metrics of the latest run (Uniform color palette matching activities section) -->
-          <div class="featured-metrics-grid">
-            <div class="featured-metric-item">
-              <span class="featured-metric-label" id="lbl-metric-dist">Distance</span>
-              <span class="featured-metric-value" id="featured-dist">10.04 km</span>
-            </div>
-            <div class="featured-metric-item">
-              <span class="featured-metric-label" id="lbl-metric-time">Time</span>
-              <span class="featured-metric-value" id="featured-time">54m 35s</span>
-            </div>
-            <div class="featured-metric-item">
-              <span class="featured-metric-label" id="lbl-metric-pace">Pace</span>
-              <span class="featured-metric-value" id="featured-pace">5:26 /km</span>
-            </div>
-            <div class="featured-metric-item">
-              <span class="featured-metric-label" id="lbl-metric-cal">Energy</span>
-              <span class="featured-metric-value" id="featured-cal">728 kcal</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card B : Current Week Activity -->
-        <div class="runner-card weekly-pulse-card">
+      <!-- Card A : Featured latest run (Leaflet Map & Desktop Overview) -->
+      <div class="runner-card featured-run-card" id="featured-run-card">
+        <div class="featured-run-header">
           <div>
-            <div class="section-title-wrap" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-              <h3 class="section-title" id="lbl-weekly-title">Current week</h3>
-              <span class="streak-pill-mini" id="lbl-streak-badge" title="Série active">
-                <strong id="hero-streak-count">53</strong> <span id="lbl-streak-text">active weeks</span>
-              </span>
-            </div>
-
-            <!-- Active days tracker -->
-            <div style="margin-top: 10px;">
-              <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px;" id="lbl-active-days">
-                Active days this week
-              </div>
-              <div class="week-days-tracker">
-                <div class="day-pill"><span class="day-box" id="day-l">M</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-1">Mon</span></div>
-                <div class="day-pill"><span class="day-box" id="day-m">T</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-2">Tue</span></div>
-                <div class="day-pill"><span class="day-box" id="day-me">W</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-3">Wed</span></div>
-                <div class="day-pill"><span class="day-box" id="day-j">T</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-4">Thu</span></div>
-                <div class="day-pill"><span class="day-box" id="day-v">F</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-5">Fri</span></div>
-                <div class="day-pill"><span class="day-box" id="day-s">S</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-6">Sat</span></div>
-                <div class="day-pill"><span class="day-box" id="day-d">S</span><span style="font-size: 0.65rem; color: var(--text-muted);" id="lbl-day-7">Sun</span></div>
-              </div>
-            </div>
+            <span class="featured-badge" id="lbl-latest-badge">Latest run</span>
+            <h2 class="featured-title" id="featured-run-title">281/ Morning run</h2>
+            <span class="featured-date" id="featured-run-date">Sunday 23 August 2026 • 08:30</span>
           </div>
-
-          <!-- Weekly real totals -->
-          <div class="pulse-averages-grid">
-            <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-runs">Runs</span>
-              <span class="pulse-avg-val" id="avg-runs-per-week">--</span>
-            </div>
-            <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-time">Time</span>
-              <span class="pulse-avg-val" id="avg-time-per-week">--</span>
-            </div>
-            <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-dist">Distance</span>
-              <span class="pulse-avg-val" id="avg-dist-per-week">--</span>
-            </div>
-            <div class="pulse-avg-item">
-              <span class="pulse-avg-label" id="lbl-avg-cal">Calories</span>
-              <span class="pulse-avg-val" id="avg-cal-per-week">--</span>
-            </div>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- Monthly Training Calendar (Strava Training Log Style) -->
-      <section class="runner-card calendar-card" id="monthly-calendar-card">
-        <div class="calendar-header-wrap">
-          <div class="calendar-title-group">
-            <h3 class="chart-title" id="lbl-calendar-title">Monthly consistency</h3>
-            <button class="btn-cal-legend-toggle" id="btn-cal-legend-toggle" type="button" aria-expanded="false" title="Légende des couleurs">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span id="lbl-cal-legend-btn">Légende</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btn-featured-details" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+              <span id="lbl-full-details">Full details</span>
             </button>
           </div>
+        </div>
+
+        <!-- Integrated Leaflet map preview with floating pill & controls -->
+        <div class="featured-map-wrap">
+          <div id="leaflet-map"></div>
+
+          <div class="map-floating-pill">
+            <span id="lbl-card-map-count">282 courses</span>
+          </div>
+
+          <div class="map-floating-controls">
+            <button id="btn-toggle-bg-tracks" class="map-icon-btn active" title="Afficher / masquer les autres tracés" aria-label="Afficher ou masquer les autres tracés">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            </button>
+            <button id="btn-recenter-featured-map" class="map-icon-btn" title="Recentrer sur la course" aria-label="Recentrer sur la course">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+            </button>
+            <button id="btn-fullscreen-featured-map" class="map-icon-btn" title="Plein écran (Échap pour quitter)" aria-label="Plein écran">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Key metrics of the latest run (Desktop only) -->
+        <div class="featured-metrics-grid">
+          <div class="featured-metric-item">
+            <span class="featured-metric-label" id="lbl-metric-dist">Distance</span>
+            <span class="featured-metric-value" id="featured-dist">10.04 km</span>
+          </div>
+          <div class="featured-metric-item">
+            <span class="featured-metric-label" id="lbl-metric-time">Time</span>
+            <span class="featured-metric-value" id="featured-time">54m 35s</span>
+          </div>
+          <div class="featured-metric-item">
+            <span class="featured-metric-label" id="lbl-metric-pace">Pace</span>
+            <span class="featured-metric-value" id="featured-pace">5:26 /km</span>
+          </div>
+          <div class="featured-metric-item">
+            <span class="featured-metric-label" id="lbl-metric-cal">Energy</span>
+            <span class="featured-metric-value" id="featured-cal">728 kcal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Sliding Bottom Sheet (Desktop: display: contents) -->
+      <div class="mobile-hub-sheet" id="mobile-hub-sheet" role="region" aria-label="Volet coulissant Hub et Course">
+        <!-- Interactive Drag Handle & Peek Bar (Visible only on mobile) -->
+        <div class="mobile-sheet-drag-zone" id="mobile-sheet-drag-zone">
+          <div class="mobile-sheet-handle"></div>
+          <div class="mobile-sheet-peek-bar">
+            <h2 class="mobile-sheet-peek-title" id="mobile-peek-title">--</h2>
+            <span class="mobile-sheet-peek-dist" id="mobile-peek-dist">-- km</span>
+          </div>
+        </div>
+
+        <!-- Scrollable Sheet Content -->
+        <div class="mobile-sheet-scroll" id="mobile-sheet-scroll">
           
-          <div class="calendar-controls">
-            <div class="calendar-nav-group">
-              <button class="calendar-nav-btn" id="btn-prev-month" aria-label="Previous month">&larr;</button>
-              <span class="calendar-current-month" id="lbl-current-month">August 2026</span>
-              <button class="calendar-nav-btn" id="btn-next-month" aria-label="Next month">&rarr;</button>
+          <!-- 1. Full Details of the Latest Run (Mobile Replacement as requested) -->
+          <div class="mobile-run-details" id="mobile-run-details">
+            <!-- Runner header: Avatar, Name, Date/Time, Location/Shoes -->
+            <div class="mobile-run-header">
+              <div class="mobile-runner-profile">
+                <img id="mobile-runner-avatar" class="mobile-runner-avatar" src="" alt="Mickaël L.">
+                <div class="mobile-runner-meta">
+                  <span class="mobile-runner-name" id="mobile-runner-name">Mickaël Lin</span>
+                  <span class="mobile-run-date-loc" id="mobile-run-date-loc">--</span>
+                </div>
+              </div>
+              <h2 class="mobile-run-title" id="mobile-run-title">--</h2>
+              <p class="mobile-run-desc" id="mobile-run-desc" style="display: none;"></p>
+              <div class="mobile-run-tags" id="mobile-run-tags"></div>
             </div>
-            <span class="act-pill" id="lbl-calendar-month-total">-- km • -- runs</span>
-          </div>
-        </div>
 
-        <!-- Distance Tiers Legend (Dropdown) -->
-        <div class="calendar-legend-bar" id="calendar-legend-bar">
-          <div class="cal-legend-item">
-            <span class="cal-legend-dot" style="background: #4B7B9E;"></span>
-            <span id="lbl-leg-10">&lt; 10 km</span>
-          </div>
-          <div class="cal-legend-item">
-            <span class="cal-legend-dot" style="background: #2D5A47;"></span>
-            <span id="lbl-leg-15">&lt; 15 km</span>
-          </div>
-          <div class="cal-legend-item">
-            <span class="cal-legend-dot" style="background: #C47A1E;"></span>
-            <span id="lbl-leg-20">&lt; 20 km</span>
-          </div>
-          <div class="cal-legend-item">
-            <span class="cal-legend-dot" style="background: #E05A36;"></span>
-            <span id="lbl-leg-sm">Semi (SM)</span>
-          </div>
-          <div class="cal-legend-item">
-            <span class="cal-legend-dot" style="background: #B83B19;"></span>
-            <span id="lbl-leg-30">&lt; 30 km</span>
-          </div>
-          <div class="cal-legend-item">
-            <span class="cal-legend-dot" style="background: #7C2D12;"></span>
-            <span id="lbl-leg-m">Marathon (M)</span>
-          </div>
-        </div>
+            <!-- 4-metric strip -->
+            <div class="modal-metrics-strip mobile-metrics-strip">
+              <div class="modal-stat-item">
+                <span class="modal-stat-val" id="mobile-detail-dist">--</span>
+                <span class="modal-stat-label" id="lbl-mobile-dist">DISTANCE</span>
+              </div>
+              <div class="modal-stat-item">
+                <span class="modal-stat-val" id="mobile-detail-time">--</span>
+                <span class="modal-stat-label" id="lbl-mobile-time">TIME</span>
+              </div>
+              <div class="modal-stat-item">
+                <span class="modal-stat-val" id="mobile-detail-pace">--</span>
+                <span class="modal-stat-label" id="lbl-mobile-pace">PACE</span>
+              </div>
+              <div class="modal-stat-item">
+                <span class="modal-stat-val" id="mobile-detail-cal">--</span>
+                <span class="modal-stat-label" id="lbl-mobile-cal">ENERGY</span>
+              </div>
+            </div>
 
-        <!-- 7-day Header & Month Days Grid -->
-        <div class="calendar-grid-wrap">
-          <div class="calendar-weekdays-row" id="calendar-weekdays-row">
-            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-          </div>
-          <div class="calendar-days-grid" id="calendar-days-grid"></div>
-        </div>
-      </section>
+            <!-- Dotted Divider -->
+            <div class="modal-dotted-divider" style="margin: 12px 0;"></div>
 
-      <!-- Recent activities & interactive telemetry feed -->
-      <section class="runner-card activities-card" id="section-activities">
-        <div class="activities-header-row">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <h3 class="chart-title" id="lbl-activities-title">Activities</h3>
-            <span class="activities-total-badge" id="lbl-activities-total-badge"></span>
-          </div>
-          
-          <!-- Search bar -->
-          <div class="activities-search-wrap">
-            <div class="search-input-box">
-              <input type="text" id="activity-search-input" class="search-input" placeholder="Search by title, shoes, date, or tags (#10k, #morning, #brooks)..." />
-              <button id="btn-clear-search" class="clear-search-btn" style="display: none;">&times;</button>
+            <!-- 2x2 Bento Telemetry Grid -->
+            <div class="modal-telemetry-grid mobile-telemetry-grid">
+              <div class="telemetry-tile">
+                <span class="telemetry-tile-lbl" id="lbl-mobile-elev-title">ELEVATION (D+ / D-)</span>
+                <span class="telemetry-tile-val text-primary" id="mobile-detail-elev">--</span>
+                <span class="telemetry-tile-sub" id="mobile-detail-alt">--</span>
+              </div>
+
+              <div class="telemetry-tile">
+                <span class="telemetry-tile-lbl" id="lbl-mobile-hr-title">HEART RATE</span>
+                <span class="telemetry-tile-val" id="mobile-detail-hr">--</span>
+                <span class="telemetry-tile-sub" id="mobile-detail-hrmax"></span>
+              </div>
+
+              <div class="telemetry-tile">
+                <span class="telemetry-tile-lbl" id="lbl-mobile-device-title">WATCH / DEVICE</span>
+                <span class="telemetry-tile-val" id="mobile-detail-device">--</span>
+              </div>
+
+              <div class="telemetry-tile">
+                <span class="telemetry-tile-lbl" id="lbl-mobile-effort-title">EFFORT SCORE</span>
+                <span class="effort-badge" id="mobile-detail-effort">--</span>
+              </div>
+
+              <div class="telemetry-tile telemetry-tile-full">
+                <span class="telemetry-tile-lbl" id="lbl-mobile-zone-title">EFFORT ZONE</span>
+                <span class="effort-badge" id="mobile-detail-zone">--</span>
+              </div>
+            </div>
+
+            <!-- Kilometer splits section -->
+            <div class="modal-splits-section mobile-splits-section" style="margin-top: 10px;">
+              <span class="splits-title" id="lbl-mobile-splits-title">Kilometer splits</span>
+              <div class="splits-list-custom" id="mobile-splits-list"></div>
             </div>
           </div>
-        </div>
 
-        <!-- Quick tag filter chips -->
-        <div class="activities-tag-filters" id="activity-tag-chips">
-          <button class="tag-chip active" data-tag="all" id="chip-all">All</button>
-          <button class="tag-chip" data-tag="#SortieLongue" id="chip-long">Long runs (15k+)</button>
-          <button class="tag-chip" data-tag="#Tempo" id="chip-fast">Fast (&lt; 4:45)</button>
-          <button class="tag-chip" data-tag="#Dénivelé" id="chip-elev">Elevation (D+)</button>
-          <button class="tag-chip" data-tag="#Adizero">Adizero EVO SL</button>
-          <button class="tag-chip" data-tag="#Pegasus">Pegasus 41</button>
-          <button class="tag-chip" data-tag="#Brooks">Brooks Hyperion</button>
-        </div>
+          <!-- Monthly Training Calendar (Strava Training Log Style) -->
+          <section class="runner-card calendar-card" id="monthly-calendar-card">
+            <div class="calendar-header-wrap">
+              <div class="calendar-title-group">
+                <h3 class="chart-title" id="lbl-calendar-title">Monthly consistency</h3>
+                <button class="btn-cal-legend-toggle" id="btn-cal-legend-toggle" type="button" aria-expanded="false" title="Légende des couleurs">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  <span id="lbl-cal-legend-btn">Légende</span>
+                </button>
+              </div>
+              
+              <div class="calendar-controls">
+                <div class="calendar-nav-group">
+                  <button class="calendar-nav-btn" id="btn-prev-month" aria-label="Previous month">&larr;</button>
+                  <span class="calendar-current-month" id="lbl-current-month">August 2026</span>
+                  <button class="calendar-nav-btn" id="btn-next-month" aria-label="Next month">&rarr;</button>
+                </div>
+                <span class="act-pill" id="lbl-calendar-month-total">-- km • -- runs</span>
+              </div>
+            </div>
 
-        <div id="activities-feed-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;"></div>
-      </section>
+            <!-- Distance Tiers Legend (Dropdown) -->
+            <div class="calendar-legend-bar" id="calendar-legend-bar">
+              <div class="cal-legend-item">
+                <span class="cal-legend-dot" style="background: #4B7B9E;"></span>
+                <span id="lbl-leg-10">&lt; 10 km</span>
+              </div>
+              <div class="cal-legend-item">
+                <span class="cal-legend-dot" style="background: #2D5A47;"></span>
+                <span id="lbl-leg-15">&lt; 15 km</span>
+              </div>
+              <div class="cal-legend-item">
+                <span class="cal-legend-dot" style="background: #C47A1E;"></span>
+                <span id="lbl-leg-20">&lt; 20 km</span>
+              </div>
+              <div class="cal-legend-item">
+                <span class="cal-legend-dot" style="background: #E05A36;"></span>
+                <span id="lbl-leg-sm">Semi (SM)</span>
+              </div>
+              <div class="cal-legend-item">
+                <span class="cal-legend-dot" style="background: #B83B19;"></span>
+                <span id="lbl-leg-30">&lt; 30 km</span>
+              </div>
+              <div class="cal-legend-item">
+                <span class="cal-legend-dot" style="background: #7C2D12;"></span>
+                <span id="lbl-leg-m">Marathon (M)</span>
+              </div>
+            </div>
+
+            <!-- 7-day Header & Month Days Grid -->
+            <div class="calendar-grid-wrap">
+              <div class="calendar-weekdays-row" id="calendar-weekdays-row">
+                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+              </div>
+              <div class="calendar-days-grid" id="calendar-days-grid"></div>
+            </div>
+          </section>
+
+          <!-- Recent activities & interactive telemetry feed -->
+          <section class="runner-card activities-card" id="section-activities">
+            <div class="activities-header-row">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 class="chart-title" id="lbl-activities-title">Activities</h3>
+                <span class="activities-total-badge" id="lbl-activities-total-badge"></span>
+              </div>
+              
+              <!-- Search bar -->
+              <div class="activities-search-wrap">
+                <div class="search-input-box">
+                  <input type="text" id="activity-search-input" class="search-input" placeholder="Search by title, shoes, date, or tags (#10k, #morning, #brooks)..." />
+                  <button id="btn-clear-search" class="clear-search-btn" style="display: none;">&times;</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick tag filter chips -->
+            <div class="activities-tag-filters" id="activity-tag-chips">
+              <button class="tag-chip active" data-tag="all" id="chip-all">All</button>
+              <button class="tag-chip" data-tag="#SortieLongue" id="chip-long">Long runs (15k+)</button>
+              <button class="tag-chip" data-tag="#Tempo" id="chip-fast">Fast (&lt; 4:45)</button>
+              <button class="tag-chip" data-tag="#Dénivelé" id="chip-elev">Elevation (D+)</button>
+              <button class="tag-chip" data-tag="#Adizero">Adizero EVO SL</button>
+              <button class="tag-chip" data-tag="#Pegasus">Pegasus 41</button>
+              <button class="tag-chip" data-tag="#Brooks">Brooks Hyperion</button>
+            </div>
+
+            <div id="activities-feed-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;"></div>
+          </section>
+
+        </div>
+      </div>
 
     </main>
 

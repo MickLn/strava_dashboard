@@ -64,6 +64,7 @@ export interface Activity {
   has_heartrate?: boolean;
   pr_count?: number;
   device_name?: string;
+  description?: string;
   elev_high?: number;
   elev_low?: number;
   splits_metric?: SplitMetric[];

@@ -267,11 +267,12 @@ export class UIRenderer {
   /**
    * Rendu de la Dernière Sortie en Vedette (Étage 1 Gauche)
    */
-  public static renderFeaturedLatestRun(activities: Activity[], onOpenDetails: (act: Activity) => void): void {
+  public static renderFeaturedLatestRun(activities: Activity[], onOpenDetails: (act: Activity) => void, dataset?: StravaDataset): void {
     if (!activities || activities.length === 0) return;
     const sorted = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
     const latest = sorted[0];
 
+    // 1. Desktop Featured Card
     const titleEl = document.getElementById('featured-run-title');
     const dateEl = document.getElementById('featured-run-date');
     const distEl = document.getElementById('featured-dist');
@@ -291,6 +292,113 @@ export class UIRenderer {
 
     if (detailsBtn) {
       detailsBtn.onclick = () => onOpenDetails(latest);
+    }
+
+    // 2. Mobile Full Details Panel (Direct Mobile Replacement as requested)
+    const isFr = i18n.getLang() === 'fr';
+    const t = i18n.t();
+    const gearItem = dataset?.gear?.find(g => g.id === latest.gear_id);
+    const gearName = gearItem ? gearItem.name : (isFr ? 'Chaussures de running' : 'Running shoes');
+    const elev = calculateElevationDetails(latest);
+    const diff = calculateDifficulty(latest);
+    const zoneRes = getActivityEffortZone(latest);
+    const tags = generateActivityTags(latest, gearName);
+    const splits = generateKilometerSplits(latest);
+
+    // Profile & Header
+    const mAvatarEl = document.getElementById('mobile-runner-avatar') as HTMLImageElement | null;
+    const mNameEl = document.getElementById('mobile-runner-name');
+    const mDateLocEl = document.getElementById('mobile-run-date-loc');
+    const mTitleEl = document.getElementById('mobile-run-title');
+    const mDescEl = document.getElementById('mobile-run-desc');
+    const mTagsEl = document.getElementById('mobile-run-tags');
+    const mPeekTitleEl = document.getElementById('mobile-peek-title');
+    const mPeekDistEl = document.getElementById('mobile-peek-dist');
+
+    if (mAvatarEl) {
+      mAvatarEl.src = dataset?.athlete?.profile_medium || dataset?.athlete?.profile || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80';
+    }
+    if (mNameEl) {
+      mNameEl.textContent = dataset?.athlete ? `${dataset.athlete.firstname} ${dataset.athlete.lastname}` : 'Mickaël Lin';
+    }
+    if (mDateLocEl) {
+      mDateLocEl.textContent = `${formatDate(latest.start_date_local)} • ${gearName}`;
+    }
+    if (mTitleEl) mTitleEl.textContent = latest.name;
+    if (mPeekTitleEl) mPeekTitleEl.textContent = latest.name;
+    if (mPeekDistEl) mPeekDistEl.textContent = formatDistance(latest.distance);
+
+    if (mDescEl) {
+      if (latest.description && latest.description.trim()) {
+        mDescEl.textContent = latest.description;
+        mDescEl.style.display = 'block';
+      } else {
+        mDescEl.style.display = 'none';
+      }
+    }
+
+    if (mTagsEl) {
+      mTagsEl.innerHTML = tags.map(tag => `<span class="act-tag-badge">${tag}</span>`).join('');
+    }
+
+    // 4 Key Metrics
+    const mDistEl = document.getElementById('mobile-detail-dist');
+    const mTimeEl = document.getElementById('mobile-detail-time');
+    const mPaceEl = document.getElementById('mobile-detail-pace');
+    const mCalEl = document.getElementById('mobile-detail-cal');
+
+    if (mDistEl) mDistEl.textContent = `${(latest.distance / 1000).toFixed(2)} km`;
+    if (mTimeEl) mTimeEl.textContent = formatTimeShort(latest.moving_time);
+    if (mPaceEl) mPaceEl.textContent = formatPace(latest.average_speed);
+    if (mCalEl) mCalEl.textContent = `${cal} kcal`;
+
+    // Bento Telemetry
+    const mElevEl = document.getElementById('mobile-detail-elev');
+    const mAltEl = document.getElementById('mobile-detail-alt');
+    const mHrEl = document.getElementById('mobile-detail-hr');
+    const mHrMaxEl = document.getElementById('mobile-detail-hrmax');
+    const mDeviceEl = document.getElementById('mobile-detail-device');
+    const mEffortEl = document.getElementById('mobile-detail-effort');
+    const mZoneEl = document.getElementById('mobile-detail-zone');
+
+    if (mElevEl) mElevEl.innerHTML = `+${elev.gain}m <span class="text-forest" style="margin-left: 3px;">-${elev.loss}m</span>`;
+    if (mAltEl) mAltEl.textContent = (elev.minAlt !== null && elev.maxAlt !== null) ? `${elev.minAlt}m - ${elev.maxAlt}m alt` : '';
+
+    if (mHrEl) mHrEl.textContent = latest.average_heartrate ? `${latest.average_heartrate} bpm` : t.notRecorded;
+    if (mHrMaxEl) mHrMaxEl.textContent = latest.max_heartrate ? `max ${latest.max_heartrate} bpm` : '';
+
+    if (mDeviceEl) mDeviceEl.textContent = latest.device_name || 'Strava App';
+
+    if (mEffortEl) {
+      mEffortEl.textContent = `${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}`;
+      mEffortEl.style.color = diff.color;
+      mEffortEl.style.borderColor = `${diff.color}50`;
+      mEffortEl.style.backgroundColor = `${diff.color}15`;
+    }
+
+    if (mZoneEl) {
+      mZoneEl.textContent = `${isFr ? zoneRes.zoneNameFr : zoneRes.zoneName} (${isFr ? zoneRes.methodLabelFr : zoneRes.methodLabel})`;
+      mZoneEl.style.color = zoneRes.badgeColor;
+      mZoneEl.style.borderColor = `${zoneRes.badgeColor}50`;
+      mZoneEl.style.backgroundColor = `${zoneRes.badgeColor}18`;
+    }
+
+    // Splits
+    const mSplitsContainer = document.getElementById('mobile-splits-list');
+    if (mSplitsContainer) {
+      mSplitsContainer.innerHTML = splits.map(s => {
+        const zoneClass = s.zoneBadge.toLowerCase();
+        return `
+          <div class="split-row">
+            <span class="split-km">${s.kmLabel}</span>
+            <div class="split-bar-track">
+              <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
+            </div>
+            <span class="split-pace">${s.paceFormatted}</span>
+            <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
+          </div>
+        `;
+      }).join('');
     }
   }
 
