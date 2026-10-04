@@ -1,6 +1,7 @@
 import { DataService } from './services/data-service.ts';
 import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
+import { renderEquivalents } from './components/equivalents.ts';
 import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap, recenterFeaturedMap, recenterAtlasMap, recenterAtlasToLatest, recenterFullscreenMap } from './components/map.ts';
 import { InteractivePreloader } from './components/preloader.ts';
 import { Router, PageId } from './components/router.ts';
@@ -83,6 +84,12 @@ class App {
           renderCharts(this.dataset.activities, 2026);
         }
       }, 50);
+    } else if (page === 'records') {
+      setTimeout(() => {
+        if (this.dataset) {
+          renderEquivalents(this.dataset.activities, this.dataset.stats);
+        }
+      }, 50);
     } else if (page === 'map') {
       setTimeout(() => {
         if (this.dataset?.activities) {
@@ -127,6 +134,7 @@ class App {
       }
     });
     UIRenderer.renderCareerStats(this.dataset);
+    renderEquivalents(this.dataset.activities, this.dataset.stats);
     UIRenderer.renderAnnualCalendar(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {
