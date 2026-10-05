@@ -95,6 +95,19 @@
     display: inline-flex !important;
   }
 
+  .map-floating-controls-left {
+    position: absolute !important;
+    bottom: 10px !important;
+    left: 10px !important;
+    top: auto !important;
+    right: auto !important;
+    z-index: 500 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: none !important;
+  }
+
   .map-floating-controls {
     position: absolute !important;
     bottom: 10px !important;
@@ -244,9 +257,24 @@
 
 
   /* Boutons d'actions flottants sur la carte : ultra-visibles, fonds tranchés et aux couleurs du dashboard */
+  .map-floating-controls-left {
+    position: fixed;
+    left: 16px;
+    bottom: calc(100dvh - var(--sheet-top, 50dvh) + 16px);
+    bottom: calc(100vh - var(--sheet-top, 50vh) + 16px);
+    top: auto;
+    right: auto;
+    z-index: 22;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   .map-floating-controls {
     position: fixed;
     right: 16px;
+    bottom: calc(100dvh - var(--sheet-top, 50dvh) + 16px);
     bottom: calc(100vh - var(--sheet-top, 50vh) + 16px);
     top: auto;
     z-index: 22;
@@ -291,6 +319,22 @@
     transform: scale(0.92);
   }
 
+  /* Bouton Play : couleur Terracotta éclatante avec gestion d'état de lecture */
+  #btn-play-featured-track {
+    background-color: #FFFFFF !important;
+    color: #E05A36 !important;
+    border: 2.5px solid #E05A36 !important;
+    box-shadow: 0 6px 20px rgba(224, 90, 54, 0.30), 0 2px 8px rgba(35, 25, 15, 0.15) !important;
+  }
+
+  #btn-play-featured-track.active,
+  #btn-play-featured-track.is-playing {
+    background-color: #E05A36 !important;
+    border-color: #FFFFFF !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 22px rgba(224, 90, 54, 0.50), 0 2px 8px rgba(35, 25, 15, 0.20) !important;
+  }
+
   /* Bouton calque actif : fond plein Terracotta ultra-voyant avec icône blanche */
   .map-icon-btn.active {
     background-color: #E05A36 !important;
@@ -316,7 +360,7 @@
     background-color: var(--color-primary-light) !important;
   }
 
-  /* Volet coulissant tactile (Bottom Sheet) - Fixé directement au viewport */
+  /* Volet coulissant tactile (Bottom Sheet) - Fixé directement au viewport avec safe-area */
   .mobile-hub-sheet {
     display: flex;
     flex-direction: column;
@@ -342,6 +386,7 @@
     transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.25s ease;
     will-change: top;
     margin: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .mobile-hub-sheet.dragging {
@@ -359,7 +404,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 16px 6px;
+    padding: 8px 16px 8px;
     cursor: grab;
     user-select: none;
     touch-action: none;
@@ -368,7 +413,12 @@
     flex-shrink: 0;
     width: 100%;
     box-sizing: border-box;
-    transition: padding-top 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: padding-top 0.32s cubic-bezier(0.16, 1, 0.3, 1), padding-bottom 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* En mode peek, padding bas équilibré et naturel */
+  .mobile-hub-sheet[data-state="peek"] .mobile-sheet-drag-zone {
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
   }
 
   /* En mode expanded, le header reste sur l'écran : la zone de drag commence sous le header */
@@ -401,7 +451,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 4px 6px 6px;
+    padding: 2px 4px 2px;
     box-sizing: border-box;
   }
 
@@ -411,13 +461,13 @@
 
   .mobile-sheet-peek-title {
     font-family: var(--font-display);
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
     flex: 1;
     min-width: 0;
-    line-height: 1.25;
+    line-height: 1.22;
     word-break: break-word;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -470,10 +520,10 @@
     -webkit-mask-image: none;
   }
 
-  /* Le micro-dégradé doux (14px) s'active UNIQUEMENT lors du défilement effectif pour adoucir le passage sous le header */
+  /* Le micro-dégradé doux (24px) s'active UNIQUEMENT lors du défilement effectif pour adoucir le passage sous le header */
   .mobile-sheet-scroll.is-scrolled {
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 14px, black 100%);
-    mask-image: linear-gradient(to bottom, transparent 0px, black 14px, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 24px, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0px, black 24px, black 100%);
   }
 
   .mobile-hub-sheet[data-state="expanded"] .mobile-sheet-scroll {
@@ -609,13 +659,22 @@
   .mobile-splits-section {
     background: var(--bg-surface-subtle);
     border-radius: var(--radius-sm);
-    padding: 10px 12px;
+    padding: 10px 12px 8px;
     border: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
     gap: 6px;
     box-sizing: border-box;
     width: 100%;
+  }
+
+  .mobile-splits-section .splits-list-custom,
+  #mobile-splits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding-bottom: 0;
   }
 
   /* Cartes suivantes dans le volet défilable */

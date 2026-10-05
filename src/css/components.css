@@ -97,6 +97,18 @@
   pointer-events: none;
 }
 
+.map-floating-controls-left {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  top: auto;
+  right: auto;
+  z-index: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .map-floating-controls {
   position: absolute;
   bottom: 10px;
@@ -1932,12 +1944,13 @@
 
 .activity-item:hover .activity-drawer,
 .activity-item.expanded .activity-drawer {
-  max-height: 600px;
+  max-height: 2500px;
   opacity: 1;
   pointer-events: auto;
   margin-top: 12px;
   padding-top: 14px;
   border-top: 1px dashed var(--border-light);
+  overflow: visible;
 }
 
 .drawer-content-grid {
@@ -1953,9 +1966,10 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .drawer-content-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 
@@ -2058,7 +2072,72 @@
 .drawer-splits-col {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  width: 100%;
+}
+
+.splits-container-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.splits-container-inner .splits-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.splits-extra-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.btn-splits-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 14px;
+  margin-top: 5px;
+  margin-bottom: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-surface);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.btn-splits-toggle:hover {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(224, 90, 54, 0.12);
+}
+
+.btn-splits-toggle:active {
+  transform: translateY(0);
+}
+
+.btn-splits-toggle-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .splits-list {
@@ -2456,7 +2535,7 @@
   pointer-events: none;
   transition: opacity var(--transition-fast);
   overscroll-behavior: contain;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .modal-overlay.open {
@@ -2478,17 +2557,21 @@
   transform: translateY(12px);
   transition: transform var(--transition-smooth);
   overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .modal-activity-details-box {
   max-width: 480px;
-  max-height: 86vh;
+  max-height: 90vh;
+  max-height: 90dvh;
+  min-height: 0;
   height: auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 16px 16px 10px 16px;
+  padding: 16px 16px 12px 16px;
   gap: 0;
+  touch-action: pan-y;
 }
 
 .modal-fixed-top {
@@ -2613,23 +2696,48 @@
 }
 
 .modal-activity-body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 2px 2px 2px 2px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 8px, black calc(100% - 6px), transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8px, black calc(100% - 6px), transparent 100%);
+  gap: 10px;
+  padding: 4px 4px 4px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 145, 155, 0.3) transparent;
+  /* État initial au repos en haut : zéro coupure en bas grâce au dégradé doux progressif de 44px */
+  -webkit-mask-image: linear-gradient(to bottom, black 0px, black calc(100% - 44px), transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0px, black calc(100% - 44px), transparent 100%);
+}
+
+/* En cours de scroll : dégradé doux en haut (28px) ET en bas (44px) pour éliminer toute coupure nette et brute */
+.modal-activity-body.is-scrolled {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 44px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 44px), transparent 100%);
+}
+
+/* Arrivé tout en bas du scroll : dégradé doux en haut pour le contenu qui s'efface, netteté totale en bas pour afficher 100% des splits sans flou */
+.modal-activity-body.is-at-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 28px, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0px, black 28px, black 100%);
+}
+
+/* Si le contenu est court et ne nécessite aucun scroll : netteté totale */
+.modal-activity-body:not(.is-scrolled).is-at-bottom {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .modal-activity-body::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 4px;
+}
+
+.modal-activity-body::-webkit-scrollbar-thumb {
+  background: rgba(140, 145, 155, 0.3);
+  border-radius: 4px;
 }
 
 .splits-list-custom {
@@ -2637,6 +2745,7 @@
   flex-direction: column;
   gap: 4px;
   width: 100%;
+  padding-bottom: 0;
 }
 
 .modal-map-wrap {
@@ -2680,12 +2789,14 @@
 .modal-splits-section {
   background: var(--bg-surface-subtle);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 10px 12px 8px;
   border: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 0;
+  margin-bottom: 2px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .modal-splits-section .splits-title {
@@ -4138,7 +4249,11 @@
 
   .modal-box.modal-activity-details-box {
     padding: 14px 14px calc(8px + var(--safe-area-bottom));
-    max-height: 85vh;
+    max-height: 88vh;
+    max-height: 88dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .modal-overlay.open .modal-box {

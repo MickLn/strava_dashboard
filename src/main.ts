@@ -3,7 +3,7 @@ import { UIRenderer } from './components/ui-renderer.ts';
 import { renderCharts } from './components/charts.ts';
 import { renderEquivalents } from './components/equivalents.ts';
 import { mobileSheetController } from './components/mobile-sheet.ts';
-import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap, recenterFeaturedMap, recenterAtlasMap, recenterAtlasToLatest, recenterFullscreenMap, toggleBackgroundTracks } from './components/map.ts';
+import { initMap, renderActivityTraces, initPageAtlasMap, invalidateMapSize, openFullscreenHeatmap, closeFullscreenHeatmap, recenterFeaturedMap, recenterAtlasMap, recenterAtlasToLatest, recenterFullscreenMap, toggleBackgroundTracks, togglePlayFeaturedTrack } from './components/map.ts';
 import { InteractivePreloader } from './components/preloader.ts';
 import { Router, PageId } from './components/router.ts';
 import { StravaDataset, Activity } from './types/strava.ts';
@@ -144,20 +144,24 @@ class App {
     this.updateNavLabels();
 
     // Page 1 : Dashboard (Dernière sortie, Weekly Pulse, Calendrier mensuel)
-    UIRenderer.renderFeaturedLatestRun(this.dataset.activities, (act: Activity) => {
-      UIRenderer.openActivityModal(act, this.dataset!);
-    }, this.dataset);
+    UIRenderer.renderFeaturedLatestRun(
+      this.dataset.activities,
+      (act: Activity) => UIRenderer.openActivityModal(act, this.dataset!),
+      this.dataset,
+      this.currentHighlightedActivityId
+    );
     UIRenderer.renderWeeklyPulse(this.dataset);
 
     const onSelectCalActivity = (act: Activity) => {
-      this.currentHighlightedActivityId = act.id;
-      renderActivityTraces(this.dataset!.activities, act.id);
+      this.selectActivity(act);
       UIRenderer.openActivityModal(act, this.dataset!);
     };
 
     UIRenderer.setupCalendarNavigation(this.dataset.activities, onSelectCalActivity);
     UIRenderer.renderMonthlyCalendar(this.dataset.activities, onSelectCalActivity);
-    renderActivityTraces(this.dataset.activities, this.currentHighlightedActivityId);
+    renderActivityTraces(this.dataset.activities, this.currentHighlightedActivityId, (act: Activity) => {
+      this.selectActivity(act);
+    });
     this.renderActivitiesForCurrentPeriod();
 
     // Page 2 : Analytics & Graphiques (Volume, D+, Allure & Habitudes)
@@ -167,6 +171,7 @@ class App {
     UIRenderer.renderRecords(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {
+        this.selectActivity(act);
         UIRenderer.openActivityModal(act, this.dataset!);
       }
     });
@@ -175,6 +180,7 @@ class App {
     UIRenderer.renderAnnualCalendar(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {
+        this.selectActivity(act);
         UIRenderer.openActivityModal(act, this.dataset!);
       }
     });
@@ -184,6 +190,7 @@ class App {
     UIRenderer.renderShoeRotator(this.dataset, (activityId) => {
       const act = this.dataset?.activities.find(a => a.id === activityId);
       if (act) {
+        this.selectActivity(act);
         UIRenderer.openActivityModal(act, this.dataset!);
       }
     });
@@ -192,6 +199,22 @@ class App {
     if (this.router.getCurrentPage() === 'map') {
       initPageAtlasMap('page-heatmap-container', this.dataset.activities);
     }
+  }
+
+  public selectActivity(act: Activity): void {
+    if (!this.dataset) return;
+    this.currentHighlightedActivityId = act.id;
+    UIRenderer.renderFeaturedLatestRun(
+      this.dataset.activities,
+      (a: Activity) => UIRenderer.openActivityModal(a, this.dataset!),
+      this.dataset,
+      act.id
+    );
+    renderActivityTraces(this.dataset.activities, act.id, (selectedAct: Activity) => {
+      this.selectActivity(selectedAct);
+    });
+    recenterFeaturedMap(this.dataset.activities, act.id);
+    mobileSheetController.updatePosition();
   }
 
   private updateNavLabels(): void {
@@ -259,8 +282,7 @@ class App {
       filtered,
       this.dataset,
       (act) => {
-        this.currentHighlightedActivityId = act.id;
-        renderActivityTraces(this.dataset!.activities, act.id);
+        this.selectActivity(act);
       },
       this.feedLimit,
       () => {
@@ -461,7 +483,15 @@ class App {
       });
     }
 
-    // Featured Map (Card A) Controls : Bascule des tracés, Recentrer et Plein Écran
+    // Featured Map (Card A) Controls : Playback / Animation, Bascule des tracés, Recentrer et Plein Écran
+    const btnPlayFeatured = document.getElementById('btn-play-featured-track');
+    if (btnPlayFeatured) {
+      btnPlayFeatured.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePlayFeaturedTrack();
+      });
+    }
+
     const btnToggleBg = document.getElementById('btn-toggle-bg-tracks');
     if (btnToggleBg) {
       btnToggleBg.addEventListener('click', (e) => {
@@ -562,6 +592,17 @@ class App {
           e.preventDefault();
         }
       }, { passive: false });
+
+      const modalBody = modalOverlay.querySelector('.modal-activity-body') as HTMLElement | null;
+      if (modalBody) {
+        const updateModalMask = () => {
+          const isScrolled = modalBody.scrollTop > 6;
+          const isAtBottom = modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight - 14;
+          modalBody.classList.toggle('is-scrolled', isScrolled);
+          modalBody.classList.toggle('is-at-bottom', isAtBottom);
+        };
+        modalBody.addEventListener('scroll', updateModalMask, { passive: true });
+      }
     }
 
     // Annual multi-run modal close

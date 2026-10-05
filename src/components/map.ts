@@ -45,6 +45,12 @@ export function initMap(elementId: string = 'leaflet-map'): L.Map | null {
     featPane.style.zIndex = '450';
   }
 
+  mapInstance.createPane('featuredMarkersPane');
+  const featMarkersPane = mapInstance.getPane('featuredMarkersPane');
+  if (featMarkersPane) {
+    featMarkersPane.style.zIndex = '480';
+  }
+
   bgTracksLayerGroup = L.layerGroup().addTo(mapInstance);
   currentLayerGroup = L.layerGroup().addTo(mapInstance);
 
@@ -107,7 +113,7 @@ export function recenterFeaturedMap(activities: Activity[], highlightActivityId?
   }
 }
 
-export function renderActivityTraces(activities: Activity[], highlightActivityId?: number) {
+export function renderActivityTraces(activities: Activity[], highlightActivityId?: number, onSelectActivity?: (act: Activity) => void) {
   if (!mapInstance || !currentLayerGroup || !activities || activities.length === 0) return;
 
   currentLayerGroup.clearLayers();
@@ -135,15 +141,36 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
           lineJoin: 'round'
         });
 
+        polyline.on('click', () => {
+          if (onSelectActivity) {
+            onSelectActivity(activity);
+          }
+        });
+
         polyline.bindPopup(`
-          <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 170px; padding: 2px;">
+          <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 175px; padding: 2px;">
             <strong style="font-size: 0.88rem; color: #1C1E21; display: block; margin-bottom: 2px;">${activity.name}</strong>
             <div style="font-size: 0.75rem; color: #5C626C; margin-bottom: 4px;">${formatDate(activity.start_date_local)}</div>
-            <div style="font-size: 0.8rem; font-weight: 700; color: #E05A36;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #E05A36; margin-bottom: 6px;">
               ${formatDistance(activity.distance)} • ${formatTimeShort(activity.moving_time)} • ${formatPace(activity.average_speed)}
             </div>
+            <button id="btn-select-map-run-${activity.id}" style="width: 100%; padding: 5px 8px; font-size: 0.76rem; font-weight: 700; background: #E05A36; color: #FFFFFF; border: none; border-radius: 4px; cursor: pointer;">
+              ${i18n.getLang() === 'fr' ? 'Afficher cette course' : 'Select this run'}
+            </button>
           </div>
         `);
+
+        polyline.on('popupopen', () => {
+          const btn = document.getElementById(`btn-select-map-run-${activity.id}`);
+          if (btn) {
+            btn.onclick = () => {
+              mapInstance?.closePopup();
+              if (onSelectActivity) {
+                onSelectActivity(activity);
+              }
+            };
+          }
+        });
 
         if (bgTracksLayerGroup) {
           polyline.addTo(bgTracksLayerGroup);
@@ -169,13 +196,16 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
   if (targetActivity && targetActivity.map?.summary_polyline) {
     const coords = decodePolyline(targetActivity.map.summary_polyline);
     if (coords.length > 0) {
-      const mainPolyline = L.polyline(coords, {
+      playbackCurrentCoords = coords;
+      resetFeaturedTrackAnimation();
+      featuredMainPolyline = L.polyline(coords, {
         pane: 'featuredTrackPane',
         color: '#E05A36',
         weight: 5,
         opacity: 1,
         lineJoin: 'round'
       });
+      const mainPolyline = featuredMainPolyline;
 
       mainPolyline.bindPopup(`
         <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 190px; padding: 4px;">
@@ -194,22 +224,22 @@ export function renderActivityTraces(activities: Activity[], highlightActivityId
       targetBounds = mainPolyline.getBounds();
       lastFeaturedTargetBounds = targetBounds;
 
-      // Marqueur de départ (vert forêt) au premier plan
+      // Marqueur de départ (vert forêt) au premier plan (au-dessus du tracé)
       const startPt = coords[0];
       L.circleMarker(startPt, {
-        pane: 'featuredTrackPane',
-        radius: 7,
+        pane: 'featuredMarkersPane',
+        radius: 7.5,
         color: '#FFFFFF',
         weight: 2.5,
         fillColor: '#2E6B56',
         fillOpacity: 1
       }).bindTooltip("Start", { permanent: false }).addTo(currentLayerGroup!);
 
-      // Marqueur d'arrivée (terracotta) au premier plan
+      // Marqueur d'arrivée (terracotta) au premier plan (au-dessus du tracé)
       const endPt = coords[coords.length - 1];
       L.circleMarker(endPt, {
-        pane: 'featuredTrackPane',
-        radius: 7,
+        pane: 'featuredMarkersPane',
+        radius: 7.5,
         color: '#FFFFFF',
         weight: 2.5,
         fillColor: '#E05A36',
@@ -601,4 +631,213 @@ export function toggleBackgroundTracks(): boolean {
   }
 
   return isBgTracksVisible;
+}
+
+// Variables pour l'animation Playback de la course
+let featuredMainPolyline: L.Polyline | null = null;
+let playbackAnimationId: number | null = null;
+let playbackCurrentCoords: [number, number][] = [];
+let playbackPolyline: L.Polyline | null = null;
+let playbackRunnerMarker: L.CircleMarker | null = null;
+let playbackProgress: number = 0; // 0 à 1
+let playbackIsPlaying: boolean = false;
+let playbackDurationMs: number = 5500;
+
+/**
+ * Réinitialise complètement l'état de l'animation Playback
+ */
+export function resetFeaturedTrackAnimation(): void {
+  if (playbackAnimationId !== null) {
+    cancelAnimationFrame(playbackAnimationId);
+    playbackAnimationId = null;
+  }
+  playbackIsPlaying = false;
+  playbackProgress = 0;
+
+  if (featuredMainPolyline) {
+    featuredMainPolyline.setStyle({ opacity: 1 });
+  }
+
+  if (mapInstance) {
+    if (playbackPolyline && mapInstance.hasLayer(playbackPolyline)) {
+      mapInstance.removeLayer(playbackPolyline);
+    }
+    if (playbackRunnerMarker && mapInstance.hasLayer(playbackRunnerMarker)) {
+      mapInstance.removeLayer(playbackRunnerMarker);
+    }
+  }
+  playbackPolyline = null;
+  playbackRunnerMarker = null;
+
+  updatePlayButtonUI('play');
+}
+
+/**
+ * Met à jour l'icône et l'état du bouton Play
+ */
+function updatePlayButtonUI(state: 'play' | 'pause' | 'replay'): void {
+  const btn = document.getElementById('btn-play-featured-track');
+  if (!btn) return;
+
+  btn.classList.toggle('active', state === 'pause');
+  btn.classList.toggle('is-playing', state === 'pause');
+
+  if (state === 'pause') {
+    btn.setAttribute('title', 'Mettre en pause');
+    btn.setAttribute('aria-label', 'Mettre en pause');
+    btn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <rect x="6" y="4" width="4" height="16" rx="1.5"></rect>
+        <rect x="14" y="4" width="4" height="16" rx="1.5"></rect>
+      </svg>
+    `;
+  } else if (state === 'replay') {
+    btn.setAttribute('title', 'Rejouer le tracé');
+    btn.setAttribute('aria-label', 'Rejouer le tracé');
+    btn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 4v6h6"></path>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+      </svg>
+    `;
+  } else {
+    btn.setAttribute('title', 'Rejouer le parcours de la course');
+    btn.setAttribute('aria-label', 'Rejouer le parcours de la course');
+    btn.innerHTML = `
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-left: 2px;">
+        <polygon points="6 3 20 12 6 21 6 3"></polygon>
+      </svg>
+    `;
+  }
+}
+
+/**
+ * Bascule lecture / pause du parcours de la course
+ */
+export function togglePlayFeaturedTrack(): void {
+  if (!mapInstance || playbackCurrentCoords.length < 2) return;
+
+  if (playbackIsPlaying) {
+    pauseFeaturedTrack();
+  } else {
+    playFeaturedTrack();
+  }
+}
+
+export function pauseFeaturedTrack(): void {
+  if (playbackAnimationId !== null) {
+    cancelAnimationFrame(playbackAnimationId);
+    playbackAnimationId = null;
+  }
+  playbackIsPlaying = false;
+  updatePlayButtonUI('play');
+}
+
+export function playFeaturedTrack(): void {
+  if (!mapInstance || playbackCurrentCoords.length < 2) return;
+
+  if (playbackProgress >= 1) {
+    playbackProgress = 0;
+    if (playbackPolyline) {
+      playbackPolyline.setLatLngs([]);
+    }
+  }
+
+  // Faire disparaître le tracé orange statique pour qu'il soit retracé en direct
+  if (featuredMainPolyline) {
+    featuredMainPolyline.setStyle({ opacity: 0 });
+  }
+
+  // Création du tracé orange dynamique redessiné progressivement
+  if (!playbackPolyline) {
+    playbackPolyline = L.polyline([], {
+      pane: 'featuredTrackPane',
+      color: '#E05A36',
+      weight: 5.5,
+      opacity: 1,
+      lineJoin: 'round',
+      lineCap: 'round'
+    }).addTo(mapInstance);
+  }
+
+  if (!playbackRunnerMarker) {
+    playbackRunnerMarker = L.circleMarker(playbackCurrentCoords[0], {
+      pane: 'featuredMarkersPane',
+      radius: 7.5,
+      color: '#FFFFFF',
+      weight: 2.5,
+      fillColor: '#E05A36',
+      fillOpacity: 1
+    }).addTo(mapInstance);
+  }
+
+  playbackIsPlaying = true;
+  updatePlayButtonUI('pause');
+
+  const totalPoints = playbackCurrentCoords.length;
+  // Durée d'animation fluide et naturelle (entre 3.5s et 7s)
+  playbackDurationMs = Math.max(3500, Math.min(7000, totalPoints * 16));
+
+  let lastTimestamp: number | null = null;
+
+  const animate = (timestamp: number) => {
+    if (!playbackIsPlaying) return;
+
+    if (lastTimestamp === null) {
+      lastTimestamp = timestamp;
+    }
+    const delta = timestamp - lastTimestamp;
+    lastTimestamp = timestamp;
+
+    playbackProgress += delta / playbackDurationMs;
+
+    if (playbackProgress >= 1) {
+      playbackProgress = 1;
+      playbackIsPlaying = false;
+
+      // Rétablir le tracé principal complet à 100%
+      if (featuredMainPolyline) {
+        featuredMainPolyline.setStyle({ opacity: 1 });
+      }
+      if (mapInstance) {
+        if (playbackPolyline && mapInstance.hasLayer(playbackPolyline)) {
+          mapInstance.removeLayer(playbackPolyline);
+        }
+        if (playbackRunnerMarker && mapInstance.hasLayer(playbackRunnerMarker)) {
+          mapInstance.removeLayer(playbackRunnerMarker);
+        }
+      }
+      playbackPolyline = null;
+      playbackRunnerMarker = null;
+
+      updatePlayButtonUI('replay');
+      return;
+    }
+
+    const floatIndex = playbackProgress * (totalPoints - 1);
+    const currIdx = Math.floor(floatIndex);
+    const nextIdx = Math.min(totalPoints - 1, currIdx + 1);
+    const t = floatIndex - currIdx;
+
+    const p1 = playbackCurrentCoords[currIdx];
+    const p2 = playbackCurrentCoords[nextIdx];
+
+    const currentLat = p1[0] + (p2[0] - p1[0]) * t;
+    const currentLng = p1[1] + (p2[1] - p1[1]) * t;
+    const currentPoint: [number, number] = [currentLat, currentLng];
+
+    const drawnPoints = playbackCurrentCoords.slice(0, currIdx + 1);
+    drawnPoints.push(currentPoint);
+
+    if (playbackPolyline) {
+      playbackPolyline.setLatLngs(drawnPoints);
+    }
+    if (playbackRunnerMarker) {
+      playbackRunnerMarker.setLatLng(currentPoint);
+    }
+
+    playbackAnimationId = requestAnimationFrame(animate);
+  };
+
+  playbackAnimationId = requestAnimationFrame(animate);
 }

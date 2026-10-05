@@ -39,13 +39,18 @@ class MobileSheetController {
       this.resetDesktop();
     }
 
-    window.addEventListener('resize', () => {
+    const handleViewportChange = () => {
       if (window.innerWidth <= 768) {
         this.snapTo(this.currentState, false);
       } else {
         this.resetDesktop();
       }
-    });
+    };
+
+    window.addEventListener('resize', handleViewportChange);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+    }
   }
 
   private setInitialState(): void {
@@ -55,9 +60,9 @@ class MobileSheetController {
   }
 
   private getTops(): { peek: number; half: number; expanded: number } {
-    const vh = window.innerHeight;
-    const dragZoneHeight = this.dragZone?.offsetHeight || 68;
-    const peek = vh - Math.max(68, dragZoneHeight);
+    const vh = window.visualViewport?.height || window.innerHeight;
+    const dragZoneHeight = this.dragZone?.offsetHeight || 58;
+    const peek = Math.max(0, vh - dragZoneHeight);
     const half = Math.round(vh * 0.50);
     const expanded = 0; // Le panel prend toute la page et cache la carte
     return { peek, half, expanded };
@@ -251,6 +256,7 @@ class MobileSheetController {
     }
     if (!this.sheet) return;
     this.currentState = state;
+    this.sheet.setAttribute('data-state', state);
 
     const { peek, half, expanded } = this.getTops();
     let targetTop = half;
@@ -267,7 +273,6 @@ class MobileSheetController {
 
     this.sheet.style.top = `${targetTop}px`;
     document.documentElement.style.setProperty('--sheet-top', `${targetTop}px`);
-    this.sheet.setAttribute('data-state', state);
 
     // Navbar
     if (this.navbarWrap) {
@@ -331,6 +336,12 @@ class MobileSheetController {
 
   public getCurrentState(): SheetState {
     return this.currentState;
+  }
+
+  public updatePosition(): void {
+    if (window.innerWidth <= 768 && this.currentState === 'peek') {
+      this.snapTo('peek', false);
+    }
   }
 }
 

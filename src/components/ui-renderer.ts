@@ -267,10 +267,12 @@ export class UIRenderer {
   /**
    * Rendu de la Dernière Sortie en Vedette (Étage 1 Gauche)
    */
-  public static renderFeaturedLatestRun(activities: Activity[], onOpenDetails: (act: Activity) => void, dataset?: StravaDataset): void {
+  public static renderFeaturedLatestRun(activities: Activity[], onOpenDetails: (act: Activity) => void, dataset?: StravaDataset, targetActivityId?: number): void {
     if (!activities || activities.length === 0) return;
     const sorted = [...activities].sort((a, b) => new Date(b.start_date_local).getTime() - new Date(a.start_date_local).getTime());
-    const latest = sorted[0];
+    const targetActivity = targetActivityId
+      ? (activities.find(a => a.id === targetActivityId) || sorted[0])
+      : sorted[0];
 
     // 1. Desktop Featured Card
     const titleEl = document.getElementById('featured-run-title');
@@ -281,29 +283,29 @@ export class UIRenderer {
     const calEl = document.getElementById('featured-cal');
     const detailsBtn = document.getElementById('btn-featured-details');
 
-    const cal = calculateCalories(latest);
+    const cal = calculateCalories(targetActivity);
 
-    if (titleEl) titleEl.textContent = latest.name;
-    if (dateEl) dateEl.textContent = `${formatDate(latest.start_date_local)} • ${latest.timezone?.split('/')[1] || 'Paris'}`;
-    if (distEl) distEl.textContent = formatDistance(latest.distance);
-    if (timeEl) timeEl.textContent = formatTimeShort(latest.moving_time);
-    if (paceEl) paceEl.textContent = formatPace(latest.average_speed);
+    if (titleEl) titleEl.textContent = targetActivity.name;
+    if (dateEl) dateEl.textContent = `${formatDate(targetActivity.start_date_local)} • ${targetActivity.timezone?.split('/')[1] || 'Paris'}`;
+    if (distEl) distEl.textContent = formatDistance(targetActivity.distance);
+    if (timeEl) timeEl.textContent = formatTimeShort(targetActivity.moving_time);
+    if (paceEl) paceEl.textContent = formatPace(targetActivity.average_speed);
     if (calEl) calEl.textContent = `${cal} kcal`;
 
     if (detailsBtn) {
-      detailsBtn.onclick = () => onOpenDetails(latest);
+      detailsBtn.onclick = () => onOpenDetails(targetActivity);
     }
 
     // 2. Mobile Full Details Panel (Direct Mobile Replacement as requested)
     const isFr = i18n.getLang() === 'fr';
     const t = i18n.t();
-    const gearItem = dataset?.gear?.find(g => g.id === latest.gear_id);
+    const gearItem = dataset?.gear?.find(g => g.id === targetActivity.gear_id);
     const gearName = gearItem ? gearItem.name : (isFr ? 'Chaussures de running' : 'Running shoes');
-    const elev = calculateElevationDetails(latest);
-    const diff = calculateDifficulty(latest);
-    const zoneRes = getActivityEffortZone(latest);
-    const tags = generateActivityTags(latest, gearName);
-    const splits = generateKilometerSplits(latest);
+    const elev = calculateElevationDetails(targetActivity);
+    const diff = calculateDifficulty(targetActivity);
+    const zoneRes = getActivityEffortZone(targetActivity);
+    const tags = generateActivityTags(targetActivity, gearName);
+    const splits = generateKilometerSplits(targetActivity);
 
     // Profile & Header
     const mAvatarEl = document.getElementById('mobile-runner-avatar') as HTMLImageElement | null;
@@ -322,15 +324,15 @@ export class UIRenderer {
       mNameEl.textContent = dataset?.athlete ? `${dataset.athlete.firstname} ${dataset.athlete.lastname}` : 'Mickaël Lin';
     }
     if (mDateLocEl) {
-      mDateLocEl.textContent = `${formatDate(latest.start_date_local)} • ${gearName}`;
+      mDateLocEl.textContent = `${formatDate(targetActivity.start_date_local)} • ${gearName}`;
     }
-    if (mTitleEl) mTitleEl.textContent = latest.name;
-    if (mPeekTitleEl) mPeekTitleEl.textContent = latest.name;
-    if (mPeekDistEl) mPeekDistEl.textContent = formatDistance(latest.distance);
+    if (mTitleEl) mTitleEl.textContent = targetActivity.name;
+    if (mPeekTitleEl) mPeekTitleEl.textContent = targetActivity.name;
+    if (mPeekDistEl) mPeekDistEl.textContent = formatDistance(targetActivity.distance);
 
     if (mDescEl) {
-      if (latest.description && latest.description.trim()) {
-        mDescEl.textContent = latest.description;
+      if (targetActivity.description && targetActivity.description.trim()) {
+        mDescEl.textContent = targetActivity.description;
         mDescEl.style.display = 'block';
       } else {
         mDescEl.style.display = 'none';
@@ -347,9 +349,9 @@ export class UIRenderer {
     const mPaceEl = document.getElementById('mobile-detail-pace');
     const mCalEl = document.getElementById('mobile-detail-cal');
 
-    if (mDistEl) mDistEl.textContent = `${(latest.distance / 1000).toFixed(2)} km`;
-    if (mTimeEl) mTimeEl.textContent = formatTimeShort(latest.moving_time);
-    if (mPaceEl) mPaceEl.textContent = formatPace(latest.average_speed);
+    if (mDistEl) mDistEl.textContent = `${(targetActivity.distance / 1000).toFixed(2)} km`;
+    if (mTimeEl) mTimeEl.textContent = formatTimeShort(targetActivity.moving_time);
+    if (mPaceEl) mPaceEl.textContent = formatPace(targetActivity.average_speed);
     if (mCalEl) mCalEl.textContent = `${cal} kcal`;
 
     // Bento Telemetry
@@ -364,10 +366,10 @@ export class UIRenderer {
     if (mElevEl) mElevEl.innerHTML = `+${elev.gain}m <span class="text-forest" style="margin-left: 3px;">-${elev.loss}m</span>`;
     if (mAltEl) mAltEl.textContent = (elev.minAlt !== null && elev.maxAlt !== null) ? `${elev.minAlt}m - ${elev.maxAlt}m alt` : '';
 
-    if (mHrEl) mHrEl.textContent = latest.average_heartrate ? `${latest.average_heartrate} bpm` : t.notRecorded;
-    if (mHrMaxEl) mHrMaxEl.textContent = latest.max_heartrate ? `max ${latest.max_heartrate} bpm` : '';
+    if (mHrEl) mHrEl.textContent = targetActivity.average_heartrate ? `${targetActivity.average_heartrate} bpm` : t.notRecorded;
+    if (mHrMaxEl) mHrMaxEl.textContent = targetActivity.max_heartrate ? `max ${targetActivity.max_heartrate} bpm` : '';
 
-    if (mDeviceEl) mDeviceEl.textContent = latest.device_name || 'Strava App';
+    if (mDeviceEl) mDeviceEl.textContent = targetActivity.device_name || 'Strava App';
 
     if (mEffortEl) {
       mEffortEl.textContent = `${diff.score}/10 • ${isFr ? diff.labelFr : diff.label}`;
@@ -383,10 +385,14 @@ export class UIRenderer {
       mZoneEl.style.backgroundColor = `${zoneRes.badgeColor}18`;
     }
 
-    // Splits
+    // Splits kilométriques
     const mSplitsContainer = document.getElementById('mobile-splits-list');
     if (mSplitsContainer) {
-      mSplitsContainer.innerHTML = splits.map(s => {
+      const hasMoreMSplits = splits.length > 11;
+      const initialMSplits = hasMoreMSplits ? splits.slice(0, 10) : splits;
+      const extraMSplits = hasMoreMSplits ? splits.slice(10) : [];
+
+      const renderRow = (s: typeof splits[0]) => {
         const zoneClass = s.zoneBadge.toLowerCase();
         return `
           <div class="split-row">
@@ -398,7 +404,39 @@ export class UIRenderer {
             <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
           </div>
         `;
-      }).join('');
+      };
+
+      mSplitsContainer.innerHTML = `
+        ${initialMSplits.map(renderRow).join('')}
+        ${hasMoreMSplits ? `
+          <div class="splits-extra-wrap" id="mobile-splits-extra">
+            ${extraMSplits.map(renderRow).join('')}
+          </div>
+          <button id="btn-mobile-splits-toggle" class="btn-splits-toggle" type="button" aria-expanded="false">
+            <span class="btn-splits-toggle-text">See more</span>
+          </button>
+        ` : ''}
+      `;
+
+      if (hasMoreMSplits) {
+        const toggleBtn = document.getElementById('btn-mobile-splits-toggle');
+        const extraWrap = document.getElementById('mobile-splits-extra');
+        if (toggleBtn && extraWrap) {
+          toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = extraWrap.style.display !== 'flex';
+            if (isHidden) {
+              extraWrap.style.display = 'flex';
+              toggleBtn.setAttribute('aria-expanded', 'true');
+              toggleBtn.innerHTML = `<span class="btn-splits-toggle-text">See less</span>`;
+            } else {
+              extraWrap.style.display = 'none';
+              toggleBtn.setAttribute('aria-expanded', 'false');
+              toggleBtn.innerHTML = `<span class="btn-splits-toggle-text">See more</span>`;
+            }
+          });
+        }
+      }
     }
   }
 
@@ -1587,20 +1625,29 @@ export class UIRenderer {
       const splits = generateKilometerSplits(activity);
       const zoneRes = getActivityEffortZone(activity);
 
-      // HTML des splits par kilomètre avec badge de Zone (Z1, Z2, Z3...)
-      const splitsHtml = splits.map(s => {
+      // Gestion des splits par kilomètre :
+      // Jusqu'à 11km inclus (ex: 10km), affichage direct et complet de tous les splits.
+      // Au-delà de 11km (> 11km), affichage des 10 premiers + bouton "+ See more" / "+ Afficher plus"
+      const hasMoreSplits = splits.length > 11;
+      const initialSplits = hasMoreSplits ? splits.slice(0, 10) : splits;
+      const extraSplits = hasMoreSplits ? splits.slice(10) : [];
+
+      const renderSplitRow = (s: typeof splits[0]) => {
         const zoneClass = s.zoneBadge.toLowerCase();
         return `
-        <div class="split-row">
-          <span class="split-km">${s.kmLabel}</span>
-          <div class="split-bar-track">
-            <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
+          <div class="split-row">
+            <span class="split-km">${s.kmLabel}</span>
+            <div class="split-bar-track">
+              <div class="split-bar-fill ${s.isFaster ? 'fast' : ''}" style="width: ${s.relativePercent}%;"></div>
+            </div>
+            <span class="split-pace">${s.paceFormatted}</span>
+            <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
           </div>
-          <span class="split-pace">${s.paceFormatted}</span>
-          <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
-        </div>
-      `;
-      }).join('');
+        `;
+      };
+
+      const initialSplitsHtml = initialSplits.map(renderSplitRow).join('');
+      const extraSplitsHtml = extraSplits.map(renderSplitRow).join('');
 
       // HTML des tags (placés en haut, au-dessus du trait en pointillés)
       const tagsHtml = tags.map(tag => `<span class="act-tag-badge">${tag}</span>`).join('');
@@ -1692,7 +1739,15 @@ export class UIRenderer {
               <div class="splits-container-inner">
                 <span class="splits-title">${t.splits}</span>
                 <div class="splits-list-custom">
-                  ${splitsHtml}
+                  ${initialSplitsHtml}
+                  ${hasMoreSplits ? `
+                    <div class="splits-extra-wrap" id="splits-extra-${activity.id}">
+                      ${extraSplitsHtml}
+                    </div>
+                    <button class="btn-splits-toggle" type="button" aria-expanded="false" data-activity-id="${activity.id}">
+                      <span class="btn-splits-toggle-text">See more</span>
+                    </button>
+                  ` : ''}
                 </div>
               </div>
             </div>
@@ -1715,14 +1770,39 @@ export class UIRenderer {
         if (hoverTimeout) clearTimeout(hoverTimeout);
       });
 
-      // Clic pour étendre / masquer
-      item.addEventListener('click', () => {
+      // Clic pour étendre / masquer (uniquement si le clic n'est pas dans les contrôles du tiroir)
+      item.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.activity-drawer')) {
+          return; // Ne pas replier le tiroir si on interagit dedans
+        }
         const isCurrentlyExpanded = item.classList.toggle('expanded');
         if (isCurrentlyExpanded) {
           UIRenderer.initOrUpdateMiniMap(activity.id, activity.map?.summary_polyline || '');
         }
         onHoverActivity(activity);
       });
+
+      // Gestionnaire du bouton "See more" pour les courses > 11km
+      if (hasMoreSplits) {
+        const toggleBtn = item.querySelector<HTMLButtonElement>('.btn-splits-toggle');
+        const extraWrap = item.querySelector<HTMLElement>(`#splits-extra-${activity.id}`);
+        if (toggleBtn && extraWrap) {
+          toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = extraWrap.style.display !== 'flex';
+            if (isHidden) {
+              extraWrap.style.display = 'flex';
+              toggleBtn.setAttribute('aria-expanded', 'true');
+              toggleBtn.innerHTML = `<span class="btn-splits-toggle-text">See less</span>`;
+            } else {
+              extraWrap.style.display = 'none';
+              toggleBtn.setAttribute('aria-expanded', 'false');
+              toggleBtn.innerHTML = `<span class="btn-splits-toggle-text">See more</span>`;
+            }
+          });
+        }
+      }
 
       container.appendChild(item);
     });
@@ -1737,8 +1817,7 @@ export class UIRenderer {
       if (activities.length > visibleLimit && onLoadMore) {
         controlsHtml += `
           <button id="btn-load-more-activities" class="btn-load-more">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>${isFr ? 'Afficher plus' : 'Load more'}</span>
+            <span>See more</span>
           </button>
         `;
       }
@@ -1746,8 +1825,7 @@ export class UIRenderer {
       if (visibleLimit > 10 && onCollapse) {
         controlsHtml += `
           <button id="btn-collapse-activities" class="btn-collapse-activities">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-            <span>${isFr ? 'Réduire' : 'Collapse'}</span>
+            <span>See less</span>
           </button>
         `;
       }
@@ -1849,10 +1927,10 @@ export class UIRenderer {
           const map = L.map(mapCanvas, {
             zoomControl: false,
             attributionControl: false,
-            dragging: true,
+            dragging: false,
             scrollWheelZoom: false,
             doubleClickZoom: false,
-            touchZoom: true,
+            touchZoom: false,
             boxZoom: false,
             keyboard: false
           });
@@ -1942,7 +2020,11 @@ export class UIRenderer {
     if (lblSplitsTitle) lblSplitsTitle.textContent = t.splits;
 
     if (splitsContainer) {
-      splitsContainer.innerHTML = splits.map(s => {
+      const hasMoreModalSplits = splits.length > 11;
+      const initialModalSplits = hasMoreModalSplits ? splits.slice(0, 10) : splits;
+      const extraModalSplits = hasMoreModalSplits ? splits.slice(10) : [];
+
+      const renderModalSplitRow = (s: typeof splits[0]) => {
         const zoneClass = s.zoneBadge.toLowerCase();
         return `
           <div class="split-row">
@@ -1954,12 +2036,55 @@ export class UIRenderer {
             <span class="split-zone-badge ${zoneClass}">${s.zoneBadge}</span>
           </div>
         `;
-      }).join('');
+      };
+
+      splitsContainer.innerHTML = `
+        ${initialModalSplits.map(renderModalSplitRow).join('')}
+        ${hasMoreModalSplits ? `
+          <div class="splits-extra-wrap" id="modal-splits-extra">
+            ${extraModalSplits.map(renderModalSplitRow).join('')}
+          </div>
+          <button id="btn-modal-splits-toggle" class="btn-splits-toggle" type="button" aria-expanded="false">
+            <span class="btn-splits-toggle-text">See more</span>
+          </button>
+        ` : ''}
+      `;
+
+      if (hasMoreModalSplits) {
+        const toggleBtn = document.getElementById('btn-modal-splits-toggle');
+        const extraWrap = document.getElementById('modal-splits-extra');
+        if (toggleBtn && extraWrap) {
+          toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = extraWrap.style.display !== 'flex';
+            if (isHidden) {
+              extraWrap.style.display = 'flex';
+              toggleBtn.setAttribute('aria-expanded', 'true');
+              toggleBtn.innerHTML = `<span class="btn-splits-toggle-text">See less</span>`;
+            } else {
+              extraWrap.style.display = 'none';
+              toggleBtn.setAttribute('aria-expanded', 'false');
+              toggleBtn.innerHTML = `<span class="btn-splits-toggle-text">See more</span>`;
+            }
+          });
+        }
+      }
     }
 
     // 6. Ouverture de la modale & verrouillage du scroll d'arrière-plan
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+
+    // 7. Réinitialisation du scroll et synchronisation de l'état des masques progressifs
+    const modalBody = modal.querySelector('.modal-activity-body') as HTMLElement | null;
+    if (modalBody) {
+      modalBody.scrollTop = 0;
+      modalBody.classList.remove('is-scrolled');
+      requestAnimationFrame(() => {
+        const isAtBottom = modalBody.scrollHeight <= modalBody.clientHeight + 14;
+        modalBody.classList.toggle('is-at-bottom', isAtBottom);
+      });
+    }
   }
 
   public static closeActivityModal(): void {
