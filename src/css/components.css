@@ -178,6 +178,18 @@
   transform: scale(0.96);
 }
 
+.map-icon-btn.active {
+  background-color: var(--color-primary);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(224, 90, 54, 0.40);
+}
+
+.map-icon-btn.active:hover {
+  background-color: var(--color-primary-dark);
+  color: #FFFFFF;
+}
+
 /* Hide native Leaflet / ArcGIS attribution badges */
 .leaflet-control-attribution {
   display: none !important;

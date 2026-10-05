@@ -78,7 +78,11 @@ class App {
     if (page === 'dashboard') {
       setTimeout(() => {
         invalidateMapSize();
-        mobileSheetController.snapTo('half', false);
+        if (window.innerWidth <= 768) {
+          mobileSheetController.snapTo('half', false);
+        } else {
+          mobileSheetController.resetDesktop();
+        }
         if (this.dataset?.activities) {
           renderActivityTraces(this.dataset.activities);
         }

@@ -23,12 +23,111 @@
     width: 100%;
   }
 
+  /* Bento Étage 1 : Live Hub (Dernière Sortie 60% / Weekly Pulse 40%) */
+  .grid-bento-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) !important;
+    gap: var(--space-lg) !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
   .featured-run-card {
-    width: 100%;
+    width: 100% !important;
+    border: 1px solid var(--border-light) !important;
+    background: var(--bg-surface) !important;
+    box-shadow: var(--shadow-card) !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--space-lg) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--space-md) !important;
+    position: relative !important;
+  }
+
+  .weekly-pulse-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: var(--space-md) !important;
+    width: 100% !important;
+    border: 1px solid var(--border-light) !important;
+    background: var(--bg-surface) !important;
+    box-shadow: var(--shadow-card) !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--space-lg) !important;
+  }
+
+  .featured-run-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+  }
+
+  .featured-map-wrap {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    height: 220px !important;
+    z-index: 1 !important;
+    border-radius: var(--radius-sm) !important;
+    border: 1px solid var(--border-light) !important;
+    overflow: hidden !important;
+    background-color: var(--bg-surface-subtle) !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .featured-metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: var(--space-sm) !important;
+  }
+
+  .map-floating-pill {
+    display: inline-flex !important;
+  }
+
+  #btn-fullscreen-featured-map {
+    display: inline-flex !important;
+  }
+
+  .map-floating-controls {
+    position: absolute !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: 500 !important;
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: none !important;
+  }
+
+  .map-icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+    box-shadow: 0 4px 14px rgba(35, 25, 15, 0.10), 0 1px 3px rgba(35, 25, 15, 0.06) !important;
+  }
+
+  .mobile-week-pill-wrap {
+    display: none !important;
   }
 
   .mobile-hub-sheet {
-    display: contents;
+    display: contents !important;
+    position: static !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .mobile-sheet-drag-zone {
@@ -36,7 +135,10 @@
   }
 
   .mobile-sheet-scroll {
-    display: contents;
+    display: contents !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 
   .mobile-run-details {
@@ -44,11 +146,11 @@
   }
 
   #monthly-calendar-card {
-    width: 100%;
+    width: 100% !important;
   }
 
   #section-activities {
-    width: 100%;
+    width: 100% !important;
   }
 }
 
@@ -56,6 +158,13 @@
    2. Refonte Mobile (< 768px)
    ========================================================================= */
 @media (max-width: 768px) {
+  .grid-bento-hero {
+    display: contents !important;
+  }
+
+  .weekly-pulse-card {
+    display: none !important;
+  }
   /* Conteneur global en mode Hub Mobile : affichage plein écran sans marges ni paddings parasites */
   body[data-active-page="dashboard"] .dashboard-container,
   .dashboard-container:has(#page-dashboard.page-active) {

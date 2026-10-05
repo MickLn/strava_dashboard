@@ -33,7 +33,11 @@ class MobileSheetController {
     if (!this.sheet || !this.dragZone) return;
 
     this.setupTouchListeners();
-    this.setInitialState();
+    if (window.innerWidth <= 768) {
+      this.setInitialState();
+    } else {
+      this.resetDesktop();
+    }
 
     window.addEventListener('resize', () => {
       if (window.innerWidth <= 768) {
@@ -241,6 +245,10 @@ class MobileSheetController {
   }
 
   public snapTo(state: SheetState, animate: boolean = true): void {
+    if (window.innerWidth > 768) {
+      this.resetDesktop();
+      return;
+    }
     if (!this.sheet) return;
     this.currentState = state;
 
@@ -312,6 +320,11 @@ class MobileSheetController {
       this.weekPillWrap.style.opacity = '';
       this.weekPillWrap.style.transition = '';
       this.weekPillWrap.style.pointerEvents = '';
+    }
+    if (this.scrollContainer) {
+      this.scrollContainer.style.overflowY = '';
+      this.scrollContainer.scrollTop = 0;
+      this.scrollContainer.classList.remove('is-scrolled');
     }
     document.documentElement.style.removeProperty('--sheet-top');
   }
