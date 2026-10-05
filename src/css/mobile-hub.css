@@ -16,7 +16,7 @@
    1. Configuration Desktop (>= 769px) - Intégrité totale de la vue bureau
    ========================================================================= */
 @media (min-width: 769px) {
-  #page-dashboard {
+  #page-dashboard.page-active {
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);

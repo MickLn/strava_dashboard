@@ -98,7 +98,32 @@ class App {
       } else if (page === 'records') {
         setTimeout(() => {
           if (this.dataset) {
+            UIRenderer.renderRecords(this.dataset, (activityId) => {
+              const act = this.dataset?.activities.find(a => a.id === activityId);
+              if (act) {
+                UIRenderer.openActivityModal(act, this.dataset!);
+              }
+            });
+            UIRenderer.renderCareerStats(this.dataset);
             renderEquivalents(this.dataset.activities, this.dataset.stats);
+            UIRenderer.renderAnnualCalendar(this.dataset, (activityId) => {
+              const act = this.dataset?.activities.find(a => a.id === activityId);
+              if (act) {
+                UIRenderer.openActivityModal(act, this.dataset!);
+              }
+            });
+            UIRenderer.renderAchievements(this.dataset);
+          }
+        }, 50);
+      } else if (page === 'shoes') {
+        setTimeout(() => {
+          if (this.dataset) {
+            UIRenderer.renderShoeRotator(this.dataset, (activityId) => {
+              const act = this.dataset?.activities.find(a => a.id === activityId);
+              if (act) {
+                UIRenderer.openActivityModal(act, this.dataset!);
+              }
+            });
           }
         }, 50);
       } else if (page === 'map') {
